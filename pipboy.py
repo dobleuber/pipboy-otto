@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Pip-Boy Octopus Edition
-Una interfaz estilo Fallout con Otto el pulpo cibernético
+Otto Command Console
+Una interfaz retro-futurista con Otto el pulpo cibernético
 """
 
 import pygame
@@ -23,7 +23,7 @@ info = pygame.display.Info()
 WIDTH = info.current_w if info.current_w > 0 else 1366
 HEIGHT = info.current_h if info.current_h > 0 else 768
 
-print(f"Pip-Boy Octopus Edition - {WIDTH}x{HEIGHT}")
+print(f"Otto Command Console - {WIDTH}x{HEIGHT}")
 
 # Colores Pip-Boy
 COLOR_BG = (10, 15, 10)
@@ -37,7 +37,7 @@ COLOR_GLOW = (40, 180, 40)
 
 # Pantalla completa
 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
-pygame.display.set_caption("Pip-Boy 3000 - Octopus Edition")
+pygame.display.set_caption("Otto Command Console")
 
 # Fuentes
 def get_font(size):
@@ -95,26 +95,6 @@ def draw_octopus(cx, cy, size=100, t=0):
     head_w = size * 1.10
     head_h = size * 0.90
     head_y = cy - size * 0.10
-    
-    # Sombra
-    pygame.draw.ellipse(screen, COLOR_SHADOW,
-                       (cx - head_w/2 + 4, head_y - head_h/2 + 4, head_w, head_h))
-    
-    # Cabeza
-    pygame.draw.ellipse(screen, COLOR_DIM,
-                       (cx - head_w/2, head_y - head_h/2, head_w, head_h))
-    
-    # Brillo
-    pygame.draw.ellipse(screen, COLOR_GLOW,
-                       (cx - head_w * 0.30, head_y - head_h * 0.35,
-                        head_w * 0.55, head_h * 0.35))
-    pygame.draw.ellipse(screen, COLOR_BRIGHT,
-                       (cx - head_w * 0.15, head_y - head_h * 0.40,
-                        head_w * 0.28, head_h * 0.18))
-    
-    # Contorno
-    pygame.draw.ellipse(screen, COLOR_PRIMARY,
-                       (cx - head_w/2, head_y - head_h/2, head_w, head_h), 4)
     
     # === TENTÁCULOS (5 cortos y gordos) ===
     tentacles = [
@@ -180,6 +160,26 @@ def draw_octopus(cx, cy, size=100, t=0):
                 vy = left_pts[v][1]
                 vr = base_thick * 0.18 * (1 - v/num_pts * 0.4)
                 pygame.draw.circle(screen, COLOR_ACCENT, (int(vx), int(vy)), int(max(2, vr)))
+
+    # Sombra
+    pygame.draw.ellipse(screen, COLOR_SHADOW,
+                       (cx - head_w/2 + 4, head_y - head_h/2 + 4, head_w, head_h))
+    
+    # Cabeza
+    pygame.draw.ellipse(screen, COLOR_DIM,
+                       (cx - head_w/2, head_y - head_h/2, head_w, head_h))
+    
+    # Brillo
+    pygame.draw.ellipse(screen, COLOR_GLOW,
+                       (cx - head_w * 0.30, head_y - head_h * 0.35,
+                        head_w * 0.55, head_h * 0.35))
+    pygame.draw.ellipse(screen, COLOR_BRIGHT,
+                       (cx - head_w * 0.15, head_y - head_h * 0.40,
+                        head_w * 0.28, head_h * 0.18))
+    
+    # Contorno
+    pygame.draw.ellipse(screen, COLOR_PRIMARY,
+                       (cx - head_w/2, head_y - head_h/2, head_w, head_h), 4)
     
     # === OJOS GRANDES ===
     eye_spacing = head_w * 0.25
@@ -199,9 +199,9 @@ def draw_octopus(cx, cy, size=100, t=0):
             pygame.draw.circle(screen, COLOR_SHADOW, (int(ex + 2), int(ey + 2)), int(eye_r))
             pygame.draw.circle(screen, (20, 55, 20), (int(ex), int(ey)), int(eye_r))
             
-            # Pupila móvil
+            # Pupila más centrada y ligeramente elevada para una mirada alegre.
             px = ex + math.sin(t * 1.2 + side * 1.5) * eye_r * 0.15
-            py = ey + math.cos(t * 0.8 + side) * eye_r * 0.08
+            py = ey - eye_r * 0.08 + math.cos(t * 0.8 + side) * eye_r * 0.05
             
             pygame.draw.circle(screen, COLOR_ACCENT, (int(px), int(py)), int(eye_r * 0.55))
             pygame.draw.circle(screen, (5, 15, 5), (int(px), int(py)), int(eye_r * 0.28))
@@ -213,28 +213,41 @@ def draw_octopus(cx, cy, size=100, t=0):
                              (int(ex + eye_r * 0.12), int(ey + eye_r * 0.12)), int(eye_r * 0.08))
             
             pygame.draw.circle(screen, COLOR_PRIMARY, (int(ex), int(ey)), int(eye_r), 3)
-    
-    # === CEJAS MUY FELICES (arqueadas hacia arriba) ===
-    for side in [-1, 1]:
-        bx = cx + side * eye_spacing
-        by = head_y - head_h * 0.35
-        pygame.draw.arc(screen, COLOR_PRIMARY,
-                       (bx - eye_r * 1.2, by - eye_r * 0.5, eye_r * 2.4, eye_r * 0.8),
-                       0.05 * math.pi, 0.95 * math.pi, 5)
+
+            # Párpado inferior sutil para reforzar la expresión sonriente.
+            pygame.draw.arc(screen, COLOR_ACCENT,
+                          (ex - eye_r * 0.9, ey - eye_r * 0.05, eye_r * 1.8, eye_r * 1.2),
+                          0.10 * math.pi, 0.90 * math.pi, 2)
     
     # === BOCA CON GRAN SONRISA ===
-    mouth_y = head_y + head_h * 0.18
-    mouth_w = head_w * 0.40  # Más ancha
-    mouth_h = head_w * 0.28  # Más alta
+    mouth_y = head_y + head_h * 0.16
+    mouth_w = head_w * 0.46
+    mouth_h = head_w * 0.24
     pygame.draw.arc(screen, COLOR_PRIMARY,
-                   (cx - mouth_w/2, mouth_y - mouth_h * 0.4, mouth_w, mouth_h),
-                   0.08 * math.pi, 0.92 * math.pi, 4)  # Sonrisa más grande
-    
+                   (cx - mouth_w/2, mouth_y - mouth_h * 0.30, mouth_w, mouth_h),
+                   1.12 * math.pi, 1.88 * math.pi, 5)
+    pygame.draw.arc(screen, COLOR_BRIGHT,
+                   (cx - mouth_w/2, mouth_y - mouth_h * 0.30, mouth_w, mouth_h),
+                   1.18 * math.pi, 1.82 * math.pi, 2)
+
+    for side in [-1, 1]:
+        corner_x = cx + side * mouth_w * 0.41
+        corner_y = mouth_y - mouth_h * 0.02
+        pygame.draw.arc(screen, COLOR_PRIMARY,
+                       (corner_x - mouth_w * 0.06, corner_y - mouth_h * 0.18,
+                        mouth_w * 0.12, mouth_h * 0.24),
+                       1.05 * math.pi if side < 0 else 1.52 * math.pi,
+                       1.42 * math.pi if side < 0 else 1.88 * math.pi, 3)
+
     # === MEJILLAS ===
     for side in [-1, 1]:
         cheek_x = cx + side * head_w * 0.34
         cheek_y = head_y + head_h * 0.10
         pygame.draw.circle(screen, COLOR_GLOW, (int(cheek_x), int(cheek_y)), int(head_w * 0.055))
+        pygame.draw.arc(screen, COLOR_ACCENT,
+                       (cheek_x - head_w * 0.08, cheek_y - head_w * 0.03,
+                        head_w * 0.16, head_w * 0.10),
+                       0.12 * math.pi, 0.88 * math.pi, 2)
 
 
 def draw_header():
@@ -244,8 +257,8 @@ def draw_header():
     current_time = datetime.now().strftime("%H:%M:%S")
     current_date = datetime.now().strftime("%Y-%m-%d")
     draw_text(f"{current_date}  {current_time}", font_medium, COLOR_PRIMARY, 30, 35)
-    draw_text("PIP-BOY 3000", font_large, COLOR_PRIMARY, WIDTH // 2, 35, center=True)
-    draw_text("OCTOPUS EDITION", font_small, COLOR_ACCENT, WIDTH // 2, 60, center=True)
+    draw_text("OTTO COMMAND", font_large, COLOR_PRIMARY, WIDTH // 2, 35, center=True)
+    draw_text("CYBERNETIC CONSOLE", font_small, COLOR_ACCENT, WIDTH // 2, 60, center=True)
     
     tab_y = 90
     tab_width = int(WIDTH / len(navigation.SECTIONS) * 0.8)
@@ -283,7 +296,7 @@ def draw_help_overlay():
     pygame.draw.rect(screen, COLOR_DIM, (box_x, box_y, box_w, box_h), 0, border_radius=10)
     pygame.draw.rect(screen, COLOR_PRIMARY, (box_x, box_y, box_w, box_h), 3, border_radius=10)
     
-    draw_text(">>> AYUDA - PIP-BOY 3000 <<<", font_large, COLOR_BRIGHT, WIDTH // 2, box_y + 30, center=True)
+    draw_text(">>> AYUDA - OTTO COMMAND <<<", font_large, COLOR_BRIGHT, WIDTH // 2, box_y + 30, center=True)
     
     y = box_y + 80
     draw_text("CONTROLES:", font_medium, COLOR_PRIMARY, box_x + 30, y)
@@ -432,7 +445,7 @@ def draw_network_section():
 
 
 def draw_otto_section():
-    draw_octopus(WIDTH // 2, int(HEIGHT * 0.45), min(180, HEIGHT * 0.3), time.time())
+    draw_octopus(WIDTH // 2, int(HEIGHT * 0.46), min(230, HEIGHT * 0.36), time.time())
     draw_text("OTTO-v1.0", font_large, COLOR_PRIMARY, WIDTH // 2, HEIGHT - 120, center=True)
     draw_text("Cybernetic Octopus Assistant", font_small, COLOR_ACCENT, WIDTH // 2, HEIGHT - 80, center=True)
     
@@ -483,14 +496,14 @@ def draw_help_section():
         draw_text(f"  [{num}] {section:10} - {desc}", font_small, COLOR_ACCENT, 50, y)
         y += 25
     
-    draw_octopus(WIDTH - 150, int(HEIGHT * 0.5), 80, time.time())
+    draw_octopus(WIDTH - 200, int(HEIGHT * 0.58), 165, time.time())
 
 
 def main():
     global show_help_overlay
     
     running = True
-    log_manager.add("Pip-Boy Octopus Edition iniciado")
+    log_manager.add("Otto Command Console iniciado")
     log_manager.add("Sistema listo")
     log_manager.add(f"Resolución: {WIDTH}x{HEIGHT}")
     
@@ -568,7 +581,7 @@ def main():
         clock.tick(30)
     
     pygame.quit()
-    log_manager.add("Pip-Boy cerrado")
+    log_manager.add("Otto Command Console cerrado")
     return 0
 
 
