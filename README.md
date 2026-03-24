@@ -13,7 +13,30 @@ A Pip-Boy 3000 clone interface with **Otto** - a cybernetic octopus assistant!
 - 📋 **LOGS** - System event log
 - ❓ **HELP** - Built-in help system
 
-## Requirements
+## Hardware / 3D Printed Body
+
+The `cad/` directory contains OpenSCAD designs for **Otto's physical body** — a 3D printable enclosure that holds the actual hardware:
+
+### Components
+- **Orange Pi 5 Pro** — Brain (85×56×15mm)
+- **5" display** — Otto's face (121×78mm)
+- **2× SG90 servos** — Pan-tilt head mechanism
+- **Arducam** — Otto's eyes (25×25mm)
+- **Strap tabs** — Mount to backpack/strap
+
+### Rendering
+
+Requires [OpenSCAD](https://openscad.org/):
+
+```bash
+# Preview
+openscad cad/otto-real-v0.2.scad -o preview.png
+
+# Export STL for printing
+openscad cad/otto-real-v0.2.scad -o otto-body.stl
+```
+
+## Requirements (Software)
 
 - Python 3.8+
 - Pygame 2.5+
@@ -22,24 +45,14 @@ A Pip-Boy 3000 clone interface with **Otto** - a cybernetic octopus assistant!
 ## Installation
 
 ```bash
-# Clone el repositorio
 git clone https://github.com/dobleuber/pipboy-otto.git
-
-# Or download manually
-wget https://github.com/dobleuber/pipboy-otto/archive/main.zip
-unzip pipboy-octopus.zip
+cd pipboy-octopus
 
 # Install dependencies
 pip install pygame psutil
 
-# Or on Ubuntu/Debian-based systems:
-sudo apt install python3-pygame python3-psutil
-
 # Run
-cd pipboy-octopus
 SDL_VIDEODRIVER=wayland python3 pipboy.py
-```
-
 ```
 
 ## Controls
@@ -47,24 +60,24 @@ SDL_VIDEODRIVER=wayland python3 pipboy.py
 | Key | Action |
 |-----|------|
 | TAB / → | Next section |
-| ← | → | Previous section |
-    H | Toggle help overlay |
-    ESC | Exit |
-    1-6 | Jump to section (1-6) |
-    L | Add test log entry |
-    ARROWS | Navigate sections |
-    H | Toggle help |
+| ← | Previous section |
+| 1-6 | Jump to section |
+| H | Toggle help overlay |
+| L | Add test log entry |
+| ESC | Exit |
 
 ## Project Structure
 
 ```
 pipboy-octopus/
 ├── pipboy.py          # Main application with UI
-├── core.py              # Core logic (testable)
-├── test_pipboy.py        # Unit tests
-├── README.md            # This file
-├── .gitignore            # Git ignore file
-├── launch.sh              # Launcher script
+├── core.py            # Core logic (testable)
+├── test_pipboy.py     # Unit tests
+├── launch.sh          # Launcher script
+├── cad/
+│   └── otto-real-v0.2.scad  # 3D printable body (OpenSCAD)
+├── assets/            # Images and media
+└── README.md          # This file
 ```
 
 ## License
