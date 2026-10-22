@@ -52,6 +52,7 @@ def simulate(params: GaitParams, seconds: float, on_frame=None, load_fn=None):
     max_torque = 0.0
     torques, errors = [], []
     prev_ctrl, max_cmd_vel = None, 0.0
+    yaw_total, prev_yaw = 0.0, yaw(data)
     fell_at = None
     for i in range(n):
         if i % steps_per_ctrl == 0:
@@ -61,6 +62,9 @@ def simulate(params: GaitParams, seconds: float, on_frame=None, load_fn=None):
                 vel = np.abs(data.ctrl[:10] - prev_ctrl) * CONTROL_HZ
                 max_cmd_vel = max(max_cmd_vel, float(vel.max()))
             prev_ctrl = data.ctrl[:10].copy()
+            y = yaw(data)
+            yaw_total += (y - prev_yaw + np.pi) % (2 * np.pi) - np.pi  # giro acumulado
+            prev_yaw = y
         mujoco.mj_step(model, data)
         max_tilt = max(max_tilt, torso_tilt(data))
         max_torque = max(max_torque, float(np.abs(data.actuator_force[:10]).max()))
@@ -76,7 +80,7 @@ def simulate(params: GaitParams, seconds: float, on_frame=None, load_fn=None):
     return {
         "x": float(data.qpos[0]),
         "y": float(data.qpos[1]),
-        "yaw_deg": float(np.degrees(yaw(data))),
+        "yaw_deg": float(np.degrees(yaw_total)),
         "fell_at": fell_at,
         "max_tilt_deg": float(np.degrees(max_tilt)),
         "max_leg_torque": max_torque,

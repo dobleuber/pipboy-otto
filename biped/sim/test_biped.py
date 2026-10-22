@@ -25,7 +25,7 @@ def test_size_and_mass():
     assert 0.8 < mass < 1.1
     head = model.geom("head").id
     head_top = data.geom_xpos[head][2] + model.geom_size[head][2]
-    assert 0.23 < head_top < 0.28  # ~26 cm
+    assert 0.21 < head_top < 0.26  # ~23 cm
 
 
 def test_stands_still():
@@ -59,7 +59,7 @@ def test_leg_ik_matches_model(side, target):
 def test_targets_within_servo_limits():
     model, _ = load()
     lo, hi = model.actuator_ctrlrange.T
-    for p in [GaitParams(), GaitParams(turn=0.3), GaitParams(turn=-0.3)]:
+    for p in [GaitParams(), GaitParams(turn=0.35), GaitParams(turn=-0.35)]:
         for t in np.linspace(0, 6, 300):
             q = targets(t, p)
             assert np.all(q >= lo - 1e-9) and np.all(q <= hi + 1e-9)
@@ -70,12 +70,15 @@ def test_walks_forward_within_servo_limits():
     assert out["fell_at"] is None
     assert out["x"] > 0.4  # > 4 cm/s
     assert abs(out["y"]) < 0.1
+    assert abs(out["yaw_deg"]) < 10  # casi recto
     assert out["p99_leg_torque"] < 1.3  # < ~70 % del torque máximo del STS3215
     assert out["max_cmd_vel"] < 4.5  # STS3215 ~4.7 rad/s sin carga
 
 
-def test_turns_both_ways():
-    left = simulate(GaitParams(turn=0.15), 10)
-    right = simulate(GaitParams(turn=-0.15), 10)
-    assert left["fell_at"] is None and right["fell_at"] is None
-    assert left["yaw_deg"] > 10 and right["yaw_deg"] < -10
+def test_turns_both_ways_within_servo_limits():
+    for turn, sign in [(0.3, 1), (-0.3, -1)]:
+        out = simulate(GaitParams(turn=turn), 10)
+        assert out["fell_at"] is None
+        assert sign * out["yaw_deg"] > 60
+        assert out["p99_leg_torque"] < 1.3
+        assert out["max_cmd_vel"] < 4.5

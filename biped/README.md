@@ -1,8 +1,8 @@
 # Mini15 — bípedo pequeño de 15 motores (simulación MuJoCo)
 
-Bípedo de **~26 cm y ~0.97 kg** con **15 motores**, con proporciones similares al
-Microduck: piernas cortas con la rodilla hacia atrás, torso compacto, cuello largo de
-servos apilados y una cabeza con cámara y mandíbula móvil.
+Bípedo de **~23 cm y ~0.96 kg** con **15 motores**, con proporciones similares al
+Microduck: piernas cortas con la rodilla hacia atrás, torso compacto, cuello corto y
+una cabeza con cámara y una boca pequeña móvil.
 
 ![Mini15 caminando](media/walk.gif)
 
@@ -16,9 +16,9 @@ imprimibles vienen después.
 
 ```
           ┌───────────┐
-          │  cabeza ◉ │  cámara; mandíbula móvil abajo
+          │  cabeza ◉ │  cámara; boca pequeña debajo
           └─────┬─────┘
-                ┃         cuello: 4 micro servos (pitch, pitch, yaw, roll)
+                ┃         cuello corto: 4 micro servos (pitch, pitch, yaw, roll)
             ┌───┸───┐
             │ torso │     batería NP-F550, Raspberry Pi Zero 2W, IMU
             └┬─────┬┘
@@ -34,26 +34,26 @@ imprimibles vienen después.
 |---|---|---|
 | Pierna izq. | cadera yaw, cadera roll, cadera pitch, rodilla, tobillo | 5x Feetech STS3215 7.4 V |
 | Pierna der. | ídem | 5x Feetech STS3215 7.4 V |
-| Cuello/cabeza | cuello pitch, cabeza pitch, cabeza yaw, cabeza roll, mandíbula | 5x micro servo de bus (p. ej. Feetech SCS0009) |
+| Cuello/cabeza | cuello pitch, cabeza pitch, cabeza yaw, cabeza roll, boca | 5x micro servo de bus (p. ej. Feetech SCS0009) |
 
 Medidas principales: muslo 4 cm, canilla 4.5 cm, cadera a 8.5 cm del piso
-(rodillas flexionadas), cuello 4 cm, cabeza 8.4 x 6.4 x 4 cm.
+(rodillas flexionadas), cuello 1.6 cm, cabeza 8.4 x 6.4 x 4 cm, boca 2.4 x 2.8 cm.
 
 La distribución de motores sigue la de Open Duck Mini (del mismo autor que trabaja
-en el Microduck) más la mandíbula. El Microduck no publica el desglose exacto de sus
+en el Microduck) más la boca. El Microduck no publica el desglose exacto de sus
 15 motores, así que esto es una aproximación.
 
 ## Resultados en simulación (caminata programada, sin IA)
 
 | Métrica | Valor |
 |---|---|
-| Velocidad | ~5.7 cm/s (68 cm en 12 s) |
+| Velocidad | ~5.6 cm/s (68 cm en 12 s) |
 | Ritmo | 4 pasos por segundo, pasos cortos (como robots de este tamaño) |
-| Desvío | ~1 cm lateral, ~7° de giro en 12 s |
+| Desvío al ir recto | ~3 cm lateral, ~2° de giro en 12 s |
 | Inclinación máx. del torso | ~4° |
 | Torque de pierna (percentil 99) | ~1.1 N·m de ~1.9 N·m |
 | Velocidad máx. pedida a un servo | ~3.3 rad/s (el STS3215 da ~4.7) |
-| Giro | sí, ambos lados (`--turn`) — ver [video de giro](media/turn.mp4) |
+| Giro | ambos lados, hasta ~110–150° en 10 s (`--turn`, máx. ±0.35) — ver [video](media/turn.mp4) |
 
 Probado también con piso resbaloso (fricción 0.5), pegajoso (1.3), +150 g y servos
 más blandos o más rígidos (kp 7 y 15): no se cae en ningún caso.
@@ -67,7 +67,7 @@ cd sim
 python run_demo.py                     # simula e imprime resultados
 python run_demo.py --video mini15.mp4  # graba video (en servidor: MUJOCO_GL=osmesa o egl)
 python run_demo.py --viewer            # visor 3D interactivo (requiere pantalla)
-python run_demo.py --turn 0.15         # gira a la izquierda (negativo = derecha)
+python run_demo.py --turn 0.3          # gira a la izquierda (negativo = derecha, máx. ±0.35)
 python -m pytest -q                    # pruebas
 ```
 
@@ -102,13 +102,15 @@ estimados y hay que confirmarlos.
 - **Servos:** las ganancias (`kp`, `kv`, `armature`, fricción) son estimadas. Antes de
   pasar al robot real hay que medirlas con un servo real (p. ej. con
   [BAM](https://github.com/Rhoban/bam), como hace Open Duck).
-- **Peso:** ~0.97 kg, más que el Microduck (~0.8 kg), porque el STS3215 es grande
+- **Peso:** ~0.96 kg, más que el Microduck (~0.8 kg), porque el STS3215 es grande
   para este tamaño. Servos más chicos bajarían el peso.
 - **Micro servos de cabeza:** verificar voltaje y protocolo; pueden necesitar un
   regulador o bus aparte.
 - **Paso bajo** (~0.5 cm): sirve para piso plano, no para alfombras ni rampas.
 - **Sin tobillo roll** (igual que Open Duck): por eso la caminata usa pasos cortos y
   rápidos en vez de balancearse mucho de lado a lado.
+- **Cuello corto:** los 4 micro servos del cuello tienen que ir muy juntos; al diseñar
+  las piezas puede que haga falta quitar uno (p. ej. cabeza roll).
 - **Caminata programada:** no reacciona a empujones ni a obstáculos. Eso es lo que
   resuelve el entrenamiento con IA (como en el video de NVIDIA).
 - Las piernas no chocan entre sí en la simulación.

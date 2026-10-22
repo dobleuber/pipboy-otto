@@ -58,10 +58,10 @@ def make_recorder(path):
         if "r" not in state:
             state["r"] = mujoco.Renderer(model, 480, 640)
             cam = mujoco.MjvCamera()
-            cam.distance, cam.azimuth, cam.elevation = 0.5, 150, -12
+            cam.distance, cam.azimuth, cam.elevation = 0.45, 150, -12
             state["cam"] = cam
         cam = state["cam"]
-        cam.lookat[:] = [data.qpos[0], data.qpos[1], 0.12]
+        cam.lookat[:] = [data.qpos[0], data.qpos[1], 0.11]
         state["r"].update_scene(data, camera=cam)
         frames.append(state["r"].render())
 
@@ -92,7 +92,7 @@ def run_viewer(params):
             start = time.time()
             if i % every == 0:
                 pitch, roll = torso_pitch_roll(data)
-            data.ctrl[:] = targets(data.time, params, pitch, roll)
+                data.ctrl[:] = targets(data.time, params, pitch, roll)
             mujoco.mj_step(model, data)
             i += 1
             if i % 10 == 0:

@@ -5,7 +5,7 @@ Idea:
   2. El pie libre se levanta (rodilla) y se adelanta (cadera pitch); el de apoyo
      va hacia atrás, empujando el cuerpo hacia adelante.
   3. El tobillo mantiene los pies paralelos al cuerpo.
-  4. Para girar, la cadera yaw rota la pierna en el aire.
+  4. Para girar, da pasos más cortos de un lado y rota un poco la cadera yaw.
   5. La cabeza compensa la inclinación del cuerpo (como las aves) y mira alrededor.
 
 Orden de actuadores (igual que en model/mini15.xml):
@@ -36,9 +36,11 @@ class GaitParams:
     sway_lead: float = 0.6  # rad, adelanto del balanceo respecto del paso
     hip_height: float = 0.085  # m, altura de la cadera sobre la suela (rodillas flexionadas)
     foot_x: float = 0.0  # m, posición del pie respecto de la cadera
-    turn: float = 0.0  # rad por paso de la cadera yaw (+ = izquierda)
+    turn: float = 0.0  # -0.35..0.35: giro (+ = izquierda). Pasos desiguales + cadera yaw
+    turn_yaw: float = 0.15  # rad de cadera yaw por paso cuando turn = 1
+    stride_bias: float = 0.04  # corrige el desvío natural al caminar recto
     ramp_time: float = 1.5  # s, arranque suave
-    head: bool = True  # animar cabeza y mandíbula
+    head: bool = True  # animar cabeza y boca
 
 
 def leg_ik(x: float, y: float, z: float) -> np.ndarray:
@@ -71,8 +73,11 @@ def leg_targets(t: float, p: GaitParams):
     swing_l = max(0.0, np.sin(phi)) ** 2  # perfil suave (sin golpes)
     swing_r = max(0.0, -np.sin(phi)) ** 2
     # Adelante/atrás: el pie en el aire va de atrás hacia adelante.
-    x_l = p.foot_x - p.step_len * ramp * np.cos(phi)
-    x_r = p.foot_x + p.step_len * ramp * np.cos(phi)
+    # Girar: pasos más cortos del lado hacia el que se gira (como un tanque).
+    # Límite ±0.4: más allá los servos no alcanzan la velocidad necesaria.
+    k = np.clip(p.turn + p.stride_bias, -0.4, 0.4)
+    x_l = p.foot_x - p.step_len * (1 - k) * ramp * np.cos(phi)
+    x_r = p.foot_x + p.step_len * (1 + k) * ramp * np.cos(phi)
     # Balanceo: el cuerpo se mueve hacia el pie de apoyo (los pies se mueven al revés).
     sway = p.sway * ramp * np.sin(phi + p.sway_lead)
     y_l = sway
@@ -80,8 +85,8 @@ def leg_targets(t: float, p: GaitParams):
     z_l = z0 + p.lift * ramp * swing_l
     z_r = z0 + p.lift * ramp * swing_r
     # Giro: la cadera yaw rota durante el paso, igual que x.
-    yaw_l = -p.turn * ramp * np.cos(phi) / 2
-    yaw_r = p.turn * ramp * np.cos(phi) / 2
+    yaw_l = -p.turn * p.turn_yaw * ramp * np.cos(phi) / 2
+    yaw_r = p.turn * p.turn_yaw * ramp * np.cos(phi) / 2
     return (x_l, y_l, z_l, yaw_l), (x_r, y_r, z_r, yaw_r)
 
 
@@ -99,10 +104,10 @@ def targets(t: float, p: GaitParams, torso_pitch: float = 0.0, torso_roll: float
 
 
 def head_targets(t: float, torso_pitch: float, torso_roll: float) -> np.ndarray:
-    """Cabeza: compensa la inclinación del cuerpo y mira a los lados; la mandíbula se abre a ratos."""
+    """Cabeza: compensa la inclinación del cuerpo y mira a los lados; la boca se abre a ratos."""
     neck_pitch = 0.15 * np.sin(2 * np.pi * 0.3 * t)
     head_pitch = -torso_pitch - neck_pitch  # mantiene la mirada horizontal
     head_yaw = 0.6 * np.sin(2 * np.pi * 0.15 * t)
     head_roll = -torso_roll
-    jaw = 0.5 if (t % 3.0) < 0.4 else 0.0  # abre la mandíbula cada 3 s
+    jaw = 0.5 if (t % 3.0) < 0.4 else 0.0  # abre la boca cada 3 s
     return np.array([neck_pitch, head_pitch, head_yaw, head_roll, jaw])
