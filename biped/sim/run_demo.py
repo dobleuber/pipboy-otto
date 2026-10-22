@@ -5,7 +5,7 @@ Uso:
   python run_demo.py --robot mini17       # el de 17 motores (con tobillo roll)
   python run_demo.py --video robot.mp4    # además graba un video (sin pantalla)
   python run_demo.py --viewer             # abre el visor interactivo de MuJoCo
-  python run_demo.py --turn 0.3           # gira a la izquierda (negativo = derecha)
+  python run_demo.py --turn 0.2           # gira a la izquierda 0.2 rad/s (negativo = derecha)
 """
 
 import argparse
@@ -21,7 +21,7 @@ def main():
     ap.add_argument("--freq", type=float, help="ciclos de paso por segundo")
     ap.add_argument("--step", type=float, help="largo de medio paso (m)")
     ap.add_argument("--lift", type=float, help="altura del pie (m)")
-    ap.add_argument("--turn", type=float, default=0.0, help="giro (+ izquierda, - derecha), ej. 0.15")
+    ap.add_argument("--turn", type=float, default=0.0, help="velocidad de giro en rad/s (+ izquierda), ej. 0.2")
     ap.add_argument("--video", help="ruta .mp4 o .gif para grabar")
     ap.add_argument("--viewer", action="store_true", help="visor interactivo")
     args = ap.parse_args()
@@ -83,10 +83,14 @@ def run_viewer(params):
     import mujoco
     import mujoco.viewer
 
-    from common import CONTROL_HZ, load, torso_pitch_roll
-    from gait import targets
+    import numpy as np
+
+    from common import CONTROL_HZ, load, torso_pitch_roll, yaw
+    from gait import Steering, targets
 
     model, data = load(params.robot)
+    steering = Steering(params)
+    yaw_total, prev_yaw = 0.0, yaw(data)
     every = int(round(1 / (CONTROL_HZ * model.opt.timestep)))
     with mujoco.viewer.launch_passive(model, data) as v:
         i = 0
@@ -94,7 +98,11 @@ def run_viewer(params):
             start = time.time()
             if i % every == 0:
                 pitch, roll = torso_pitch_roll(data)
-                data.ctrl[:] = targets(data.time, params, pitch, roll)
+                y = yaw(data)
+                yaw_total += (y - prev_yaw + np.pi) % (2 * np.pi) - np.pi
+                prev_yaw = y
+                p_now = steering.update(yaw_total, 1 / CONTROL_HZ)
+                data.ctrl[:] = targets(data.time, p_now, pitch, roll)
             mujoco.mj_step(model, data)
             i += 1
             if i % 10 == 0:

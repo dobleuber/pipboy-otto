@@ -16,7 +16,7 @@ Orden de actuadores (igual que en los XML):
   luego cabeza (neck_pitch, head_pitch, head_yaw[, head_roll, jaw]).
 """
 
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, fields, replace
 
 import numpy as np
 
@@ -35,7 +35,10 @@ class GaitParams:
     sway_lead: float = None  # rad, adelanto del balanceo respecto del paso
     hip_height: float = None  # m, altura de la cadera sobre la suela (rodillas flexionadas)
     foot_x: float = None  # m, posición del pie respecto de la cadera
-    turn: float = 0.0  # -0.4..0.4: giro (+ = izquierda). Pasos desiguales + cadera yaw
+    turn: float = 0.0  # giro (+ = izquierda). Con steer: velocidad de giro pedida en rad/s
+    steer: bool = True  # corrige el rumbo con la IMU (si no, el giro es en lazo abierto)
+    steer_gain: float = None  # ganancia del control de rumbo (por rad de error)
+    steer_damping: float = None  # amortiguación (por rad/s de velocidad de giro, giroscopio)
     turn_yaw: float = None  # rad de cadera yaw por paso cuando turn = 1
     stride_bias: float = None  # corrige desvíos al caminar recto (pasos desiguales)
     ramp_time: float = 1.5  # s, arranque suave
@@ -129,3 +132,33 @@ def head_targets(t: float, torso_pitch: float, torso_roll: float, n_head: int = 
         jaw = 0.5 if (t % 3.0) < 0.4 else 0.0  # abre la boca cada 3 s
         q += [-torso_roll, jaw]
     return np.array(q[:n_head])
+
+
+class Steering:
+    """Control de rumbo con la IMU (el BNO055 da el rumbo absoluto).
+
+    Lleva un rumbo de referencia que avanza a la velocidad de giro pedida
+    (params.turn, rad/s) y ajusta el giro de la caminata (pasos desiguales +
+    cadera yaw) para seguirlo. Con turn = 0 mantiene la dirección inicial.
+    """
+
+    MAX_TURN = 0.35
+
+    def __init__(self, params: GaitParams):
+        self.params = params
+        self.yaw_ref = 0.0
+        self.prev_yaw = None
+        self.rate = 0.0
+
+    def update(self, yaw_measured: float, dt: float) -> GaitParams:
+        p = self.params
+        if not p.steer:
+            return p
+        if self.prev_yaw is not None:  # velocidad de giro filtrada (en el robot: giroscopio)
+            self.rate += 0.2 * ((yaw_measured - self.prev_yaw) / dt - self.rate)
+        self.prev_yaw = yaw_measured
+        self.yaw_ref += p.turn * dt
+        err = self.yaw_ref - yaw_measured
+        u = p.steer_gain * err - p.steer_damping * (self.rate - p.turn) + 0.3 * p.turn
+        turn_cmd = float(np.clip(u, -self.MAX_TURN, self.MAX_TURN))
+        return replace(p, turn=turn_cmd, steer=False)

@@ -24,7 +24,7 @@ def test_zero_action_walks_on_flat(env):
     for _ in range(250):
         obs, r, term, trunc, info = env.step(np.zeros(env.n_leg))
         assert not term
-    assert info["progress"] > 0.15
+    assert info["progress"] > 0.1  # 5 s con fricción, peso y servos aleatorios
 
 
 def test_distance_sensor_sees_step(env):

@@ -53,8 +53,9 @@ ROBOTS = {
         ankle_to_sole=0.025,
         ankle_roll=False,
         n_head=3,
-        gait=dict(freq=1.6, step_len=0.012, lift=0.008, sway=0.004, sway_lead=0.6, hip_height=0.115,
-                  foot_x=0.0, turn_yaw=0.15, stride_bias=0.0),
+        target_speed=0.06,
+        gait=dict(freq=1.6, step_len=0.016, lift=0.008, sway=0.002, sway_lead=0.0, hip_height=0.115,
+                  foot_x=0.0, turn_yaw=0.0, stride_bias=0.0, steer_gain=0.2, steer_damping=0.0),
     ),
     "mini17": Robot(
         name="mini17",
@@ -66,7 +67,7 @@ ROBOTS = {
         ankle_roll=True,
         n_head=5,
         gait=dict(freq=1.2, step_len=0.01, lift=0.02, sway=0.025, sway_lead=0.0, hip_height=0.085,
-                  foot_x=-0.008, turn_yaw=0.4, stride_bias=0.0),
+                  foot_x=-0.008, turn_yaw=0.4, stride_bias=0.0, steer_gain=0.3, steer_damping=0.0),
     ),
 }
 

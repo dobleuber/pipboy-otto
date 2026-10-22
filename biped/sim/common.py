@@ -6,7 +6,7 @@ import mujoco
 import numpy as np
 
 import robots
-from gait import GaitParams, targets
+from gait import GaitParams, Steering, targets
 
 CONTROL_HZ = 50  # igual que el Microduck / Open Duck
 
@@ -57,11 +57,13 @@ def simulate(params: GaitParams, seconds: float, on_frame=None, load_fn=None):
     torques, errors = [], []
     prev_ctrl, max_cmd_vel = None, 0.0
     yaw_total, prev_yaw = 0.0, yaw(data)
+    steering = Steering(params)
     fell_at = None
     for i in range(n):
         if i % steps_per_ctrl == 0:
             pitch, roll = torso_pitch_roll(data)
-            data.ctrl[:] = targets(data.time, params, pitch, roll)
+            p_now = steering.update(yaw_total, 1 / CONTROL_HZ)
+            data.ctrl[:] = targets(data.time, p_now, pitch, roll)
             if prev_ctrl is not None and data.time > 0.5:
                 vel = np.abs(data.ctrl[:N_LEG] - prev_ctrl) * CONTROL_HZ
                 max_cmd_vel = max(max_cmd_vel, float(vel.max()))
