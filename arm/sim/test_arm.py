@@ -50,3 +50,34 @@ def test_grasps_holds_and_places_back(volts, mass):
     out = demo_hold.run("cube", mass, volts)
     assert out["held"] and out["placed_back"]
     assert np.all(out["hold_torque"] < scene.STALL_TORQUE[volts])
+
+
+# ----------------------------------------------------------------------------- morral
+def test_backpack_rest_pose_keeps_distance_from_head():
+    import backpack as bp
+    import demo_walk as dw
+
+    m = bp.build()
+    d = mujoco.MjData(m)
+    arm = Arm(m, d)
+    arm.set_pose(REST)
+    assert dw.Safety(m, d, bp.Wearer(m, d)).head_distance() > dw.SAFE_DIST
+
+
+def test_looks_at_people_while_walking():
+    import demo_walk as dw
+
+    out = dw.run_look(imu=True, predict=True)
+    assert out["greetings"] >= 2
+    assert out["err_median"] < 5 and out["err_p90"] < 12
+    assert out["min_head"] > dw.SAFE_DIST - 0.01  # nunca entra a la zona de la cabeza
+    assert out["max_torque"] < scene.STALL_TORQUE["7.4V"]
+
+
+@pytest.mark.parametrize("mass", [0.1, 0.3])
+def test_holds_box_while_walking(mass):
+    import demo_walk as dw
+
+    out = dw.run_hold(mass, "12V")
+    assert out["held"] and out["slip_mm"] < 15
+    assert out["max_torque"] < scene.STALL_TORQUE["12V"]

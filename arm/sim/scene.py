@@ -65,8 +65,8 @@ def _geom(body, name, gtype, size, pos=(0, 0, 0), rgba=(0.8, 0.8, 0.8, 1), **kw)
     return g
 
 
-def build(volts="12V", objects=True, person=True) -> mujoco.MjModel:
-    spec = mujoco.MjSpec.from_file(str(ensure_model()))
+def configure_arm(spec, volts):
+    """Ajustes del brazo comunes a todas las escenas."""
     spec.option.timestep = 0.005
     # Torque máximo de los servos según la versión elegida
     for a in spec.actuators:
@@ -78,12 +78,38 @@ def build(volts="12V", objects=True, person=True) -> mujoco.MjModel:
     for g in spec.geoms:
         if g.classname.name == "collision_gripper_mesh":
             g.contype = g.conaffinity = 0
-
     spec.visual.headlight.ambient = [0.35, 0.35, 0.35]
     spec.visual.headlight.diffuse = [0.6, 0.6, 0.6]
     spec.visual.global_.offwidth, spec.visual.global_.offheight = 1280, 720
-    B, S, C, P = (mujoco.mjtGeom.mjGEOM_BOX, mujoco.mjtGeom.mjGEOM_SPHERE, mujoco.mjtGeom.mjGEOM_CYLINDER,
-                  mujoco.mjtGeom.mjGEOM_PLANE)
+
+
+B, S, C, P, CAP = (mujoco.mjtGeom.mjGEOM_BOX, mujoco.mjtGeom.mjGEOM_SPHERE, mujoco.mjtGeom.mjGEOM_CYLINDER,
+                   mujoco.mjtGeom.mjGEOM_PLANE, mujoco.mjtGeom.mjGEOM_CAPSULE)
+
+
+def add_person(parent, name, pos, face_z=0.42, mocap=False):
+    """Persona simple: torso, cara color piel (lo que busca el detector), pelo, ojos y boca.
+
+    Mira hacia -x. face_z = altura de la cara sobre `pos`.
+    """
+    b = parent.add_body()
+    b.name, b.pos, b.mocap = name, list(pos), mocap
+    nc = dict(contype=0, conaffinity=0)
+    _geom(b, None, B, (0.09, 0.17, 0.2), (0.05, 0, face_z - 0.3), (0.25, 0.4, 0.55, 1), **nc)
+    if face_z > 1.0:  # de pie: piernas
+        for y in (-0.08, 0.08):
+            _geom(b, None, CAP, (0.06, (face_z - 0.55) / 2), (0.05, y, (face_z - 0.55) / 2), (0.2, 0.2, 0.25, 1), **nc)
+    _geom(b, f"{name}_face" if name != "person" else "face", S, (0.085,), (0, 0, face_z), SKIN, **nc)
+    _geom(b, None, S, (0.088,), (0.025, 0, face_z + 0.025), (0.2, 0.13, 0.08, 1), **nc)
+    for y in (-0.03, 0.03):
+        _geom(b, None, S, (0.011,), (-0.078, y, face_z + 0.015), (0.05, 0.05, 0.05, 1), **nc)
+    _geom(b, None, B, (0.005, 0.025, 0.006), (-0.08, 0, face_z - 0.035), (0.6, 0.25, 0.25, 1), **nc)
+    return b
+
+
+def build(volts="12V", objects=True, person=True) -> mujoco.MjModel:
+    spec = mujoco.MjSpec.from_file(str(ensure_model()))
+    configure_arm(spec, volts)
     w = spec.worldbody
     light = w.add_light()
     light.pos, light.dir, light.type = [0.3, -0.3, 2.0], [0, 0.2, -1], mujoco.mjtLightType.mjLIGHT_DIRECTIONAL
@@ -112,14 +138,7 @@ def build(volts="12V", objects=True, person=True) -> mujoco.MjModel:
 
     if person:
         # Persona sentada al otro lado de la mesa (cuerpo "mocap": la movemos nosotros)
-        b = w.add_body()
-        b.name, b.mocap, b.pos = "person", True, [0.95, 0.0, 0.0]
-        _geom(b, "torso", B, (0.09, 0.17, 0.2), (0.05, 0, 0.12), (0.25, 0.4, 0.55, 1), contype=0, conaffinity=0)
-        _geom(b, "face", S, (0.085,), (0, 0, 0.42), SKIN, contype=0, conaffinity=0)
-        _geom(b, "hair", S, (0.088,), (0.025, 0, 0.445), (0.2, 0.13, 0.08, 1), contype=0, conaffinity=0)
-        for y in (-0.03, 0.03):
-            _geom(b, None, S, (0.011,), (-0.078, y, 0.435), (0.05, 0.05, 0.05, 1), contype=0, conaffinity=0)
-        _geom(b, None, B, (0.005, 0.025, 0.006), (-0.08, 0, 0.385), (0.6, 0.25, 0.25, 1), contype=0, conaffinity=0)
+        add_person(w, "person", [0.95, 0.0, 0.0], mocap=True)
 
     # Cámara externa fija para los videos
     target = w.add_body()

@@ -117,11 +117,43 @@ def detect_face(img):
     return (xs.mean() / W * 2 - 1, ys.mean() / H * 2 - 1, n / mask.size)
 
 
-def look_velocity(arm, u, v, gain=2.5, posture_gain=0.6, fovy_deg=61.0, aspect=4 / 3):
+def ray_world(arm, u, v, fovy_deg=61.0, aspect=4 / 3):
+    """Dirección (marco mundo) del punto visto en (u, v) de la imagen."""
+    _, Rc = arm.cam_frame()
+    th = np.tan(np.radians(fovy_deg) / 2)
+    r = np.array([u * th * aspect, -v * th, -1.0])
+    return Rc @ (r / np.linalg.norm(r))
+
+
+class TargetMotion:
+    """Estima la velocidad angular del objetivo visto (rad/s, mundo) con detecciones seguidas.
+
+    Sirve para adelantarse cuando el objetivo (o uno mismo) se mueve: sin esto, el seguimiento
+    va siempre un poco atrasado.
+    """
+
+    def __init__(self, dt, smooth=0.3):
+        self.dt, self.smooth = dt, smooth
+        self.prev, self.omega = None, np.zeros(3)
+
+    def update(self, ray):
+        if ray is None:
+            self.prev, self.omega = None, np.zeros(3)
+            return self.omega
+        if self.prev is not None:
+            w = np.cross(self.prev, ray) / self.dt
+            self.omega = (1 - self.smooth) * self.omega + self.smooth * w
+        self.prev = ray
+        return self.omega
+
+
+def look_velocity(arm, u, v, gain=2.5, posture_gain=0.6, fovy_deg=61.0, aspect=4 / 3, base_omega=None,
+                  target_omega=None):
     """Velocidad articular para centrar en la imagen un punto visto en (u, v), con la cámara derecha.
 
     Gira la cámara alrededor de sus ejes (servo visual por imagen) y mantiene el horizonte
-    nivelado (sin roll). La postura sobrante vuelve a REST.
+    nivelado (sin roll). La postura sobrante vuelve a REST. Si la base se mueve (brazo en el
+    morral), base_omega = velocidad angular de la base medida por la IMU (rad/s, marco mundo).
     """
     _, Rc = arm.cam_frame()  # columnas: x derecha, y arriba, z hacia atrás (MuJoCo)
     half_v = np.radians(fovy_deg) / 2
@@ -132,6 +164,11 @@ def look_velocity(arm, u, v, gain=2.5, posture_gain=0.6, fovy_deg=61.0, aspect=4
     roll_err = -Rc[2, 0]  # eje x de la cámara debería quedar horizontal
     w_cam = gain * np.array([pitch_err, yaw_err, roll_err])
     w = Rc @ w_cam
+    if target_omega is not None:
+        w = w + target_omega  # adelantarse al movimiento del objetivo
+    if base_omega is not None:
+        # La base gira (IMU): los servos compensan ese giro para que la cámara no se sacuda
+        w = w - base_omega
     _, jr = arm.jac()
     dq = dls(jr, w)
     q = arm.d.qpos[arm.qadr]
