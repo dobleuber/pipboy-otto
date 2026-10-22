@@ -1,8 +1,9 @@
-"""Demo de Mini17 caminando.
+"""Demo de Mini13 / Mini17 caminando.
 
 Uso:
-  python run_demo.py                      # simula 12 s e imprime resultados
-  python run_demo.py --video mini17.mp4   # además graba un video (sin pantalla)
+  python run_demo.py                      # simula 12 s e imprime resultados (Mini13)
+  python run_demo.py --robot mini17       # el de 17 motores (con tobillo roll)
+  python run_demo.py --video robot.mp4    # además graba un video (sin pantalla)
   python run_demo.py --viewer             # abre el visor interactivo de MuJoCo
   python run_demo.py --turn 0.3           # gira a la izquierda (negativo = derecha)
 """
@@ -15,16 +16,17 @@ from gait import GaitParams
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument("--robot", default=None, help="mini13 (por defecto) o mini17")
     ap.add_argument("--seconds", type=float, default=12.0)
-    ap.add_argument("--freq", type=float, default=GaitParams.freq, help="ciclos de paso por segundo")
-    ap.add_argument("--step", type=float, default=GaitParams.step_len, help="largo de medio paso (m)")
-    ap.add_argument("--lift", type=float, default=GaitParams.lift, help="altura del pie (m)")
+    ap.add_argument("--freq", type=float, help="ciclos de paso por segundo")
+    ap.add_argument("--step", type=float, help="largo de medio paso (m)")
+    ap.add_argument("--lift", type=float, help="altura del pie (m)")
     ap.add_argument("--turn", type=float, default=0.0, help="giro (+ izquierda, - derecha), ej. 0.15")
     ap.add_argument("--video", help="ruta .mp4 o .gif para grabar")
     ap.add_argument("--viewer", action="store_true", help="visor interactivo")
     args = ap.parse_args()
 
-    params = GaitParams(freq=args.freq, step_len=args.step, lift=args.lift, turn=args.turn)
+    params = GaitParams(robot=args.robot, freq=args.freq, step_len=args.step, lift=args.lift, turn=args.turn)
 
     if args.viewer:
         run_viewer(params)
@@ -58,10 +60,10 @@ def make_recorder(path):
         if "r" not in state:
             state["r"] = mujoco.Renderer(model, 480, 640)
             cam = mujoco.MjvCamera()
-            cam.distance, cam.azimuth, cam.elevation = 0.45, 150, -12
+            cam.distance, cam.azimuth, cam.elevation = 0.55, 150, -12
             state["cam"] = cam
         cam = state["cam"]
-        cam.lookat[:] = [data.qpos[0], data.qpos[1], 0.11]
+        cam.lookat[:] = [data.qpos[0], data.qpos[1], data.qpos[2] + 0.025]
         state["r"].update_scene(data, camera=cam)
         frames.append(state["r"].render())
 
@@ -84,7 +86,7 @@ def run_viewer(params):
     from common import CONTROL_HZ, load, torso_pitch_roll
     from gait import targets
 
-    model, data = load()
+    model, data = load(params.robot)
     every = int(round(1 / (CONTROL_HZ * model.opt.timestep)))
     with mujoco.viewer.launch_passive(model, data) as v:
         i = 0

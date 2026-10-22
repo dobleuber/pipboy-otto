@@ -14,14 +14,23 @@ from pathlib import Path
 
 import numpy as np
 
-from env import TERRAINS, Mini17Env
+from env import TERRAINS, MiniEnv
 
 SUCCESS_PROGRESS = 0.3
 
 
+ROBOT = None  # se fija con --robot
+
+
+def n_leg():
+    import robots
+
+    return robots.get(ROBOT).n_leg
+
+
 def load_policy(path):
     if path is None:
-        return lambda obs: np.zeros(12, np.float32)  # caminata programada sola
+        return lambda obs: np.zeros(n_leg(), np.float32)  # caminata programada sola
     if str(path).endswith(".onnx"):
         import onnxruntime as ort
 
@@ -35,7 +44,7 @@ def load_policy(path):
 
 
 def run_episode(policy, terrain, seed, frames=None, seconds=10.0):
-    env = Mini17Env(terrain=[terrain], episode_seconds=seconds, seed=seed)
+    env = MiniEnv(terrain=[terrain], robot=ROBOT, episode_seconds=seconds, seed=seed)
     obs, _ = env.reset(seed=seed)
     fell = False
     while True:
@@ -48,7 +57,7 @@ def run_episode(policy, terrain, seed, frames=None, seconds=10.0):
                 break
             # sigue grabando un poco para mostrar la caída
             for _ in range(25):
-                env.step(np.zeros(12))
+                env.step(np.zeros(env.n_leg))
                 frames.append(env.render())
             break
         if trunc:
@@ -102,9 +111,12 @@ def side_by_side_video(policies, names, terrain, path, seed=0):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--policy", help="policy.zip o .onnx (sin esto: solo la caminata programada)")
+    ap.add_argument("--robot", default=None, help="mini13 (por defecto) o mini17")
     ap.add_argument("--seeds", type=int, default=5)
     ap.add_argument("--video", help="carpeta para guardar videos comparativos")
     args = ap.parse_args()
+    global ROBOT
+    ROBOT = args.robot
 
     terrains = TERRAINS["mix"]
     seeds = list(range(100, 100 + args.seeds))

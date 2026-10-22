@@ -5,14 +5,14 @@ from pathlib import Path
 import mujoco
 import numpy as np
 
-from gait import N_LEG, GaitParams, targets
+import robots
+from gait import GaitParams, targets
 
-SCENE = Path(__file__).resolve().parent.parent / "model" / "scene.xml"
 CONTROL_HZ = 50  # igual que el Microduck / Open Duck
 
 
-def load():
-    model = mujoco.MjModel.from_xml_path(str(SCENE))
+def load(robot=None):
+    model = mujoco.MjModel.from_xml_path(str(robots.get(robot).scene))
     data = mujoco.MjData(model)
     mujoco.mj_resetDataKeyframe(model, data, 0)
     mujoco.mj_forward(model, data)
@@ -43,8 +43,12 @@ def yaw(data) -> float:
 
 
 def simulate(params: GaitParams, seconds: float, on_frame=None, load_fn=None):
-    """Corre la caminata. Devuelve métricas. on_frame(model, data) se llama a 30 fps."""
-    model, data = (load_fn or load)()
+    """Corre la caminata. Devuelve métricas. on_frame(model, data) se llama a 30 fps.
+
+    load_fn(robot) -> (model, data) permite cambiar el terreno o el modelo.
+    """
+    N_LEG = params.rb.n_leg
+    model, data = (load_fn or load)(params.robot)
     steps_per_ctrl = int(round(1 / (CONTROL_HZ * model.opt.timestep)))
     frame_every = int(round(1 / (30 * model.opt.timestep)))
     n = int(seconds / model.opt.timestep)

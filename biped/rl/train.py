@@ -1,7 +1,8 @@
-"""Entrena a Mini17 con PPO (Stable-Baselines3) en terrenos variados.
+"""Entrena a Mini13 / Mini17 con PPO (Stable-Baselines3) en terrenos variados.
 
 Uso:
-  python train.py --steps 5000000 --envs 4            # entrenamiento local en CPU
+  python train.py --steps 5000000 --envs 4            # entrenamiento local en CPU (Mini13)
+  python train.py --robot mini17 --out runs/mini17     # el de 17 motores
   python train.py --steps 200000 --envs 2 --out runs/prueba   # prueba rápida
 
 Guarda en --out: modelo final (policy.zip), checkpoints y un log CSV con el progreso.
@@ -20,13 +21,13 @@ from stable_baselines3 import PPO
 from stable_baselines3.common.callbacks import BaseCallback, CheckpointCallback
 from stable_baselines3.common.vec_env import SubprocVecEnv, VecMonitor
 
-from env import Mini17Env
+from env import MiniEnv
 
 
-def make_env(terrain, seed):
+def make_env(terrain, seed, robot):
     def _f():
         torch.set_num_threads(1)
-        return Mini17Env(terrain=terrain, seed=seed)
+        return MiniEnv(terrain=terrain, robot=robot, seed=seed)
 
     return _f
 
@@ -71,13 +72,14 @@ def main():
     ap.add_argument("--steps", type=int, default=5_000_000)
     ap.add_argument("--envs", type=int, default=4)
     ap.add_argument("--terrain", default="mix", choices=["flat", "ramps", "steps", "mix"])
+    ap.add_argument("--robot", default=None, help="mini13 (por defecto) o mini17")
     ap.add_argument("--out", default="runs/mix")
     ap.add_argument("--resume", help="policy.zip para continuar entrenando")
     args = ap.parse_args()
 
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
-    env = VecMonitor(SubprocVecEnv([make_env(args.terrain, 1000 + i) for i in range(args.envs)]))
+    env = VecMonitor(SubprocVecEnv([make_env(args.terrain, 1000 + i, args.robot) for i in range(args.envs)]))
 
     if args.resume:
         model = PPO.load(args.resume, env=env, device="cpu")

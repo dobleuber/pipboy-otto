@@ -1,4 +1,4 @@
-"""Entorno de entrenamiento (Gymnasium) para Mini17.
+"""Entorno de entrenamiento (Gymnasium) para Mini13 / Mini17.
 
 La IA no aprende a caminar desde cero: aprende CORRECCIONES sobre la caminata
 programada (sim/gait.py). Esto acelera mucho el entrenamiento y hace que el
@@ -7,13 +7,14 @@ comportamiento inicial ya sea razonable.
 Observación (todo lo puede medir el robot real):
   - gravedad en el marco del torso (IMU)          3
   - velocidad angular (IMU)                       3
-  - posición de los 12 motores de pierna          12  (relativa a la caminata programada)
-  - velocidad de los 12 motores de pierna         12
-  - acción anterior                               12
+  - posición de los motores de pierna             N_LEG (10 en Mini13, 12 en Mini17),
+                                                  relativa a la caminata programada
+  - velocidad de los motores de pierna            N_LEG
+  - acción anterior                               N_LEG
   - fase de la caminata (sin, cos)                2
   - contacto de los pies                          2
   - distancia al piso delante (sensor ToF)        N_RAYS
-Acción: 12 correcciones en [-1, 1] -> ±ACTION_SCALE rad sobre cada motor de pierna.
+Acción: N_LEG correcciones en [-1, 1] -> ±ACTION_SCALE rad sobre cada motor de pierna.
 
 Variación aleatoria en cada episodio (para que funcione en el robot real):
 fricción, peso extra, rigidez de los servos, retardo de control y empujones.
@@ -29,8 +30,9 @@ import numpy as np
 SIM = Path(__file__).resolve().parent.parent / "sim"
 sys.path.insert(0, str(SIM))
 
-from common import SCENE, fallen  # noqa: E402
-from gait import N_LEG, GaitParams, head_targets, targets  # noqa: E402
+import robots  # noqa: E402
+from common import fallen  # noqa: E402
+from gait import GaitParams, head_targets, targets  # noqa: E402
 
 CONTROL_HZ = 50
 ACTION_SCALE = 0.3  # rad
@@ -62,8 +64,8 @@ def _box(spec, name, pos, size, euler=(0, 0, 0)):
     g.rgba = [0.8, 0.65, 0.45, 1]
 
 
-def build_model(kind, value):
-    spec = mujoco.MjSpec.from_file(str(SCENE))
+def build_model(kind, value, robot=None):
+    spec = mujoco.MjSpec.from_file(str(robots.get(robot).scene))
     spec.geom("floor").group = TERRAIN_GROUP
     if kind == "ramp":
         th = np.radians(value)
@@ -79,24 +81,26 @@ def build_model(kind, value):
     return spec.compile()
 
 
-class Mini17Env(gym.Env):
+class MiniEnv(gym.Env):
     metadata = {"render_modes": ["rgb_array"], "render_fps": 30}
 
-    def __init__(self, terrain="mix", episode_seconds=10.0, randomize=True, push=True,
-                 target_speed=0.06, render_mode=None, seed=None):
+    def __init__(self, terrain="mix", robot=None, episode_seconds=10.0, randomize=True, push=True,
+                 target_speed=None, render_mode=None, seed=None):
         super().__init__()
+        self.rb = robots.get(robot)
+        self.n_leg = self.rb.n_leg
         self.terrain_list = TERRAINS[terrain] if isinstance(terrain, str) else list(terrain)
-        self.models = {t: build_model(*t) for t in self.terrain_list}
+        self.models = {t: build_model(*t, self.rb) for t in self.terrain_list}
         self.base_torso_mass = float(next(iter(self.models.values())).body_mass[1])
         self.episode_steps = int(episode_seconds * CONTROL_HZ)
         self.randomize, self.push = randomize, push
-        self.target_speed = target_speed
         self.render_mode = render_mode
-        self.gait = GaitParams()
+        self.gait = GaitParams(robot=self.rb.name)
+        self.target_speed = target_speed or self.rb.target_speed
         self.rng = np.random.default_rng(seed)
-        n_obs = 3 + 3 + N_LEG * 3 + 2 + 2 + N_RAYS
+        n_obs = 3 + 3 + self.n_leg * 3 + 2 + 2 + N_RAYS
         self.observation_space = gym.spaces.Box(-np.inf, np.inf, (n_obs,), np.float32)
-        self.action_space = gym.spaces.Box(-1.0, 1.0, (N_LEG,), np.float32)
+        self.action_space = gym.spaces.Box(-1.0, 1.0, (self.n_leg,), np.float32)
         self._renderer = None
 
     # ------------------------------------------------------------------ helpers
@@ -104,12 +108,12 @@ class Mini17Env(gym.Env):
         m = self.models[key]
         self.m, self.d = m, mujoco.MjData(m)
         self.substeps = int(round(1 / (CONTROL_HZ * m.opt.timestep)))
-        self.leg_qadr = 7 + np.arange(N_LEG)
-        self.leg_dadr = 6 + np.arange(N_LEG)
+        self.leg_qadr = 7 + np.arange(self.n_leg)
+        self.leg_dadr = 6 + np.arange(self.n_leg)
         self.imu = m.site("imu").id
         self.soles = [m.geom("left_sole").id, m.geom("right_sole").id]
         self.torso = m.body("torso").id
-        self.lo, self.hi = m.actuator_ctrlrange[:N_LEG].T
+        self.lo, self.hi = m.actuator_ctrlrange[: self.n_leg].T
 
     def _randomize(self):
         m = self.m
@@ -121,8 +125,8 @@ class Mini17Env(gym.Env):
             m.geom_friction[g, 0] = fr
         m.body_mass[self.torso] = self.base_torso_mass + r.uniform(0, 0.15)
         kp = r.uniform(7, 15)
-        m.actuator_gainprm[:N_LEG, 0] = kp
-        m.actuator_biasprm[:N_LEG, 1] = -kp
+        m.actuator_gainprm[: self.n_leg, 0] = kp
+        m.actuator_biasprm[: self.n_leg, 1] = -kp
         self.delay = int(r.integers(0, 2))  # 0 o 1 paso de control (0-20 ms)
 
     def _rays(self):
@@ -173,7 +177,7 @@ class Mini17Env(gym.Env):
         if options and "terrain" in options:
             key = tuple(options["terrain"])
             if key not in self.models:
-                self.models[key] = build_model(*key)
+                self.models[key] = build_model(*key, self.rb)
         self.key = key
         self._setup(key)
         self.delay = 0
@@ -181,9 +185,9 @@ class Mini17Env(gym.Env):
         mujoco.mj_resetDataKeyframe(self.m, self.d, 0)
         mujoco.mj_forward(self.m, self.d)
         self.t = 0
-        self.prev_action = np.zeros(N_LEG)
+        self.prev_action = np.zeros(self.n_leg)
         self.pending = []
-        self.ref_q = targets(0.0, self.gait)[:N_LEG]
+        self.ref_q = targets(0.0, self.gait)[: self.n_leg]
         self.push_at = self.rng.uniform(2, 6) if self.push else 1e9
         self.start_x = self.d.qpos[0]
         return self._obs(), {"terrain": key}
@@ -192,16 +196,16 @@ class Mini17Env(gym.Env):
         action = np.clip(np.asarray(action, float), -1, 1)
         d, m = self.d, self.m
         full = targets(d.time, self.gait)
-        self.ref_q = full[:N_LEG]
+        self.ref_q = full[: self.n_leg]
         cmd = np.clip(self.ref_q + ACTION_SCALE * action, self.lo, self.hi)
         # Límite de velocidad del servo real
-        prev_cmd = d.ctrl[:N_LEG].copy()
+        prev_cmd = d.ctrl[: self.n_leg].copy()
         max_delta = MAX_SERVO_SPEED / CONTROL_HZ
         cmd = np.clip(cmd, prev_cmd - max_delta, prev_cmd + max_delta)
         self.pending.append(cmd)
         if len(self.pending) > self.delay:
-            d.ctrl[:N_LEG] = self.pending.pop(0)
-        d.ctrl[N_LEG:] = head_targets(d.time, 0.0, 0.0)
+            d.ctrl[: self.n_leg] = self.pending.pop(0)
+        d.ctrl[self.n_leg :] = head_targets(d.time, 0.0, 0.0, self.rb.n_head)
 
         x0 = d.qpos[0]
         if self.push and abs(d.time - self.push_at) < 0.5 / CONTROL_HZ:
@@ -215,7 +219,7 @@ class Mini17Env(gym.Env):
         R = d.xmat[self.torso].reshape(3, 3)
         up = R[2, 2]
         yaw_rate = d.qvel[5]
-        tau = d.actuator_force[:N_LEG]
+        tau = d.actuator_force[: self.n_leg]
         r_vel = np.exp(-((vx - self.target_speed) / 0.04) ** 2) + 2.0 * min(vx, self.target_speed)
         r_up = -2.0 * (1 - up)
         r_smooth = -0.02 * np.sum((action - self.prev_action) ** 2)
@@ -240,3 +244,6 @@ class Mini17Env(gym.Env):
         self._cam.lookat[:] = [self.d.qpos[0], self.d.qpos[1], self.d.qpos[2] + 0.01]
         self._renderer.update_scene(self.d, camera=self._cam)
         return self._renderer.render()
+
+
+Mini17Env = MiniEnv  # compatibilidad

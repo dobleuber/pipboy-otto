@@ -2,13 +2,13 @@
 
 Uso típico:
     from terrain import load_with_ramp, load_with_step
-    out = simulate(params, 20, load_fn=lambda: load_with_ramp(10))
+    out = simulate(params, 20, load_fn=lambda robot: load_with_ramp(10, robot=robot))
 """
 
 import mujoco
 import numpy as np
 
-from common import SCENE
+import robots
 
 START_X = 0.12  # m, distancia del robot al obstáculo
 
@@ -41,9 +41,9 @@ def _euler_to_quat(euler):
     return q
 
 
-def load_with_ramp(angle_deg: float, length: float = 0.8):
+def load_with_ramp(angle_deg: float, length: float = 0.8, robot=None):
     """Rampa que sube en +x, empieza a START_X."""
-    spec = mujoco.MjSpec.from_file(str(SCENE))
+    spec = mujoco.MjSpec.from_file(str(robots.get(robot).scene))
     th = np.radians(angle_deg)
     L, t = length / 2, 0.01
     center = [START_X + L * np.cos(th) + t * np.sin(th), 0, L * np.sin(th) - t * np.cos(th)]
@@ -55,9 +55,9 @@ def load_with_ramp(angle_deg: float, length: float = 0.8):
     return _compile(spec)
 
 
-def load_with_step(height: float, depth: float = 0.6):
+def load_with_step(height: float, depth: float = 0.6, robot=None):
     """Escalón (plataforma) de altura `height` que empieza a START_X."""
-    spec = mujoco.MjSpec.from_file(str(SCENE))
+    spec = mujoco.MjSpec.from_file(str(robots.get(robot).scene))
     _add_box(spec, "step", [START_X + depth / 2, 0, height / 2], [depth / 2, 0.3, height / 2])
     return _compile(spec)
 
