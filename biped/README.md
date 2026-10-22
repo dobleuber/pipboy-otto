@@ -3,7 +3,7 @@
 Exploración de diseño de un bípedo compacto de bajo costo, inspirado en Open Duck Mini v2
 y Microduck. Hay dos variantes con el mismo código de simulación, caminata e IA:
 
-| | **Mini13** (por defecto) | **Mini17** |
+| | **Mini13** | **Mini17** (por defecto, recomendado) |
 |---|---|---|
 | Motores | 13: 5 por pierna + 3 cabeza | 17: 6 por pierna + 5 cabeza |
 | Pierna | cadera yaw/roll/pitch, rodilla, tobillo pitch | ídem + **tobillo roll** |
@@ -74,8 +74,8 @@ velocidad pedida < 4.5 rad/s) y resisten fricción 0.5–1.3, +150 g y servos m�
 cd biped
 pip install -r requirements.txt
 cd sim
-python run_demo.py                      # Mini13: simula e imprime resultados
-python run_demo.py --robot mini17       # Mini17
+python run_demo.py                      # Mini17: simula e imprime resultados
+python run_demo.py --robot mini13       # Mini13 (5 motores por pierna)
 python run_demo.py --video robot.mp4    # graba video (en servidor: MUJOCO_GL=osmesa o egl)
 python run_demo.py --viewer             # visor 3D interactivo (requiere pantalla)
 python run_demo.py --turn 0.2           # gira a la izquierda 0.2 rad/s (negativo = derecha)

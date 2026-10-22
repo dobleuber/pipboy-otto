@@ -73,7 +73,7 @@ def main():
     ap.add_argument("--steps", type=int, default=5_000_000)
     ap.add_argument("--envs", type=int, default=4)
     ap.add_argument("--terrain", default="mix", choices=["flat", "ramps", "steps", "mix"])
-    ap.add_argument("--robot", default=None, help="mini13 (por defecto) o mini17")
+    ap.add_argument("--robot", default=None, help="mini17 (por defecto) o mini13")
     ap.add_argument("--out", default="runs/mix")
     ap.add_argument("--resume", help="policy.zip para continuar entrenando")
     args = ap.parse_args()

@@ -1,6 +1,6 @@
 """Robots disponibles y sus datos geométricos.
 
-Elegir robot: variable de entorno MINI_ROBOT (mini13 por defecto) o pasar `robot=`
+Elegir robot: variable de entorno MINI_ROBOT (mini17 por defecto) o pasar `robot=`
 a las funciones. Ej.: MINI_ROBOT=mini17 python run_demo.py
 """
 
@@ -73,7 +73,7 @@ ROBOTS = {
     ),
 }
 
-DEFAULT = os.environ.get("MINI_ROBOT", "mini13")
+DEFAULT = os.environ.get("MINI_ROBOT", "mini17")
 
 
 def get(name=None) -> Robot:
