@@ -1,55 +1,62 @@
-# Biped6 — bípedo pequeño de 6 servos (simulación MuJoCo)
+# Mini15 — bípedo pequeño de 15 motores (simulación MuJoCo)
 
-Bípedo tipo "pato" de **~26 cm y ~0.8 kg**, con **6 servos Feetech STS3215 (7.4 V)**.
+Bípedo de **~26 cm y ~0.97 kg** con **15 motores**, con proporciones similares al
+Microduck: piernas cortas con la rodilla hacia atrás, torso compacto, cuello largo de
+servos apilados y una cabeza con cámara y mandíbula móvil.
 
-![Biped6 caminando](media/walk.gif)
+![Mini15 caminando](media/walk.gif)
 
-Esta primera versión es solo la **simulación**: modelo físico + una caminata
-programada que ya funciona. La IA entrenada y las piezas imprimibles vienen después.
+Esta versión es la **simulación**: el modelo físico más una caminata programada que ya
+funciona dentro de los límites reales de los servos. La IA entrenada y las piezas
+imprimibles vienen después.
 
 > Proyecto independiente de Pip-Boy Otto; vive en esta carpeta solo de forma temporal.
 
 ## Diseño
 
 ```
-        (cabeza)
-      ┌──────────┐
-      │  torso   │  baterías 2x18650, Raspberry Pi Zero 2W, IMU, placa de servos
-      └─●──────●─┘  ← cadera pitch (x2), eje a 14.5 cm del piso
-        │      │
-        │      │    piernas rectas de 9 cm (sin rodilla)
-        ■      ■    ← tobillo pitch (x2), a 5.5 cm
-        ■      ■    ← tobillo roll  (x2), a 2.5 cm
-      ▬▬▬▬    ▬▬▬▬  pies 9 x 5 cm con interruptor de contacto
+          ┌───────────┐
+          │  cabeza ◉ │  cámara; mandíbula móvil abajo
+          └─────┬─────┘
+                ┃         cuello: 4 micro servos (pitch, pitch, yaw, roll)
+            ┌───┸───┐
+            │ torso │     batería NP-F550, Raspberry Pi Zero 2W, IMU
+            └┬─────┬┘
+     cadera  ●     ●      yaw + roll + pitch (3 servos por lado)
+            ╱       ╲
+     rodilla●       ●     dobla hacia atrás
+             ╲     ╱
+     tobillo  ●   ●
+            ▬▬▬▬ ▬▬▬▬     pies 8 x 4.4 cm con interruptor de contacto
 ```
 
-| Articulación | Eje | Rango | Para qué sirve |
-|---|---|---|---|
-| Cadera pitch | adelante/atrás | ±60° | adelantar la pierna |
-| Tobillo pitch | adelante/atrás | ±52° | mantener el pie plano |
-| Tobillo roll | lado a lado | ±29° | inclinar el cuerpo y levantar el otro pie |
+| Grupo | Motores | Servo |
+|---|---|---|
+| Pierna izq. | cadera yaw, cadera roll, cadera pitch, rodilla, tobillo | 5x Feetech STS3215 7.4 V |
+| Pierna der. | ídem | 5x Feetech STS3215 7.4 V |
+| Cuello/cabeza | cuello pitch, cabeza pitch, cabeza yaw, cabeza roll, mandíbula | 5x micro servo de bus (p. ej. Feetech SCS0009) |
 
-**Cómo camina:** los dos tobillos roll inclinan el cuerpo hacia un lado, lo que
-levanta el pie contrario; la cadera adelanta ese pie mientras el tobillo pitch lo
-mantiene paralelo al piso. Es el mismo principio de los robots "Otto DIY", pero
-con servos que reportan su posición (necesario para entrenar con IA después).
+Medidas principales: muslo 4 cm, canilla 4.5 cm, cadera a 8.5 cm del piso
+(rodillas flexionadas), cuello 4 cm, cabeza 8.4 x 6.4 x 4 cm.
 
-**Sin rodillas** a propósito: con solo 6 servos, poner los motores en los tobillos
-mantiene los pies planos en ambos ejes y deja el centro de masa bajo.
+La distribución de motores sigue la de Open Duck Mini (del mismo autor que trabaja
+en el Microduck) más la mandíbula. El Microduck no publica el desglose exacto de sus
+15 motores, así que esto es una aproximación.
 
 ## Resultados en simulación (caminata programada, sin IA)
 
 | Métrica | Valor |
 |---|---|
-| Velocidad | ~9 cm/s (105 cm en 12 s) |
-| Desvío lateral | ~1 cm en 1 m |
-| Altura de paso | ~0.8 cm |
-| Inclinación máx. del torso | ~6° |
-| Torque máx. usado | ~0.7 N·m de ~1.9 N·m disponibles (≈35 %) |
-| Giro | sí, ambos lados (`--turn`) |
+| Velocidad | ~5.7 cm/s (68 cm en 12 s) |
+| Ritmo | 4 pasos por segundo, pasos cortos (como robots de este tamaño) |
+| Desvío | ~1 cm lateral, ~7° de giro en 12 s |
+| Inclinación máx. del torso | ~4° |
+| Torque de pierna (percentil 99) | ~1.1 N·m de ~1.9 N·m |
+| Velocidad máx. pedida a un servo | ~3.3 rad/s (el STS3215 da ~4.7) |
+| Giro | sí, ambos lados (`--turn`) — ver [video de giro](media/turn.mp4) |
 
-Se probó también con piso resbaloso (fricción 0.5), piso pegajoso (1.3),
-+150 g de peso y servos más blandos/duros (kp 5–12): no se cae en ningún caso.
+Probado también con piso resbaloso (fricción 0.5), pegajoso (1.3), +150 g y servos
+más blandos o más rígidos (kp 7 y 15): no se cae en ningún caso.
 
 ## Uso
 
@@ -57,52 +64,61 @@ Se probó también con piso resbaloso (fricción 0.5), piso pegajoso (1.3),
 cd biped
 pip install -r requirements.txt
 cd sim
-python run_demo.py                 # simula e imprime resultados
-python run_demo.py --video pato.mp4  # graba video (en servidor: MUJOCO_GL=osmesa o egl)
-python run_demo.py --viewer        # visor 3D interactivo (requiere pantalla)
-python run_demo.py --turn 0.4      # gira a la izquierda
-python -m pytest -q                # pruebas
+python run_demo.py                     # simula e imprime resultados
+python run_demo.py --video mini15.mp4  # graba video (en servidor: MUJOCO_GL=osmesa o egl)
+python run_demo.py --viewer            # visor 3D interactivo (requiere pantalla)
+python run_demo.py --turn 0.15         # gira a la izquierda (negativo = derecha)
+python -m pytest -q                    # pruebas
 ```
 
 Archivos:
-- `model/biped6.xml` — el robot (medidas, masas, servos, IMU, sensores de pie)
+- `model/mini15.xml` — el robot (medidas, masas, 15 motores, IMU, cámara, sensores de pie)
 - `model/scene.xml` — robot + piso
-- `sim/gait.py` — caminata programada y sus parámetros
-- `sim/common.py` — cargar modelo y simular
+- `sim/gait.py` — caminata programada con cinemática inversa de las piernas
+- `sim/common.py` — cargar modelo, simular y medir
 - `sim/run_demo.py` — demo / video / visor
 - `sim/test_biped.py` — pruebas
 
 ## Lista de piezas estimada
 
-Precios de referencia tomados del BOM de Open Duck Mini (pueden variar).
+Precios de referencia del BOM de Open Duck Mini; los micro servos y la batería son
+estimados y hay que confirmarlos.
 
 | Pieza | Cant. | Aprox. |
 |---|---|---|
-| Feetech STS3215 **7.4 V** (19 kg·cm) | 6 | 84 € |
+| Feetech STS3215 **7.4 V** (19 kg·cm) | 10 | 140 € |
+| Micro servo de bus con lectura de posición (p. ej. SCS0009) | 5 | 30–50 € |
 | Raspberry Pi Zero 2W + microSD | 1 | 36 € |
 | Placa Waveshare Bus Servo Adapter (A) | 1 | 5 € |
 | IMU BNO055 (o clon) | 1 | 1–40 € |
-| 2x 18650 + portapilas + BMS 2S + regulador 5 V + interruptor | 1 | 32 € |
-| Cargador USB-C | 1 | 10 € |
+| Batería NP-F550 (7.4 V) + soporte + regulador 5 V + interruptor | 1 | 25–35 € |
+| Cámara Raspberry Pi | 1 | 5–25 € |
 | Interruptores de pie SS-10 | 2–4 | 2–4 € |
-| Insertos M3, tornillos, PLA (~300 g), TPU para suelas | — | ~15 € |
-| **Total** | | **~185–225 €** |
+| Insertos M3, tornillos, PLA, TPU para suelas | — | ~15 € |
+| **Total** | | **~260–350 €** |
 
 ## Limitaciones (importante)
 
-- Las ganancias de los servos (`kp`, `kv`, `armature`, fricción) son **estimadas**.
-  Antes de pasar al robot real hay que medirlas con un servo real (p. ej. con
+- **Servos:** las ganancias (`kp`, `kv`, `armature`, fricción) son estimadas. Antes de
+  pasar al robot real hay que medirlas con un servo real (p. ej. con
   [BAM](https://github.com/Rhoban/bam), como hace Open Duck).
-- El paso es bajo (~0.8 cm): sirve para piso plano, no para alfombras gruesas.
+- **Peso:** ~0.97 kg, más que el Microduck (~0.8 kg), porque el STS3215 es grande
+  para este tamaño. Servos más chicos bajarían el peso.
+- **Micro servos de cabeza:** verificar voltaje y protocolo; pueden necesitar un
+  regulador o bus aparte.
+- **Paso bajo** (~0.5 cm): sirve para piso plano, no para alfombras ni rampas.
+- **Sin tobillo roll** (igual que Open Duck): por eso la caminata usa pasos cortos y
+  rápidos en vez de balancearse mucho de lado a lado.
+- **Caminata programada:** no reacciona a empujones ni a obstáculos. Eso es lo que
+  resuelve el entrenamiento con IA (como en el video de NVIDIA).
 - Las piernas no chocan entre sí en la simulación.
-- La caminata es programada (no reacciona a empujones). Eso es lo que resolvería
-  el entrenamiento con IA.
 
 ## Próximos pasos
 
-1. **Entrenamiento con IA (RL):** entorno de entrenamiento sobre este modelo,
-   usando la IMU y los sensores de pie, para que camine reaccionando a empujones.
-2. **Piezas imprimibles:** torso, piernas, soportes de tobillo y pies en OpenSCAD
-   con las mismas medidas del modelo.
+1. **Entrenamiento con IA (RL):** entorno sobre este modelo (IMU, sensores de pie y
+   cámara ya están definidos) para que camine reaccionando a empujones, suba rampas
+   y esquive obstáculos.
+2. **Piezas imprimibles:** torso, soportes de cadera, muslos, canillas, pies y cabeza
+   en OpenSCAD con las mismas medidas del modelo.
 3. **Software del robot:** correr la caminata (o la política entrenada) en la
    Raspberry Pi Zero 2W a 50 Hz.
