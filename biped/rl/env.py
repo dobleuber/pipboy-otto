@@ -16,7 +16,10 @@ Observación (todo lo puede medir el robot real):
   - fase de la caminata (sin, cos)                2
   - contacto de los pies                          2
   - distancia al piso delante (sensor ToF)        N_RAYS
-Acción: N_LEG correcciones en [-1, 1] -> ±ACTION_SCALE rad sobre cada motor de pierna.
+Acción: correcciones en [-1, 1] -> ±ACTION_SCALE rad sobre cada motor de pierna.
+Si el robot tiene rl_head (Mini14), la IA también mueve los 4 motores de cuello y cabeza
+(±HEAD_SCALE rad alrededor de la postura neutra): la cabeza pesada es su contrapeso, como en
+el Microduck. Entonces las observaciones de motores incluyen también la cabeza.
 
 Variación aleatoria en cada episodio (para que funcione en el robot real):
 fricción, peso extra, rigidez de los servos, retardo de control y empujones.
@@ -33,14 +36,14 @@ SIM = Path(__file__).resolve().parent.parent / "sim"
 sys.path.insert(0, str(SIM))
 
 import robots  # noqa: E402
-from common import fallen, yaw  # noqa: E402
+from common import fallen, torso_pitch_roll, yaw  # noqa: E402
 from gait import GaitParams, Steering, head_targets, targets  # noqa: E402
 
 CONTROL_HZ = 50
 ACTION_SCALE = 0.3  # rad
+HEAD_SCALE = 0.6  # rad
 N_RAYS = 6
 RAY_X = np.linspace(0.04, 0.14, N_RAYS)  # m delante del torso
-MAX_SERVO_SPEED = 4.7  # rad/s (STS3215 sin carga)
 START_X = 0.12  # distancia al obstáculo
 TERRAIN_GROUP = 2  # grupo de geometrías del terreno (el sensor solo ve este grupo)
 _RAY_GROUPS = np.array([0, 0, 1, 0, 0, 0], np.uint8)
@@ -91,18 +94,24 @@ class MiniEnv(gym.Env):
         super().__init__()
         self.rb = robots.get(robot)
         self.n_leg = self.rb.n_leg
+        self.n_ctrl = self.rb.n_act if self.rb.rl_head else self.n_leg  # motores que mueve la IA
         self.terrain_list = TERRAINS[terrain] if isinstance(terrain, str) else list(terrain)
         self.models = {t: build_model(*t, self.rb) for t in self.terrain_list}
-        self.base_torso_mass = float(next(iter(self.models.values())).body_mass[1])
+        m0 = next(iter(self.models.values()))
+        self.base_torso_mass = float(m0.body_mass[1])
+        self.total_mass = float(m0.body_mass.sum())
+        self.base_kp = m0.actuator_gainprm[: self.n_ctrl, 0].copy()
         self.episode_steps = int(episode_seconds * CONTROL_HZ)
         self.randomize, self.push = randomize, push
         self.render_mode = render_mode
         self.gait = GaitParams(robot=self.rb.name)
         self.target_speed = target_speed or self.rb.target_speed
         self.rng = np.random.default_rng(seed)
-        n_obs = 3 + 3 + self.n_leg * 3 + 2 + 2 + N_RAYS
+        n_obs = 3 + 3 + self.n_ctrl * 3 + 2 + 2 + N_RAYS
         self.observation_space = gym.spaces.Box(-np.inf, np.inf, (n_obs,), np.float32)
-        self.action_space = gym.spaces.Box(-1.0, 1.0, (self.n_leg,), np.float32)
+        self.action_space = gym.spaces.Box(-1.0, 1.0, (self.n_ctrl,), np.float32)
+        self.scale = np.full(self.n_ctrl, ACTION_SCALE)
+        self.scale[self.n_leg :] = HEAD_SCALE
         self._renderer = None
 
     # ------------------------------------------------------------------ helpers
@@ -110,12 +119,12 @@ class MiniEnv(gym.Env):
         m = self.models[key]
         self.m, self.d = m, mujoco.MjData(m)
         self.substeps = int(round(1 / (CONTROL_HZ * m.opt.timestep)))
-        self.leg_qadr = 7 + np.arange(self.n_leg)
-        self.leg_dadr = 6 + np.arange(self.n_leg)
+        self.leg_qadr = 7 + np.arange(self.n_ctrl)
+        self.leg_dadr = 6 + np.arange(self.n_ctrl)
         self.imu = m.site("imu").id
         self.soles = [m.geom("left_sole").id, m.geom("right_sole").id]
         self.torso = m.body("torso").id
-        self.lo, self.hi = m.actuator_ctrlrange[: self.n_leg].T
+        self.lo, self.hi = m.actuator_ctrlrange[: self.n_ctrl].T
 
     def _randomize(self):
         m = self.m
@@ -125,10 +134,12 @@ class MiniEnv(gym.Env):
         fr = r.uniform(0.5, 1.3)
         for g in self.soles:
             m.geom_friction[g, 0] = fr
-        m.body_mass[self.torso] = self.base_torso_mass + r.uniform(0, 0.15)
-        kp = r.uniform(7, 15)
-        m.actuator_gainprm[: self.n_leg, 0] = kp
-        m.actuator_biasprm[: self.n_leg, 1] = -kp
+        # Peso extra en el torso: hasta 15 % del robot (150 g en Mini16, ~95 g en Mini14)
+        m.body_mass[self.torso] = self.base_torso_mass + r.uniform(0, 0.13 * self.total_mass)
+        # Rigidez de los servos: ±30 % de la del modelo (voltaje de batería, servos distintos)
+        kp = self.base_kp * r.uniform(0.7, 1.3)
+        m.actuator_gainprm[: self.n_ctrl, 0] = kp
+        m.actuator_biasprm[: self.n_ctrl, 1] = -kp
         self.delay = int(r.integers(0, 2))  # 0 o 1 paso de control (0-20 ms)
 
     def _rays(self):
@@ -171,6 +182,12 @@ class MiniEnv(gym.Env):
                 return 1.0
         return 0.0
 
+    def _reference(self, full):
+        """Postura de referencia de los motores que mueve la IA (cabeza: neutra)."""
+        ref = np.zeros(self.n_ctrl)
+        ref[: self.n_leg] = full[: self.n_leg]
+        return ref
+
     # --------------------------------------------------------------------- API
     def reset(self, seed=None, options=None):
         if seed is not None:
@@ -187,9 +204,9 @@ class MiniEnv(gym.Env):
         mujoco.mj_resetDataKeyframe(self.m, self.d, 0)
         mujoco.mj_forward(self.m, self.d)
         self.t = 0
-        self.prev_action = np.zeros(self.n_leg)
+        self.prev_action = np.zeros(self.n_ctrl)
         self.pending = []
-        self.ref_q = targets(0.0, self.gait)[: self.n_leg]
+        self.ref_q = self._reference(targets(0.0, self.gait))
         self.push_at = self.rng.uniform(2, 6) if self.push else 1e9
         self.start_x = self.d.qpos[0]
         # La caminata de referencia mantiene el rumbo con la IMU (igual que en el robot real).
@@ -203,17 +220,19 @@ class MiniEnv(gym.Env):
         y = yaw(d)
         self.yaw_total += (y - self.prev_yaw + np.pi) % (2 * np.pi) - np.pi
         self.prev_yaw = y
-        full = targets(d.time, self.steering.update(self.yaw_total, 1 / CONTROL_HZ))
-        self.ref_q = full[: self.n_leg]
-        cmd = np.clip(self.ref_q + ACTION_SCALE * action, self.lo, self.hi)
+        pitch, roll = torso_pitch_roll(d)
+        full = targets(d.time, self.steering.update(self.yaw_total, 1 / CONTROL_HZ), pitch, roll)
+        self.ref_q = self._reference(full)
+        cmd = np.clip(self.ref_q + self.scale * action, self.lo, self.hi)
         # Límite de velocidad del servo real
-        prev_cmd = d.ctrl[: self.n_leg].copy()
-        max_delta = MAX_SERVO_SPEED / CONTROL_HZ
+        prev_cmd = d.ctrl[: self.n_ctrl].copy()
+        max_delta = self.rb.servo_speed / CONTROL_HZ
         cmd = np.clip(cmd, prev_cmd - max_delta, prev_cmd + max_delta)
         self.pending.append(cmd)
         if len(self.pending) > self.delay:
-            d.ctrl[: self.n_leg] = self.pending.pop(0)
-        d.ctrl[self.n_leg :] = head_targets(d.time, 0.0, 0.0, self.rb.n_head)
+            d.ctrl[: self.n_ctrl] = self.pending.pop(0)
+        if not self.rb.rl_head:
+            d.ctrl[self.n_leg :] = head_targets(d.time, 0.0, 0.0, self.rb.n_head)
 
         x0 = d.qpos[0]
         if self.push and abs(d.time - self.push_at) < 0.5 / CONTROL_HZ:

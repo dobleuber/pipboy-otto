@@ -6,7 +6,7 @@ import pytest
 from env import N_RAYS, MiniEnv
 
 
-@pytest.fixture(scope="module", params=["mini13", "mini16"])
+@pytest.fixture(scope="module", params=["mini13", "mini16", "mini14"])
 def env(request):
     return MiniEnv(terrain="mix", robot=request.param, seed=0)
 
@@ -14,7 +14,7 @@ def env(request):
 def test_spaces_and_observation(env):
     obs, info = env.reset(seed=1, options={"terrain": ("flat", 0)})
     assert env.observation_space.shape == obs.shape
-    assert env.action_space.shape == (env.n_leg,)
+    assert env.action_space.shape == (env.n_ctrl,)
     assert np.all(np.isfinite(obs))
 
 
@@ -24,7 +24,7 @@ def test_zero_action_stands_on_flat(env):
     real casi no avanza; mejorar eso es el trabajo de la IA.)"""
     env.reset(seed=2, options={"terrain": ("flat", 0)})
     for _ in range(250):
-        obs, r, term, trunc, info = env.step(np.zeros(env.n_leg))
+        obs, r, term, trunc, info = env.step(np.zeros(env.n_ctrl))
         assert not term
 
 
@@ -37,7 +37,7 @@ def test_distance_sensor_sees_step(env):
 
 def test_servo_speed_limit(env):
     env.reset(seed=4, options={"terrain": ("flat", 0)})
-    n = env.n_leg
+    n = env.n_ctrl
     prev = env.d.ctrl[:n].copy()
     env.step(np.ones(n))
-    assert np.all(np.abs(env.d.ctrl[:n] - prev) <= 4.7 / 50 + 1e-9)
+    assert np.all(np.abs(env.d.ctrl[:n] - prev) <= env.rb.servo_speed / 50 + 1e-9)

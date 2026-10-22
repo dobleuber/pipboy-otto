@@ -1,4 +1,4 @@
-"""Pruebas de los modelos (Mini13 y Mini16) y su caminata. Correr con: python -m pytest -q"""
+"""Pruebas de los modelos (Mini13, Mini16 y Mini14) y su caminata. Correr con: python -m pytest -q"""
 
 import mujoco
 import numpy as np
@@ -9,7 +9,7 @@ import robots
 from common import load, simulate
 from gait import GaitParams, leg_command, targets
 
-ROBOTS = ["mini13", "mini16"]
+ROBOTS = ["mini13", "mini16", "mini14"]
 
 # Límites por robot. Mini13 (sin tobillo roll) balancea el rumbo ±15-20° al caminar y su
 # caminata programada solo sirve en plano: rampas y escalones quedan para la IA.
@@ -18,7 +18,19 @@ SPEC = {
     # Mini16 generado desde el CAD (servos reales): ~32 cm y ~1.18 kg; con caminata programada
     # sube rampas de 10°, no de 15° (eso queda para la IA).
     "mini16": dict(mass=(1.1, 1.25), height=(0.28, 0.36), min_x=0.3, yaw_tol=10, ramps=[10]),
+    # Mini14 (XL330, blandos): sin IA se inclina ~8° al estar de pie y la caminata de referencia
+    # solo da pasos sin caerse; avanzar y girar lo aprende la IA.
+    "mini14": dict(mass=(0.55, 0.75), height=(0.25, 0.29), min_x=None, yaw_tol=None, ramps=[],
+                   stand_tilt=10, torque=0.7, cmd_vel=9.0),
 }
+STS3215 = dict(stand_tilt=3, torque=1.3, cmd_vel=4.5)  # < ~70 % del torque máximo; ~4.7 rad/s
+
+
+def lim(robot, key):
+    return SPEC[robot].get(key, STS3215[key])
+
+
+WALKERS = [r for r in ROBOTS if SPEC[r]["min_x"] is not None]
 
 
 @pytest.mark.parametrize("robot", ROBOTS)
@@ -52,7 +64,7 @@ def test_stands_still(robot):
     for _ in range(int(3 / model.opt.timestep)):
         mujoco.mj_step(model, data)
     assert not common.fallen(data)
-    assert common.torso_tilt(data) < np.radians(3)
+    assert common.torso_tilt(data) < np.radians(lim(robot, "stand_tilt"))
 
 
 @pytest.mark.parametrize("robot", ROBOTS)
@@ -93,14 +105,16 @@ def test_targets_within_servo_limits(robot):
 def test_walks_forward_within_servo_limits(robot):
     out = simulate(GaitParams(robot=robot), 10)
     assert out["fell_at"] is None
+    assert out["p99_leg_torque"] < lim(robot, "torque")
+    assert out["max_cmd_vel"] < lim(robot, "cmd_vel")
+    if SPEC[robot]["min_x"] is None:
+        return  # solo la referencia para la IA
     assert out["x"] > SPEC[robot]["min_x"]
     assert abs(out["y"]) < 0.1
     assert abs(out["yaw_deg"]) < SPEC[robot]["yaw_tol"]  # rumbo controlado con la IMU
-    assert out["p99_leg_torque"] < 1.3  # < ~70 % del torque máximo del STS3215
-    assert out["max_cmd_vel"] < 4.5  # STS3215 ~4.7 rad/s sin carga
 
 
-@pytest.mark.parametrize("robot", ROBOTS)
+@pytest.mark.parametrize("robot", WALKERS)
 def test_turns_both_ways_within_servo_limits(robot):
     for turn, sign in [(0.2, 1), (-0.2, -1)]:  # rad/s pedidos al control de rumbo
         out = simulate(GaitParams(robot=robot, turn=turn), 10)

@@ -41,6 +41,7 @@ class GaitParams:
     steer_damping: float = None  # amortiguación (por rad/s de velocidad de giro, giroscopio)
     turn_yaw: float = None  # rad de cadera yaw por paso cuando turn = 1
     stride_bias: float = None  # corrige desvíos al caminar recto (pasos desiguales)
+    balance: float = None  # rad de tobillo pitch por rad de inclinación del torso (IMU); 0 = sin corrección
     ramp_time: float = 1.5  # s, arranque suave
     head: bool = True  # animar cabeza
 
@@ -48,8 +49,8 @@ class GaitParams:
         rb = robots.get(self.robot)
         self.robot = rb.name
         for f in fields(self):
-            if getattr(self, f.name) is None and f.name in rb.gait:
-                setattr(self, f.name, rb.gait[f.name])
+            if getattr(self, f.name) is None:
+                setattr(self, f.name, rb.gait.get(f.name, 0.0))
 
     @property
     def rb(self):
@@ -117,6 +118,11 @@ def targets(t: float, p: GaitParams, torso_pitch: float = 0.0, torso_roll: float
     q = np.zeros(rb.n_act)
     q[: rb.per_leg] = leg_command(yawl, xl, yl, zl, rb)
     q[rb.per_leg : rb.n_leg] = leg_command(yawr, xr, yr, zr, rb)
+    if p.balance:
+        # Equilibrio con el tobillo: si el torso se inclina, los tobillos lo empujan de vuelta.
+        ankle = rb.leg_joints.index("ankle")
+        q[ankle] += p.balance * torso_pitch
+        q[rb.per_leg + ankle] += p.balance * torso_pitch
     if p.head:
         q[rb.n_leg :] = head_targets(t, torso_pitch, torso_roll, rb.n_head)
     return q

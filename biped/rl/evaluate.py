@@ -23,9 +23,11 @@ ROBOT = None  # se fija con --robot
 
 
 def n_leg():
+    """Cantidad de motores que mueve la IA (piernas, y cabeza si el robot tiene rl_head)."""
     import robots
 
-    return robots.get(ROBOT).n_leg
+    rb = robots.get(ROBOT)
+    return rb.n_act if rb.rl_head else rb.n_leg
 
 
 def load_policy(path):
@@ -57,7 +59,7 @@ def run_episode(policy, terrain, seed, frames=None, seconds=10.0):
                 break
             # sigue grabando un poco para mostrar la caída
             for _ in range(25):
-                env.step(np.zeros(env.n_leg))
+                env.step(np.zeros(env.n_ctrl))
                 frames.append(env.render())
             break
         if trunc:

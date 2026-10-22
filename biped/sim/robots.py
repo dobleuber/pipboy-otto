@@ -25,6 +25,8 @@ class Robot:
     gait: dict = field(default_factory=dict)  # parámetros de caminata por defecto
     target_speed: float = 0.06  # m/s, velocidad objetivo para el entrenamiento con IA
     rl_log_std: float = -1.5  # ruido inicial de exploración de la IA (log de la desviación)
+    servo_speed: float = 4.7  # rad/s, velocidad máxima del servo de pierna (STS3215 sin carga)
+    rl_head: bool = False  # True: la IA también mueve cuello y cabeza (contrapeso)
 
     @property
     def leg_joints(self):
@@ -71,6 +73,26 @@ ROBOTS = {
         n_head=4,
         gait=dict(freq=1.5, step_len=0.008, lift=0.006, sway=0.014, sway_lead=0.0, hip_height=0.12,
                   foot_x=-0.02, turn_yaw=0.4, stride_bias=0.0, steer_gain=0.3, steer_damping=0.0),
+    ),
+    "mini14": Robot(
+        # Diseño nuevo con lo aprendido del Microduck (model/build_mini14.py, LECCIONES.md)
+        name="mini14",
+        scene=MODEL_DIR / "scene_mini14.xml",
+        roll_to_pitch=0.024,
+        thigh=0.045,
+        shin=0.045,
+        ankle_to_sole=0.022,
+        ankle_roll=False,
+        n_head=4,
+        target_speed=0.08,
+        rl_log_std=-2.0,
+        servo_speed=10.0,  # XL330-M288 a 7.4 V (~16 rad/s sin carga; margen por carga)
+        rl_head=True,
+        # Servos blandos: la referencia corrige la inclinación con el tobillo (balance) y casi no
+        # avanza sola; avanzar es lo que aprende la IA.
+        gait=dict(freq=2.0, step_len=0.008, lift=0.009, sway=0.0, sway_lead=0.0, hip_height=0.1,
+                  foot_x=0.0, turn_yaw=0.3, stride_bias=0.0, steer_gain=0.2, steer_damping=0.0,
+                  balance=0.6),
     ),
 }
 
