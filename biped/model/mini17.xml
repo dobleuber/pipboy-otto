@@ -1,11 +1,14 @@
 <!--
-  Mini15: bípedo pequeño de ~23 cm con 15 motores, con proporciones similares al Microduck:
+  Mini17: bípedo pequeño de ~23 cm con 17 motores, con proporciones similares al Microduck:
   piernas cortas con rodilla hacia atrás, torso compacto, cuello corto y cabeza con cámara
   y boca pequeña móvil.
 
-  Motores (misma distribución que Open Duck Mini + boca):
-    Cada pierna (5):  cadera yaw, cadera roll, cadera pitch, rodilla, tobillo
+  Motores:
+    Cada pierna (6):  cadera yaw, cadera roll, cadera pitch, rodilla, tobillo pitch, tobillo roll
     Cuello/cabeza (5): cuello pitch, cabeza pitch, cabeza yaw, cabeza roll, boca
+
+  El tobillo roll (lateral) mantiene el pie plano cuando el cuerpo se carga sobre una
+  pierna; con él puede levantar el pie 2-2.5 cm y subir rampas de 10-15° (ver README).
 
   Piernas: Feetech STS3215 7.4 V (con lectura de posición).
   Cabeza:  micro servos de bus con lectura de posición (p. ej. Feetech SCS0009).
@@ -13,9 +16,9 @@
   Ejes: x = adelante, y = izquierda, z = arriba. Unidades: m, kg, rad.
   Origen del torso = punto medio entre los ejes de cadera pitch.
   Pierna: yaw (z +0.030) -> roll (+0.012) -> pitch (0) -> muslo 4 cm -> rodilla
-          -> canilla 4.5 cm -> tobillo -> suela (2 cm más abajo).
+          -> canilla 4.5 cm -> tobillo pitch + roll (ejes cruzados) -> suela (2 cm más abajo).
 -->
-<mujoco model="mini15">
+<mujoco model="mini17">
   <compiler angle="radian" autolimits="true"/>
 
   <option timestep="0.002" integrator="implicitfast"/>
@@ -86,6 +89,9 @@
               <geom name="left_ankle_servo" class="servo" pos="0 0 -0.03" size="0.0124 0.0175 0.012"/>
               <body name="left_foot" pos="0 0 -0.045">
                 <joint name="left_ankle" axis="0 1 0" range="-1.4 1.4"/>
+                <!-- Tobillo roll: mantiene el pie plano hacia los lados (eje cruzado con el pitch). -->
+                <joint name="left_ankle_roll" axis="1 0 0" range="-0.5 0.5"/>
+                <geom name="left_ankle_roll_servo" class="servo" pos="0 0 -0.006" size="0.0226 0.0124 0.009" contype="0" conaffinity="0"/>
                 <geom class="hub" size="0.007 0.016"/>
                 <geom name="left_sole" class="sole"/>
                 <site name="left_foot_touch" type="box" pos="0.008 0 -0.019" size="0.04 0.022 0.004" rgba="0 0 0 0"/>
@@ -116,6 +122,9 @@
               <geom name="right_ankle_servo" class="servo" pos="0 0 -0.03" size="0.0124 0.0175 0.012"/>
               <body name="right_foot" pos="0 0 -0.045">
                 <joint name="right_ankle" axis="0 1 0" range="-1.4 1.4"/>
+                <!-- Tobillo roll: mantiene el pie plano hacia los lados (eje cruzado con el pitch). -->
+                <joint name="right_ankle_roll" axis="1 0 0" range="-0.5 0.5"/>
+                <geom name="right_ankle_roll_servo" class="servo" pos="0 0 -0.006" size="0.0226 0.0124 0.009" contype="0" conaffinity="0"/>
                 <geom class="hub" size="0.007 0.016"/>
                 <geom name="right_sole" class="sole"/>
                 <site name="right_foot_touch" type="box" pos="0.008 0 -0.019" size="0.04 0.022 0.004" rgba="0 0 0 0"/>
@@ -169,11 +178,13 @@
     <position name="left_hip_pitch" joint="left_hip_pitch" ctrlrange="-1.0 1.6"/>
     <position name="left_knee" joint="left_knee" ctrlrange="-2.4 0.1"/>
     <position name="left_ankle" joint="left_ankle" ctrlrange="-1.4 1.4"/>
+    <position name="left_ankle_roll" joint="left_ankle_roll" ctrlrange="-0.5 0.5"/>
     <position name="right_hip_yaw" joint="right_hip_yaw" ctrlrange="-0.6 0.6"/>
     <position name="right_hip_roll" joint="right_hip_roll" ctrlrange="-0.5 0.5"/>
     <position name="right_hip_pitch" joint="right_hip_pitch" ctrlrange="-1.0 1.6"/>
     <position name="right_knee" joint="right_knee" ctrlrange="-2.4 0.1"/>
     <position name="right_ankle" joint="right_ankle" ctrlrange="-1.4 1.4"/>
+    <position name="right_ankle_roll" joint="right_ankle_roll" ctrlrange="-0.5 0.5"/>
     <position name="neck_pitch" joint="neck_pitch" class="micro" ctrlrange="-0.8 0.8"/>
     <position name="head_pitch" joint="head_pitch" class="micro" ctrlrange="-0.9 0.9"/>
     <position name="head_yaw" joint="head_yaw" class="micro" ctrlrange="-1.3 1.3"/>
@@ -193,11 +204,11 @@
     <!-- De pie, rodillas flexionadas hacia atrás (cadera a 8.5 cm de la suela). -->
     <key name="home"
          qpos="0 0 0.0855 1 0 0 0
-               0 0 0.751 -1.403 0.652
-               0 0 0.751 -1.403 0.652
+               0 0 0.751 -1.403 0.652 0
+               0 0 0.751 -1.403 0.652 0
                0 0 0 0 0"
-         ctrl="0 0 0.751 -1.403 0.652
-               0 0 0.751 -1.403 0.652
+         ctrl="0 0 0.751 -1.403 0.652 0
+               0 0 0.751 -1.403 0.652 0
                0 0 0 0 0"/>
   </keyframe>
 </mujoco>

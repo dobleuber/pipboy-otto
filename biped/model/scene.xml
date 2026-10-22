@@ -1,5 +1,5 @@
-<mujoco model="mini15_scene">
-  <include file="mini15.xml"/>
+<mujoco model="mini17_scene">
+  <include file="mini17.xml"/>
 
   <visual>
     <headlight diffuse="0.6 0.6 0.6" ambient="0.3 0.3 0.3" specular="0 0 0"/>

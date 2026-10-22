@@ -1,10 +1,10 @@
-"""Demo de Mini15 caminando.
+"""Demo de Mini17 caminando.
 
 Uso:
   python run_demo.py                      # simula 12 s e imprime resultados
-  python run_demo.py --video mini15.mp4   # además graba un video (sin pantalla)
+  python run_demo.py --video mini17.mp4   # además graba un video (sin pantalla)
   python run_demo.py --viewer             # abre el visor interactivo de MuJoCo
-  python run_demo.py --turn 0.15          # gira a la izquierda (negativo = derecha)
+  python run_demo.py --turn 0.3           # gira a la izquierda (negativo = derecha)
 """
 
 import argparse

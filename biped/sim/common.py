@@ -5,7 +5,7 @@ from pathlib import Path
 import mujoco
 import numpy as np
 
-from gait import GaitParams, targets
+from gait import N_LEG, GaitParams, targets
 
 SCENE = Path(__file__).resolve().parent.parent / "model" / "scene.xml"
 CONTROL_HZ = 50  # igual que el Microduck / Open Duck
@@ -59,18 +59,18 @@ def simulate(params: GaitParams, seconds: float, on_frame=None, load_fn=None):
             pitch, roll = torso_pitch_roll(data)
             data.ctrl[:] = targets(data.time, params, pitch, roll)
             if prev_ctrl is not None and data.time > 0.5:
-                vel = np.abs(data.ctrl[:10] - prev_ctrl) * CONTROL_HZ
+                vel = np.abs(data.ctrl[:N_LEG] - prev_ctrl) * CONTROL_HZ
                 max_cmd_vel = max(max_cmd_vel, float(vel.max()))
-            prev_ctrl = data.ctrl[:10].copy()
+            prev_ctrl = data.ctrl[:N_LEG].copy()
             y = yaw(data)
             yaw_total += (y - prev_yaw + np.pi) % (2 * np.pi) - np.pi  # giro acumulado
             prev_yaw = y
         mujoco.mj_step(model, data)
         max_tilt = max(max_tilt, torso_tilt(data))
-        max_torque = max(max_torque, float(np.abs(data.actuator_force[:10]).max()))
+        max_torque = max(max_torque, float(np.abs(data.actuator_force[:N_LEG]).max()))
         if data.time > 2.0 and i % 5 == 0:
-            torques.append(np.abs(data.actuator_force[:10]))
-            errors.append(np.abs(data.ctrl[:10] - data.qpos[7:17]))
+            torques.append(np.abs(data.actuator_force[:N_LEG]))
+            errors.append(np.abs(data.ctrl[:N_LEG] - data.qpos[7 : 7 + N_LEG]))
         if on_frame is not None and i % frame_every == 0:
             on_frame(model, data)
         if fell_at is None and fallen(data):

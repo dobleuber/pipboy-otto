@@ -1,44 +1,46 @@
-"""Caminata programada (sin IA) para Mini15, con cinemática inversa de las piernas.
+"""Caminata programada (sin IA) para Mini17, con cinemática inversa de las piernas.
 
 Idea:
-  1. El cuerpo se balancea de lado a lado (cadera roll) para cargar el peso en un pie.
+  1. El cuerpo se balancea de lado a lado (cadera roll) para cargar el peso en un pie;
+     el tobillo roll compensa para que los pies queden planos.
   2. El pie libre se levanta (rodilla) y se adelanta (cadera pitch); el de apoyo
      va hacia atrás, empujando el cuerpo hacia adelante.
-  3. El tobillo mantiene los pies paralelos al cuerpo.
+  3. El tobillo pitch mantiene los pies paralelos al cuerpo.
   4. Para girar, da pasos más cortos de un lado y rota un poco la cadera yaw.
   5. La cabeza compensa la inclinación del cuerpo (como las aves) y mira alrededor.
 
-Orden de actuadores (igual que en model/mini15.xml):
-   0-4  pierna izquierda: hip_yaw, hip_roll, hip_pitch, knee, ankle
-   5-9  pierna derecha:   hip_yaw, hip_roll, hip_pitch, knee, ankle
-  10-14 cabeza:           neck_pitch, head_pitch, head_yaw, head_roll, jaw
+Orden de actuadores (igual que en model/mini17.xml):
+   0-5   pierna izquierda: hip_yaw, hip_roll, hip_pitch, knee, ankle, ankle_roll
+   6-11  pierna derecha:   hip_yaw, hip_roll, hip_pitch, knee, ankle, ankle_roll
+  12-16  cabeza:           neck_pitch, head_pitch, head_yaw, head_roll, jaw
 """
 
 from dataclasses import dataclass
 
 import numpy as np
 
-# Geometría de la pierna (debe coincidir con patito.xml)
+# Geometría de la pierna (debe coincidir con model/mini17.xml)
 ROLL_TO_PITCH = 0.012  # m, del eje roll al eje pitch de la cadera
 THIGH = 0.04  # m
 SHIN = 0.045  # m
 ANKLE_TO_SOLE = 0.02  # m
 
-N_ACT = 15
+N_ACT = 17
+N_LEG = 12  # actuadores de piernas (0-11)
 
 
 @dataclass
 class GaitParams:
-    freq: float = 2.0  # ciclos por segundo (cada ciclo = un paso con cada pie)
-    step_len: float = 0.012  # m, mitad del recorrido del pie hacia adelante/atrás
-    lift: float = 0.005  # m, altura a la que se levanta el pie
-    sway: float = 0.002  # m, balanceo lateral del cuerpo
-    sway_lead: float = 0.6  # rad, adelanto del balanceo respecto del paso
+    freq: float = 1.2  # ciclos por segundo (cada ciclo = un paso con cada pie)
+    step_len: float = 0.01  # m, mitad del recorrido del pie hacia adelante/atrás
+    lift: float = 0.02  # m, altura a la que se levanta el pie
+    sway: float = 0.025  # m, balanceo lateral del cuerpo
+    sway_lead: float = 0.0  # rad, adelanto del balanceo respecto del paso
     hip_height: float = 0.085  # m, altura de la cadera sobre la suela (rodillas flexionadas)
-    foot_x: float = 0.0  # m, posición del pie respecto de la cadera
+    foot_x: float = -0.008  # m, posición del pie respecto de la cadera (negativo = cuerpo adelantado)
     turn: float = 0.0  # -0.35..0.35: giro (+ = izquierda). Pasos desiguales + cadera yaw
-    turn_yaw: float = 0.15  # rad de cadera yaw por paso cuando turn = 1
-    stride_bias: float = 0.04  # corrige el desvío natural al caminar recto
+    turn_yaw: float = 0.4  # rad de cadera yaw por paso cuando turn = 1
+    stride_bias: float = 0.0  # corrige desvíos al caminar recto (pasos desiguales)
     ramp_time: float = 1.5  # s, arranque suave
     head: bool = True  # animar cabeza y boca
 
@@ -91,15 +93,14 @@ def leg_targets(t: float, p: GaitParams):
 
 
 def targets(t: float, p: GaitParams, torso_pitch: float = 0.0, torso_roll: float = 0.0) -> np.ndarray:
-    """Ángulos objetivo de los 15 motores en el tiempo t."""
+    """Ángulos objetivo de los 17 motores en el tiempo t."""
     (xl, yl, zl, yawl), (xr, yr, zr, yawr) = leg_targets(t, p)
     q = np.zeros(N_ACT)
-    q[0] = yawl
-    q[1:5] = leg_ik(xl, yl, zl)
-    q[5] = yawr
-    q[6:10] = leg_ik(xr, yr, zr)
+    for i0, yaw, (x, y, z) in [(0, yawl, (xl, yl, zl)), (6, yawr, (xr, yr, zr))]:
+        roll, pitch, knee, ankle = leg_ik(x, y, z)
+        q[i0 : i0 + 6] = [yaw, roll, pitch, knee, ankle, -roll]  # tobillo roll = -cadera roll: pie plano
     if p.head:
-        q[10:15] = head_targets(t, torso_pitch, torso_roll)
+        q[12:17] = head_targets(t, torso_pitch, torso_roll)
     return q
 
 
