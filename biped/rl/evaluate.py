@@ -113,14 +113,15 @@ def side_by_side_video(policies, names, terrain, path, seed=0):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--policy", help="policy.zip o .onnx (sin esto: solo la caminata programada)")
-    ap.add_argument("--robot", default=None, help="mini16 (por defecto) o mini13")
+    ap.add_argument("--robot", default=None, help="mini16 (por defecto), mini13 o mini14")
+    ap.add_argument("--terrain", default="mix", choices=list(TERRAINS), help="terrenos a evaluar")
     ap.add_argument("--seeds", type=int, default=5)
     ap.add_argument("--video", help="carpeta para guardar videos comparativos")
     args = ap.parse_args()
     global ROBOT
     ROBOT = args.robot
 
-    terrains = TERRAINS["mix"]
+    terrains = TERRAINS[args.terrain]
     seeds = list(range(100, 100 + args.seeds))
     base = evaluate(load_policy(None), terrains, seeds)
     pol = load_policy(args.policy) if args.policy else None
@@ -135,7 +136,8 @@ def main():
     if args.video and pol:
         out = Path(args.video)
         out.mkdir(parents=True, exist_ok=True)
-        for t in [("ramp", 15), ("ramp", 20), ("step", 0.01), ("step", 0.015)]:
+        vids = [("ramp", 15), ("ramp", 20), ("step", 0.01), ("step", 0.015)]
+        for t in [v for v in vids if v in terrains] or terrains:
             name = f"{t[0]}_{t[1]}".replace(".", "_")
             side_by_side_video([load_policy(None), pol], ["Caminata programada", "Con IA"], t,
                                str(out / f"{name}.mp4"))
