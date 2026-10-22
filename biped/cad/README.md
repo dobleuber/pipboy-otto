@@ -13,12 +13,12 @@ Estado: **pierna completa** (izquierda y derecha). Falta: torso y cabeza.
 | `yaw_link` | PETG | 35 % | 7 g | atornillada al disco del servo de cadera yaw; "U" sobre el servo de cadera roll |
 | `roll_link` | PETG | 35 % | 14 g | sostiene el servo roll (acostado hacia afuera) y el pitch (acostado hacia adelante) |
 | `thigh` | PETG | 35 % | 13 g | "U" sobre el servo de cadera pitch; cuna del servo de rodilla (acostado hacia atrás) |
-| `shin` | PETG | 35 % | 11 g | "U" sobre la rodilla; cuna del servo de tobillo pitch (parado a lo largo de la canilla) |
+| `shin` | PETG | 35 % | 13 g | "U" sobre la rodilla; cuna del servo de tobillo pitch (acostado hacia adelante) |
 | `ankle_cross` | PETG | 35 % | 13 g | "U" sobre el tobillo pitch; cuna del servo de tobillo roll (acostado hacia afuera) |
 | `foot` | PETG | 35 % | 19 g | "U" sobre el tobillo roll; plancha con alojamientos para 2 sensores de pisada |
 | `sole` | **TPU 95A** | 40 % | 8 g | suela con bordes curvos (punta, talón y costados) |
 
-Pierna derecha: mismas piezas en espejo (`right_*.stl`). Total de plástico: ~86 g por pierna.
+Pierna derecha: mismas piezas en espejo (`right_*.stl`). Total de plástico: ~89 g por pierna.
 
 **Impresión:** 4 perímetros (0.4 mm), capa 0.2 mm, sin soportes en lo posible (las placas
 planas hacia la cama). Holgura de ajuste `CL = 0.4 mm` en `lib/params.scad`: bajarla a 0.3 si la
@@ -31,13 +31,15 @@ impresora es precisa.
 | Disco de cadera yaw → eje roll | 25.0 |
 | Eje roll → eje pitch | 28.2 |
 | Muslo (pitch → rodilla) | 33.3 |
-| Canilla (rodilla → tobillo pitch) | 56.1 |
+| Canilla (rodilla → tobillo pitch) | 33.3 (56.1 con `SHIN_SERVO = "up"`) |
 | Tobillo pitch → tobillo roll | 33.3 |
 | Tobillo roll → suela | 34.5 |
 | Separación de cada pierna al centro | 30.0 |
 
 Rangos sin choques (revisados con `check_leg.py`): cadera yaw ±34°, cadera roll ±29°,
-cadera pitch −17° a 74°, rodilla −100° a 6°, tobillo ±80°, tobillo roll ±29°.
+cadera pitch −14° a 74°, rodilla −83° a 6°, tobillo −11° a 80°, tobillo roll ±29°
+(con `SHIN_SERVO = "up"`: rodilla hasta −100° y tobillo ±80°, a cambio de 23 mm más de canilla).
+La caminata usada en la simulación no provoca choques entre piezas, ni entre las dos piernas.
 
 ## Tornillería (por pierna)
 
