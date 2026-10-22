@@ -77,6 +77,16 @@ incluso de 1 cm. Subir escalones requiere que el robot reaccione (sentir el bord
 ajustar el paso), algo que una caminata fija no hace: es el trabajo del entrenamiento
 con IA.
 
+Prueba con **cintura roll** (16 motores; el torso y la cabeza se inclinan sobre las
+caderas): ayuda poco. Solo ~30 % del peso está arriba de la cintura, así que mueve
+poco el centro de masa. Sube rampas de 10° lento, se cae en 15° y no pasa escalones.
+
+| Variante | Rampa 10° | Rampa 15° | Escalón 1 cm |
+|---|---|---|---|
+| Actual (15) | trabado | se cae | trabado |
+| + cintura (16) | lento | se cae | se cae |
+| + tobillo roll (17) | sube | sube | se cae |
+
 ## Uso
 
 ```bash
