@@ -21,7 +21,8 @@ from stable_baselines3 import PPO
 from stable_baselines3.common.callbacks import BaseCallback, CheckpointCallback
 from stable_baselines3.common.vec_env import SubprocVecEnv, VecMonitor
 
-from env import MiniEnv
+from env import MiniEnv  # noqa: I001 (env añade sim/ al path)
+import robots  # noqa: E402
 
 
 def make_env(terrain, seed, robot):
@@ -97,7 +98,7 @@ def main():
             ent_coef=0.0,
             max_grad_norm=0.5,
             # Política chica: corre fácil en una Raspberry Pi Zero 2W.
-            policy_kwargs=dict(net_arch=dict(pi=[128, 128], vf=[128, 128]), log_std_init=-1.5,
+            policy_kwargs=dict(net_arch=dict(pi=[128, 128], vf=[128, 128]), log_std_init=robots.get(args.robot).rl_log_std,
                                activation_fn=torch.nn.ELU),
             device="cpu",
             seed=0,

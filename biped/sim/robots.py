@@ -24,6 +24,7 @@ class Robot:
     n_head: int  # motores de cuello/cabeza
     gait: dict = field(default_factory=dict)  # parámetros de caminata por defecto
     target_speed: float = 0.06  # m/s, velocidad objetivo para el entrenamiento con IA
+    rl_log_std: float = -1.5  # ruido inicial de exploración de la IA (log de la desviación)
 
     @property
     def leg_joints(self):
@@ -54,6 +55,7 @@ ROBOTS = {
         ankle_roll=False,
         n_head=3,
         target_speed=0.06,
+        rl_log_std=-2.5,  # sin tobillo roll es más inestable: explorar con menos ruido
         gait=dict(freq=1.6, step_len=0.016, lift=0.008, sway=0.002, sway_lead=0.0, hip_height=0.115,
                   foot_x=0.0, turn_yaw=0.0, stride_bias=0.0, steer_gain=0.2, steer_damping=0.0),
     ),
