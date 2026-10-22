@@ -1,8 +1,8 @@
-"""Entrena a Mini13 / Mini17 con PPO (Stable-Baselines3) en terrenos variados.
+"""Entrena a Mini13 / Mini16 con PPO (Stable-Baselines3) en terrenos variados.
 
 Uso:
   python train.py --steps 5000000 --envs 4            # entrenamiento local en CPU (Mini13)
-  python train.py --robot mini17 --out runs/mini17     # el de 17 motores
+  python train.py --robot mini16 --out runs/mini16     # el de 16 motores
   python train.py --steps 200000 --envs 2 --out runs/prueba   # prueba rápida
 
 Guarda en --out: modelo final (policy.zip), checkpoints y un log CSV con el progreso.
@@ -73,7 +73,7 @@ def main():
     ap.add_argument("--steps", type=int, default=5_000_000)
     ap.add_argument("--envs", type=int, default=4)
     ap.add_argument("--terrain", default="mix", choices=["flat", "ramps", "steps", "mix"])
-    ap.add_argument("--robot", default=None, help="mini17 (por defecto) o mini13")
+    ap.add_argument("--robot", default=None, help="mini16 (por defecto) o mini13")
     ap.add_argument("--out", default="runs/mix")
     ap.add_argument("--resume", help="policy.zip para continuar entrenando")
     args = ap.parse_args()

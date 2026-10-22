@@ -1,7 +1,7 @@
 """Robots disponibles y sus datos geométricos.
 
-Elegir robot: variable de entorno MINI_ROBOT (mini17 por defecto) o pasar `robot=`
-a las funciones. Ej.: MINI_ROBOT=mini17 python run_demo.py
+Elegir robot: variable de entorno MINI_ROBOT (mini16 por defecto) o pasar `robot=`
+a las funciones. Ej.: MINI_ROBOT=mini13 python run_demo.py
 """
 
 import os
@@ -59,21 +59,21 @@ ROBOTS = {
         gait=dict(freq=1.6, step_len=0.016, lift=0.008, sway=0.002, sway_lead=0.0, hip_height=0.115,
                   foot_x=0.0, turn_yaw=0.0, stride_bias=0.0, steer_gain=0.2, steer_damping=0.0),
     ),
-    "mini17": Robot(
-        name="mini17",
-        scene=MODEL_DIR / "scene_mini17.xml",
+    "mini16": Robot(
+        name="mini16",
+        scene=MODEL_DIR / "scene_mini16.xml",
         roll_to_pitch=0.012,
         thigh=0.04,
         shin=0.045,
         ankle_to_sole=0.02,
         ankle_roll=True,
-        n_head=5,
+        n_head=4,
         gait=dict(freq=1.2, step_len=0.01, lift=0.02, sway=0.025, sway_lead=0.0, hip_height=0.085,
                   foot_x=-0.008, turn_yaw=0.4, stride_bias=0.0, steer_gain=0.3, steer_damping=0.0),
     ),
 }
 
-DEFAULT = os.environ.get("MINI_ROBOT", "mini17")
+DEFAULT = os.environ.get("MINI_ROBOT", "mini16")
 
 
 def get(name=None) -> Robot:

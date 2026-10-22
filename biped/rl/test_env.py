@@ -6,7 +6,7 @@ import pytest
 from env import N_RAYS, MiniEnv
 
 
-@pytest.fixture(scope="module", params=["mini13", "mini17"])
+@pytest.fixture(scope="module", params=["mini13", "mini16"])
 def env(request):
     return MiniEnv(terrain="mix", robot=request.param, seed=0)
 

@@ -1,4 +1,4 @@
-"""Pruebas de los modelos (Mini13 y Mini17) y su caminata. Correr con: python -m pytest -q"""
+"""Pruebas de los modelos (Mini13 y Mini16) y su caminata. Correr con: python -m pytest -q"""
 
 import mujoco
 import numpy as np
@@ -9,13 +9,13 @@ import robots
 from common import load, simulate
 from gait import GaitParams, leg_command, targets
 
-ROBOTS = ["mini13", "mini17"]
+ROBOTS = ["mini13", "mini16"]
 
 # Límites por robot. Mini13 (sin tobillo roll) balancea el rumbo ±15-20° al caminar y su
 # caminata programada solo sirve en plano: rampas y escalones quedan para la IA.
 SPEC = {
     "mini13": dict(mass=(0.9, 1.0), height=(0.25, 0.30), min_x=0.4, yaw_tol=25, ramps=[]),
-    "mini17": dict(mass=(0.9, 1.2), height=(0.21, 0.26), min_x=0.3, yaw_tol=10, ramps=[10, 15]),
+    "mini16": dict(mass=(0.9, 1.2), height=(0.20, 0.25), min_x=0.3, yaw_tol=10, ramps=[10, 15]),
 }
 
 
@@ -24,7 +24,7 @@ def test_motors_in_expected_order(robot):
     rb = robots.get(robot)
     model, _ = load(robot)
     names = [model.actuator(i).name for i in range(model.nu)]
-    head = ["neck_pitch", "head_pitch", "head_yaw", "head_roll", "jaw"][: rb.n_head]
+    head = ["neck_pitch", "head_pitch", "head_yaw", "head_roll"][: rb.n_head]
     expected = [f"left_{j}" for j in rb.leg_joints] + [f"right_{j}" for j in rb.leg_joints] + head
     assert names == expected
     # El orden de actuadores coincide con el de las articulaciones (qpos 7...)

@@ -1,6 +1,6 @@
 """Caminata programada (sin IA) con cinemática inversa de las piernas.
 
-Sirve para Mini13 (5 motores por pierna) y Mini17 (6, con tobillo roll).
+Sirve para Mini13 (5 motores por pierna) y Mini16 (6, con tobillo roll).
 
 Idea:
   1. El cuerpo se balancea de lado a lado (cadera roll) para cargar el peso en un pie.
@@ -13,7 +13,7 @@ Idea:
 
 Orden de actuadores (igual que en los XML):
   pierna izquierda, pierna derecha (hip_yaw, hip_roll, hip_pitch, knee, ankle[, ankle_roll]),
-  luego cabeza (neck_pitch, head_pitch, head_yaw[, head_roll, jaw]).
+  luego cabeza (neck_pitch, head_pitch, head_yaw[, head_roll]).
 """
 
 from dataclasses import dataclass, fields, replace
@@ -27,7 +27,7 @@ import robots
 class GaitParams:
     """Los campos en None toman el valor por defecto del robot (robots.py)."""
 
-    robot: str = None  # "mini13" / "mini17" (None = robots.DEFAULT)
+    robot: str = None  # "mini13" / "mini16" (None = robots.DEFAULT)
     freq: float = None  # ciclos por segundo (cada ciclo = un paso con cada pie)
     step_len: float = None  # m, mitad del recorrido del pie hacia adelante/atrás
     lift: float = None  # m, altura a la que se levanta el pie
@@ -127,10 +127,7 @@ def head_targets(t: float, torso_pitch: float, torso_roll: float, n_head: int = 
     neck_pitch = 0.15 * np.sin(2 * np.pi * 0.3 * t)
     head_pitch = -torso_pitch - neck_pitch  # mantiene la mirada horizontal
     head_yaw = 0.6 * np.sin(2 * np.pi * 0.15 * t)
-    q = [neck_pitch, head_pitch, head_yaw]
-    if n_head >= 5:
-        jaw = 0.5 if (t % 3.0) < 0.4 else 0.0  # abre la boca cada 3 s
-        q += [-torso_roll, jaw]
+    q = [neck_pitch, head_pitch, head_yaw, -torso_roll]  # cabeza roll compensa el balanceo
     return np.array(q[:n_head])
 
 

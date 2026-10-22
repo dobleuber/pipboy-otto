@@ -1,7 +1,7 @@
-"""Demo de Mini13 / Mini17 caminando.
+"""Demo de Mini13 / Mini16 caminando.
 
 Uso:
-  python run_demo.py                      # simula 12 s e imprime resultados (Mini17)
+  python run_demo.py                      # simula 12 s e imprime resultados (Mini16)
   python run_demo.py --robot mini13       # el de 13 motores (sin tobillo roll)
   python run_demo.py --video robot.mp4    # además graba un video (sin pantalla)
   python run_demo.py --viewer             # abre el visor interactivo de MuJoCo
@@ -16,7 +16,7 @@ from gait import GaitParams
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--robot", default=None, help="mini17 (por defecto) o mini13")
+    ap.add_argument("--robot", default=None, help="mini16 (por defecto) o mini13")
     ap.add_argument("--seconds", type=float, default=12.0)
     ap.add_argument("--freq", type=float, help="ciclos de paso por segundo")
     ap.add_argument("--step", type=float, help="largo de medio paso (m)")

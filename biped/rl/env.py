@@ -1,4 +1,4 @@
-"""Entorno de entrenamiento (Gymnasium) para Mini13 / Mini17.
+"""Entorno de entrenamiento (Gymnasium) para Mini13 / Mini16.
 
 La IA no aprende a caminar desde cero: aprende CORRECCIONES sobre la caminata
 programada (sim/gait.py). Esto acelera mucho el entrenamiento y hace que el
@@ -9,7 +9,7 @@ La caminata de referencia incluye el control de rumbo con la IMU (gait.Steering)
 Observación (todo lo puede medir el robot real):
   - gravedad en el marco del torso (IMU)          3
   - velocidad angular (IMU)                       3
-  - posición de los motores de pierna             N_LEG (10 en Mini13, 12 en Mini17),
+  - posición de los motores de pierna             N_LEG (10 en Mini13, 12 en Mini16),
                                                   relativa a la caminata programada
   - velocidad de los motores de pierna            N_LEG
   - acción anterior                               N_LEG
@@ -254,4 +254,4 @@ class MiniEnv(gym.Env):
         return self._renderer.render()
 
 
-Mini17Env = MiniEnv  # compatibilidad
+Mini16Env = MiniEnv  # compatibilidad

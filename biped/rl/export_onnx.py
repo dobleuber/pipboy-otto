@@ -1,7 +1,7 @@
 """Exporta la política entrenada a ONNX para correrla en la Raspberry Pi.
 
 Uso:
-  python export_onnx.py runs/mix/policy.zip mini17_policy.onnx
+  python export_onnx.py runs/mix/policy.zip mini16_policy.onnx
 
 El archivo ONNX recibe la observación (ver env.py) y devuelve las 12 correcciones
 de los motores de pierna en [-1, 1]. En el robot: objetivo = caminata programada

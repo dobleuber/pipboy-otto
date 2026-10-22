@@ -3,7 +3,7 @@
 Uso:
   python evaluate.py --policy runs/mix/policy.zip                  # tabla de resultados
   python evaluate.py --policy runs/mix/policy.zip --video out_dir  # + videos lado a lado
-  python evaluate.py --policy mini17_policy.onnx                   # también acepta ONNX
+  python evaluate.py --policy mini16_policy.onnx                   # también acepta ONNX
 
 Éxito = no se cae y avanza al menos 30 cm (en escalones: sube al menos el primero).
 Cada terreno se prueba con varias semillas, con fricción/peso/servos aleatorios y empujones.
@@ -111,7 +111,7 @@ def side_by_side_video(policies, names, terrain, path, seed=0):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--policy", help="policy.zip o .onnx (sin esto: solo la caminata programada)")
-    ap.add_argument("--robot", default=None, help="mini17 (por defecto) o mini13")
+    ap.add_argument("--robot", default=None, help="mini16 (por defecto) o mini13")
     ap.add_argument("--seeds", type=int, default=5)
     ap.add_argument("--video", help="carpeta para guardar videos comparativos")
     args = ap.parse_args()

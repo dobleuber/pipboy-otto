@@ -3,23 +3,25 @@
 Exploración de diseño de un bípedo compacto de bajo costo, inspirado en Open Duck Mini v2
 y Microduck. Hay dos variantes con el mismo código de simulación, caminata e IA:
 
-| | **Mini13** | **Mini17** (por defecto, recomendado) |
+| | **Mini13** | **Mini16** (por defecto, recomendado) |
 |---|---|---|
-| Motores | 13: 5 por pierna + 3 cabeza | 17: 6 por pierna + 5 cabeza |
+| Motores | 13: 5 por pierna + 3 cabeza | 16: 6 por pierna + 4 cabeza |
 | Pierna | cadera yaw/roll/pitch, rodilla, tobillo pitch | ídem + **tobillo roll** |
-| Altura / masa | ~27 cm / 996 g | ~23 cm / 1.07 kg |
+| Altura / masa | ~27 cm / 996 g | ~22.4 cm / 1.055 kg |
 | Pie | suela curva de TPU (punta, talón, costados) | plano |
+| Cámara | sí (simulada) | módulo tipo Raspberry Pi Camera Module 3 al frente de la cabeza |
 | Velocidad en plano (caminata programada) | ~5 cm/s | ~4 cm/s |
 | Rampas 10–15° (caminata programada) | no | **sí** |
 | Escalones ≥ 1 cm | no (necesita IA) | no (necesita IA) |
 
 <p>
 <img src="media/mini13_walk.gif" width="45%" alt="Mini13 caminando">
-<img src="media/mini17_walk.gif" width="45%" alt="Mini17 caminando">
+<img src="media/mini16_walk.gif" width="45%" alt="Mini16 caminando">
 </p>
 
 Videos: [Mini13 caminando](media/mini13_walk.mp4) · [Mini13 girando](media/mini13_turn.mp4) ·
-[Mini17 caminando](media/mini17_walk.mp4) · [Mini17 girando](media/mini17_turn.mp4)
+[Mini16 caminando](media/mini16_walk.mp4) · [Mini16 girando](media/mini16_turn.mp4) ·
+[Mini16: lo que ve la cámara](media/mini16_camara.mp4)
 
 > Proyecto independiente de Pip-Boy Otto; vive en esta carpeta solo de forma temporal.
 
@@ -74,7 +76,7 @@ velocidad pedida < 4.5 rad/s) y resisten fricción 0.5–1.3, +150 g y servos m�
 cd biped
 pip install -r requirements.txt
 cd sim
-python run_demo.py                      # Mini17: simula e imprime resultados
+python run_demo.py                      # Mini16: simula e imprime resultados
 python run_demo.py --robot mini13       # Mini13 (5 motores por pierna)
 python run_demo.py --video robot.mp4    # graba video (en servidor: MUJOCO_GL=osmesa o egl)
 python run_demo.py --viewer             # visor 3D interactivo (requiere pantalla)
@@ -93,7 +95,7 @@ python export_onnx.py runs/prueba/policy.zip policy.onnx
 ```
 
 Archivos:
-- `model/mini13.xml`, `model/mini17.xml` — robots; `model/scene_*.xml` — robot + piso
+- `model/mini13.xml`, `model/mini16.xml` — robots; `model/scene_*.xml` — robot + piso
 - `sim/robots.py` — medidas y parámetros de caminata de cada robot
 - `sim/gait.py` — caminata programada, cinemática inversa y control de rumbo
 - `sim/common.py`, `sim/terrain.py` — simulación, métricas, rampas y escalones
@@ -122,7 +124,7 @@ tamaño del torso (~7 x 9 cm en Mini13).
 | Cámara, interruptores de pie, insertos M3, rodamientos, PLA/PETG, TPU | — | ~30 € |
 | **Total (sin placa)** | | **~225–285 €** |
 
-Mini17 suma 2 STS3215 (~28 €) y 2 micro servos.
+Mini16 suma 2 STS3215 (~28 €) y 1 micro servo.
 
 ## Limitaciones
 
