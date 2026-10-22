@@ -126,6 +126,10 @@ La red de la IA es chica (2 capas de 128): cualquier placa la corre a 50 Hz. Ele
 | Raspberry Pi Zero 2W | sí | la más fácil de meter; conector de cámara CSI |
 | Orange Pi 5 Pro | no | potente, pero exige un torso más grande y más batería |
 
+## Qué aprender de Microduck y Open Duck
+
+Ver **[LECCIONES.md](LECCIONES.md)**: reparto de masa, servos, cabeza como contrapeso y entrenamiento.
+
 ## Componentes
 
 Lista completa de Mini16 (servos, placa, batería, sensores, conexiones, peso y qué verificar):
