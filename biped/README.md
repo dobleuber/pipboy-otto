@@ -58,6 +58,25 @@ en el Microduck) más la boca. El Microduck no publica el desglose exacto de sus
 Probado también con piso resbaloso (fricción 0.5), pegajoso (1.3), +150 g y servos
 más blandos o más rígidos (kp 7 y 15): no se cae en ningún caso.
 
+## Rampas y obstáculos (prueba con `sim/terrain.py`)
+
+| Terreno | Caminata actual (15 motores) |
+|---|---|
+| Rampa 5° | sube |
+| Rampa 10° y 15° | se queda trabado |
+| Escalón 3 mm | pasa |
+| Escalón 6 mm o más | se traba |
+
+La pierna puede levantar el pie ~3 cm, pero la caminata programada lo levanta solo
+~0.5 cm: si lo levanta más de ~1 cm pierde el equilibrio (no hay tobillo roll ni
+corrección con la IMU).
+
+Prueba aparte con **tobillo roll** (17 motores, +~100 g): levanta el pie 2–2.5 cm sin
+caerse y sube rampas de 10° (y algunas de 15°), pero **los escalones siguen fallando**
+incluso de 1 cm. Subir escalones requiere que el robot reaccione (sentir el borde y
+ajustar el paso), algo que una caminata fija no hace: es el trabajo del entrenamiento
+con IA.
+
 ## Uso
 
 ```bash
