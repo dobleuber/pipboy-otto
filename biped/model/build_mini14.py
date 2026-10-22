@@ -164,10 +164,10 @@ def head():
                     mass="{p['head_shell']}" class="shell"/>
               <!-- Batería 2x18650 acostada a lo ancho, atrás en la cabeza -->
               <geom name="battery" type="box" pos="-0.006 0 {hz / 2 - 0.012:.4f}" size="0.019 0.034 0.0095"
-                    mass="{p['battery']}" rgba="0.2 0.3 0.6 1" contype="0" conaffinity="0"/>
+                    mass="{p['battery']}" rgba="0.2 0.3 0.6 1" contype="0" conaffinity="0" group="3"/>
               <geom name="sensors" type="box" pos="{0.012 + hx / 2 - 0.004:.4f} 0 {hz / 2 - 0.012:.4f}"
                     size="0.004 0.014 0.012" mass="{p['head_sensors']}" rgba="0.1 0.1 0.1 1"
-                    contype="0" conaffinity="0"/>
+                    contype="0" conaffinity="0" group="3"/>
               <geom type="cylinder" pos="{0.012 + hx / 2:.4f} 0 {hz / 2 - 0.006:.4f}" zaxis="1 0 0" size="0.011 0.0015"
                     contype="0" conaffinity="0" density="0" rgba="0.98 0.6 0.15 1"/>
               <geom type="cylinder" pos="{0.012 + hx / 2 + 0.0015:.4f} 0 {hz / 2 - 0.006:.4f}" zaxis="1 0 0" size="0.006 0.0015"
@@ -248,11 +248,11 @@ def build():
     <body name="torso" pos="0 0 {z0:.4f}">
       <freejoint name="root"/>
       <site name="imu" pos="0 0 {yaw_z + 0.03:.4f}" size="0.005"/>
-      <geom name="torso" class="shell" pos="-0.002 0 {yaw_z + 0.032:.4f}" size="0.036 0.046 0.036"
+      <geom name="torso" class="shell" pos="-0.002 0 {yaw_z + 0.032:.4f}" size="0.036 0.048 0.036"
             mass="{p['trunk_shell']}"/>
       <!-- Orange Pi Zero 3 vertical contra la espalda; UBEC, interfaz de bus e IMU -->
       <geom name="electronics" type="box" pos="-0.028 0 {yaw_z + 0.035:.4f}" size="0.006 0.027 0.025"
-            mass="{p['trunk_electronics']}" rgba="0.1 0.5 0.2 1" contype="0" conaffinity="0"/>
+            mass="{p['trunk_electronics']}" rgba="0.1 0.5 0.2 1" contype="0" conaffinity="0" group="3"/>
       {servo_geom("left_hip_yaw_servo", (-off, p['hip_y'], yaw_z + 0.013), "z", "x")}
       {servo_geom("right_hip_yaw_servo", (-off, -p['hip_y'], yaw_z + 0.013), "z", "x")}
 {leg("left")}
