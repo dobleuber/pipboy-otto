@@ -4,6 +4,8 @@ La IA no aprende a caminar desde cero: aprende CORRECCIONES sobre la caminata
 programada (sim/gait.py). Esto acelera mucho el entrenamiento y hace que el
 comportamiento inicial ya sea razonable.
 
+La caminata de referencia incluye el control de rumbo con la IMU (gait.Steering).
+
 Observación (todo lo puede medir el robot real):
   - gravedad en el marco del torso (IMU)          3
   - velocidad angular (IMU)                       3
@@ -31,8 +33,8 @@ SIM = Path(__file__).resolve().parent.parent / "sim"
 sys.path.insert(0, str(SIM))
 
 import robots  # noqa: E402
-from common import fallen  # noqa: E402
-from gait import GaitParams, head_targets, targets  # noqa: E402
+from common import fallen, yaw  # noqa: E402
+from gait import GaitParams, Steering, head_targets, targets  # noqa: E402
 
 CONTROL_HZ = 50
 ACTION_SCALE = 0.3  # rad
@@ -190,12 +192,18 @@ class MiniEnv(gym.Env):
         self.ref_q = targets(0.0, self.gait)[: self.n_leg]
         self.push_at = self.rng.uniform(2, 6) if self.push else 1e9
         self.start_x = self.d.qpos[0]
+        # La caminata de referencia mantiene el rumbo con la IMU (igual que en el robot real).
+        self.steering = Steering(self.gait)
+        self.yaw_total, self.prev_yaw = 0.0, yaw(self.d)
         return self._obs(), {"terrain": key}
 
     def step(self, action):
         action = np.clip(np.asarray(action, float), -1, 1)
         d, m = self.d, self.m
-        full = targets(d.time, self.gait)
+        y = yaw(d)
+        self.yaw_total += (y - self.prev_yaw + np.pi) % (2 * np.pi) - np.pi
+        self.prev_yaw = y
+        full = targets(d.time, self.steering.update(self.yaw_total, 1 / CONTROL_HZ))
         self.ref_q = full[: self.n_leg]
         cmd = np.clip(self.ref_q + ACTION_SCALE * action, self.lo, self.hi)
         # Límite de velocidad del servo real
