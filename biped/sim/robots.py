@@ -60,15 +60,16 @@ ROBOTS = {
                   foot_x=0.0, turn_yaw=0.0, stride_bias=0.0, steer_gain=0.2, steer_damping=0.0),
     ),
     "mini16": Robot(
+        # Geometría generada desde el CAD (cad/lib/params.scad, cad/build_mjcf.py)
         name="mini16",
         scene=MODEL_DIR / "scene_mini16.xml",
-        roll_to_pitch=0.012,
-        thigh=0.04,
-        shin=0.045,
-        ankle_to_sole=0.02,
+        roll_to_pitch=0.02822,
+        thigh=0.03333,
+        shin=0.05608,
+        ankle_to_sole=0.03333 + 0.0345,  # tobillo pitch -> tobillo roll -> suela
         ankle_roll=True,
         n_head=4,
-        gait=dict(freq=1.2, step_len=0.01, lift=0.02, sway=0.03, sway_lead=0.0, hip_height=0.085,
+        gait=dict(freq=1.2, step_len=0.01, lift=0.015, sway=0.03, sway_lead=0.0, hip_height=0.145,
                   foot_x=-0.016, turn_yaw=0.4, stride_bias=0.0, steer_gain=0.3, steer_damping=0.0),
     ),
 }

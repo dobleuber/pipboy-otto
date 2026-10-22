@@ -1,155 +1,141 @@
 <!--
-  Mini16: bípedo pequeño de ~24 cm con 16 motores, con proporciones similares al Microduck:
-  piernas cortas con rodilla hacia atrás, tobillo de dos ejes, torso compacto, cuello muy
-  corto y cabeza con cámara USB.
+  Mini16 (GENERADO por cad/build_mjcf.py a partir del CAD: no editar a mano).
 
-  Componentes: 12x STS3215 (piernas), 4x SCS0009 (cabeza), Orange Pi Zero 3, cámara USB,
-  2x 18650 alta descarga + BMS 2S, IMU BNO055, ToF VL53L5CX/VL53L8CX, 4x SS-10 (pisada).
+  Bípedo de 16 motores: 12 Feetech STS3215 en las piernas (cadera yaw/roll/pitch, rodilla,
+  tobillo pitch y roll) y 4 Feetech SCS0009 en cuello/cabeza. Distancias entre ejes, mallas y
+  masas salen de cad/lib/params.scad y de las piezas exportadas (PETG/TPU).
 
-  Motores:
-    Cada pierna (6):  cadera yaw, cadera roll, cadera pitch, rodilla, tobillo pitch, tobillo roll
-    Cuello/cabeza (4): cuello pitch, cabeza pitch, cabeza yaw, cabeza roll
-
-  El tobillo roll (lateral) mantiene el pie plano cuando el cuerpo se carga sobre una
-  pierna; con él puede levantar el pie 2-2.5 cm y subir rampas de 10-15° (ver README).
-
-  Piernas: Feetech STS3215 7.4 V (con lectura de posición).
-  Cabeza:  micro servos de bus con lectura de posición (p. ej. Feetech SCS0009).
+  Componentes: Orange Pi Zero 3, cámara USB, 2x 18650 + BMS 2S, IMU BNO055,
+  ToF VL53L5CX/VL53L8CX, 4x SS-10 (pisada en punta y talón).
 
   Ejes: x = adelante, y = izquierda, z = arriba. Unidades: m, kg, rad.
   Origen del torso = punto medio entre los ejes de cadera pitch.
-  Pierna: yaw (z +0.030) -> roll (+0.012) -> pitch (0) -> muslo 4 cm -> rodilla
-          -> canilla 4.5 cm -> tobillo pitch + roll (ejes cruzados) -> suela (2 cm más abajo).
 -->
 <mujoco model="mini16">
   <compiler angle="radian" autolimits="true"/>
-
   <option timestep="0.002" integrator="implicitfast"/>
+
+  <asset>
+    <mesh name="left_yaw_link" file="../cad/stl/left_yaw_link.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="left_roll_link" file="../cad/stl/left_roll_link.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="left_thigh" file="../cad/stl/left_thigh.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="left_shin" file="../cad/stl/left_shin.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="left_ankle_cross" file="../cad/stl/left_ankle_cross.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="left_foot" file="../cad/stl/left_foot.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="left_sole" file="../cad/stl/left_sole.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="right_yaw_link" file="../cad/stl/right_yaw_link.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="right_roll_link" file="../cad/stl/right_roll_link.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="right_thigh" file="../cad/stl/right_thigh.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="right_shin" file="../cad/stl/right_shin.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="right_ankle_cross" file="../cad/stl/right_ankle_cross.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="right_foot" file="../cad/stl/right_foot.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="right_sole" file="../cad/stl/right_sole.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="servo" file="../cad/stl/servo.stl" scale="0.001 0.001 0.001"/>
+  </asset>
 
   <default>
     <geom contype="2" conaffinity="1" friction="0.9 0.02 0.01" condim="3"/>
     <joint damping="0.08" armature="0.01" frictionloss="0.03"/>
     <!-- STS3215 7.4 V: ~1.9 N·m máx. Ganancias estimadas (identificar con servo real). -->
     <position kp="10" kv="0.15" forcerange="-1.9 1.9"/>
-
     <default class="micro">
-      <!-- Micro servo de cabeza: ~0.2 N·m. Valores estimados. -->
+      <!-- Feetech SCS0009: ~0.23 N·m a 6 V. Valores estimados. -->
       <joint damping="0.01" armature="0.001" frictionloss="0.005"/>
       <position kp="1.5" kv="0.02" forcerange="-0.22 0.22"/>
     </default>
-
-    <default class="servo">
-      <!-- STS3215: 45 x 35 x 25 mm, 55 g -->
-      <geom type="box" mass="0.055" rgba="0.1 0.1 0.11 1"/>
-    </default>
     <default class="micro_servo">
-      <!-- Feetech SCS0009: 23.2 x 12.1 x 25.25 mm, ~12 g, 2.3 kg·cm a 6 V -->
       <geom type="box" size="0.012 0.011 0.006" mass="0.012" rgba="0.1 0.1 0.11 1"/>
     </default>
-    <default class="hub">
-      <!-- Disco visual que marca cada articulación de pitch (eje en y). -->
-      <geom type="cylinder" size="0.008 0.02" zaxis="0 1 0" contype="0" conaffinity="0" density="0"
-            rgba="0.75 0.75 0.78 1"/>
+    <default class="petg">
+      <geom rgba="0.55 0.82 0.9 1"/>
     </default>
-    <default class="shell">
-      <geom type="box" contype="0" conaffinity="0" density="0" rgba="0.55 0.82 0.9 1"/>
-    </default>
-    <default class="sole">
-      <geom type="box" size="0.04 0.022 0.004" pos="0.008 0 -0.016" mass="0.03" rgba="0.98 0.6 0.15 1"
-            friction="1.0 0.02 0.01"/>
+    <default class="tpu">
+      <geom rgba="0.2 0.2 0.22 1" friction="1.0 0.02 0.01" solref="0.015 1"/>
     </default>
   </default>
 
   <worldbody>
-    <body name="torso" pos="0 0 0.0855">
+    <body name="torso" pos="0 0 0.1450">
       <freejoint name="root"/>
-      <!-- IMU BNO055 fija y nivelada entre los servos de cadera, cerca del centro de masa -->
-      <site name="imu" pos="0 0 0.035" size="0.005"/>
-      <geom name="imu_board" type="box" pos="0 0 0.033" size="0.0105 0.013 0.001" mass="0.003" contype="0" conaffinity="0" rgba="0.1 0.3 0.6 1"/>
+      <!-- IMU BNO055 nivelada entre los servos de cadera -->
+      <site name="imu" pos="0 0 0.0732" size="0.005"/>
+      <geom name="imu_board" type="box" pos="0 0 0.0712" size="0.0105 0.013 0.001" mass="0.003" contype="0" conaffinity="0" rgba="0.1 0.3 0.6 1"/>
+      <!-- Torso (PETG): servos yaw abajo, batería 2x18650 encima, Orange Pi Zero 3 arriba;
+           atrás: adaptadores de bus, UBEC 5 V, regulador 6 V, BMS 2S y condensador. -->
+      <geom name="torso" type="box" pos="-0.0026 0 0.0906" size="0.0366 0.0454 0.0368" mass="0.07" rgba="0.55 0.82 0.9 0.35"/>
+      <geom name="battery" type="box" pos="-0.0026 0 0.1009" size="0.0325 0.0185 0.0095" mass="0.098" contype="0" conaffinity="0" rgba="0.2 0.3 0.6 1"/>
+      <geom name="orange_pi" type="box" pos="-0.0026 0 0.1174" size="0.0275 0.025 0.006" mass="0.025" contype="0" conaffinity="0" rgba="0.95 0.5 0.1 1"/>
+      <geom name="power_and_bus" type="box" pos="-0.0331 0 0.1034" size="0.004 0.035 0.012" mass="0.05" contype="0" conaffinity="0" rgba="0.1 0.5 0.2 1"/>
+      <!-- Sensor ToF 8x8 (VL53L5CX / VL53L8CX) al frente, mirando 45° hacia el piso -->
+      <geom name="tof_sensor" type="box" pos="0.0350 0 0.0658" size="0.001 0.0065 0.01" mass="0.002" contype="0" conaffinity="0" rgba="0.1 0.1 0.1 1"/>
+      <site name="tof" pos="0.0370 0 0.0658" zaxis="0.7 0 -0.7" size="0.003"/>
+      <geom name="left_hip_yaw_servo" type="mesh" mesh="servo" pos="0 0.03 0.0718131" xyaxes="-1 0 0 0 1 0" mass="0.055" rgba="0.12 0.12 0.13 1" contype="0" conaffinity="0"/>
+      <geom name="right_hip_yaw_servo" type="mesh" mesh="servo" pos="0 -0.03 0.0718131" xyaxes="-1 -0 0 -0 1 -0" mass="0.055" rgba="0.12 0.12 0.13 1" contype="0" conaffinity="0"/>
 
-      <!-- Torso 70 x 80 x 62 mm. Distribución (de abajo hacia arriba):
-           servos de cadera yaw -> batería 2x18650 (arriba de ellos) -> Orange Pi Zero 3.
-           Atrás: adaptador de bus de servos, UBEC 5 V, regulador 6 V (cabeza), BMS 2S, condensador. -->
-      <geom name="torso" type="box" pos="0 0 0.057" size="0.035 0.04 0.031" mass="0.055" rgba="0.55 0.82 0.9 1"/>
-      <geom name="battery" type="box" pos="0 0 0.0555" size="0.0185 0.0325 0.0095" mass="0.098"
-            contype="0" conaffinity="0" rgba="0.2 0.3 0.6 1"/>
-      <geom name="orange_pi" type="box" pos="0 0 0.0735" size="0.025 0.0275 0.006" mass="0.025"
-            contype="0" conaffinity="0" rgba="0.95 0.5 0.1 1"/>
-      <geom name="power_and_bus" type="box" pos="-0.028 0 0.06" size="0.005 0.035 0.02" mass="0.05"
-            contype="0" conaffinity="0" rgba="0.1 0.5 0.2 1"/>
-      <!-- Sensor de distancia ToF 8x8 (VL53L5CX / VL53L8CX) al frente, mirando hacia el piso delante -->
-      <geom name="tof_sensor" type="box" pos="0.0355 0 0.035" size="0.001 0.0065 0.01" mass="0.002"
-            contype="0" conaffinity="0" rgba="0.1 0.1 0.1 1"/>
-      <site name="tof" pos="0.037 0 0.035" zaxis="0.7 0 -0.7" size="0.003"/>
-      <!-- Servos de cadera yaw (eje vertical), dentro del torso. -->
-      <geom name="left_hip_yaw_servo" class="servo" pos="0 0.03 0.028" size="0.0226 0.0124 0.0175"/>
-      <geom name="right_hip_yaw_servo" class="servo" pos="0 -0.03 0.028" size="0.0226 0.0124 0.0175"/>
-
-      <!-- ============================ PIERNA IZQUIERDA ============================ -->
-      <body name="left_hip_yaw_link" pos="0 0.033 0.03">
-        <joint name="left_hip_yaw" axis="0 0 1" range="-0.6 0.6"/>
-        <geom name="left_hip_bracket" type="box" pos="0 0 -0.006" size="0.014 0.012 0.003" mass="0.008" rgba="0.75 0.75 0.78 1"/>
-        <body name="left_hip_roll_link" pos="0 0 -0.018">
+      <body name="left_hip_yaw_link" pos="0 0.0300 0.05319">
+        <joint name="left_hip_yaw" axis="0 0 1" range="-0.35 0.35"/>
+        <geom name="left_yaw_link" type="mesh" mesh="left_yaw_link" mass="0.0069" class="petg"/>
+        <body name="left_hip_roll_link" pos="0 0 -0.02497">
           <joint name="left_hip_roll" axis="1 0 0" range="-0.5 0.5"/>
-          <geom name="left_hip_roll_servo" class="servo" pos="0 0 0.004" size="0.0226 0.0124 0.009" mass="0.055"/>
-          <body name="left_thigh" pos="0 0 -0.012">
-            <joint name="left_hip_pitch" axis="0 1 0" range="-1.0 1.6"/>
-            <geom class="hub"/>
-            <geom name="left_hip_pitch_servo" class="servo" pos="0 0.004 0" size="0.0124 0.0175 0.012"/>
-            <!-- Muslo: el servo de la rodilla va acostado dentro de la placa. -->
-            <geom name="left_knee_servo" class="servo" pos="0 0 -0.022" size="0.0124 0.0175 0.018"/>
-            <geom class="shell" pos="0 0.021 -0.02" size="0.016 0.003 0.024"/>
-            <body name="left_shin" pos="0 0 -0.04">
-              <joint name="left_knee" axis="0 1 0" range="-2.4 0.1"/>
-              <geom class="hub"/>
-              <geom name="left_shin" type="capsule" fromto="0 0 0 0 0 -0.045" size="0.007" mass="0.015"
-                    rgba="0.75 0.75 0.78 1"/>
-              <geom name="left_ankle_servo" class="servo" pos="0 0 -0.03" size="0.0124 0.0175 0.012"/>
-              <body name="left_foot" pos="0 0 -0.045">
+          <geom name="left_roll_link" type="mesh" mesh="left_roll_link" mass="0.0144" class="petg"/>
+          <geom name="left_hip_roll_servo" type="mesh" mesh="servo" pos="0 0 0" xyaxes="0 1 0 0 0 1" mass="0.055" rgba="0.12 0.12 0.13 1"/>
+          <geom name="left_hip_pitch_servo" type="mesh" mesh="servo" pos="0 0 -0.02822" xyaxes="1 0 0 0 0 -1" mass="0.055" rgba="0.12 0.12 0.13 1"/>
+          <body name="left_thigh" pos="0 0 -0.02822">
+            <joint name="left_hip_pitch" axis="0 1 0" range="-0.29 1.29"/>
+            <geom name="left_thigh" type="mesh" mesh="left_thigh" mass="0.0132" class="petg"/>
+            <geom name="left_knee_servo" type="mesh" mesh="servo" pos="0 0 -0.0333281" xyaxes="-1 0 0 0 -0 1" mass="0.055" rgba="0.12 0.12 0.13 1"/>
+            <body name="left_shin" pos="0 0 -0.03333">
+              <joint name="left_knee" axis="0 1 0" range="-1.74 0.1"/>
+              <geom name="left_shin" type="mesh" mesh="left_shin" mass="0.0108" class="petg"/>
+              <geom name="left_ankle_servo" type="mesh" mesh="servo" pos="0 0 -0.0560781" xyaxes="0 0 1 1 0 0" mass="0.055" rgba="0.12 0.12 0.13 1"/>
+              <body name="left_ankle_link" pos="0 0 -0.05608">
                 <joint name="left_ankle" axis="0 1 0" range="-1.4 1.4"/>
-                <!-- Tobillo roll: mantiene el pie plano hacia los lados (eje cruzado con el pitch). -->
-                <joint name="left_ankle_roll" axis="1 0 0" range="-0.5 0.5"/>
-                <geom name="left_ankle_roll_servo" class="servo" pos="0 0 -0.006" size="0.0226 0.0124 0.009" contype="0" conaffinity="0"/>
-                <geom class="hub" size="0.007 0.016"/>
-                <geom name="left_sole" class="sole"/>
-                <!-- Sensores de pisada: microinterruptor SS-10 en punta y talón -->
-                <site name="left_toe_touch" type="box" pos="0.032 0 -0.019" size="0.016 0.022 0.004" rgba="0 0 0 0"/>
-                <site name="left_heel_touch" type="box" pos="-0.016 0 -0.019" size="0.016 0.022 0.004" rgba="0 0 0 0"/>
+                <geom name="left_ankle_cross" type="mesh" mesh="left_ankle_cross" mass="0.0134" class="petg"/>
+                <geom name="left_ankle_roll_servo" type="mesh" mesh="servo" pos="0 0 -0.0333281" xyaxes="0 1 0 0 0 1" mass="0.055" rgba="0.12 0.12 0.13 1"/>
+                <body name="left_foot" pos="0 0 -0.03333">
+                  <joint name="left_ankle_roll" axis="1 0 0" range="-0.5 0.5"/>
+                  <geom name="left_foot_plate" type="mesh" mesh="left_foot" mass="0.0192" class="petg"/>
+                  <!-- Suela de TPU: es la que toca el piso (forma real, con bordes curvos) -->
+                  <geom name="left_sole" type="mesh" mesh="left_sole" mass="0.0084" class="tpu"/>
+                  <site name="left_toe_touch" type="box" pos="0.0370 0 -0.0325" size="0.012 0.022 0.004" rgba="0 0 0 0"/>
+                  <site name="left_heel_touch" type="box" pos="-0.0270 0 -0.0325" size="0.012 0.022 0.004" rgba="0 0 0 0"/>
+                  <site name="left_sole_bottom" pos="0 0 -0.0345" size="0.002"/>
+                </body>
               </body>
             </body>
           </body>
         </body>
       </body>
 
-      <!-- ============================ PIERNA DERECHA ============================= -->
-      <body name="right_hip_yaw_link" pos="0 -0.033 0.03">
-        <joint name="right_hip_yaw" axis="0 0 1" range="-0.6 0.6"/>
-        <geom name="right_hip_bracket" type="box" pos="0 0 -0.006" size="0.014 0.012 0.003" mass="0.008" rgba="0.75 0.75 0.78 1"/>
-        <body name="right_hip_roll_link" pos="0 0 -0.018">
+      <body name="right_hip_yaw_link" pos="0 -0.0300 0.05319">
+        <joint name="right_hip_yaw" axis="0 0 1" range="-0.35 0.35"/>
+        <geom name="right_yaw_link" type="mesh" mesh="right_yaw_link" mass="0.0069" class="petg"/>
+        <body name="right_hip_roll_link" pos="0 0 -0.02497">
           <joint name="right_hip_roll" axis="1 0 0" range="-0.5 0.5"/>
-          <geom name="right_hip_roll_servo" class="servo" pos="0 0 0.004" size="0.0226 0.0124 0.009" mass="0.055"/>
-          <body name="right_thigh" pos="0 0 -0.012">
-            <joint name="right_hip_pitch" axis="0 1 0" range="-1.0 1.6"/>
-            <geom class="hub"/>
-            <geom name="right_hip_pitch_servo" class="servo" pos="0 -0.004 0" size="0.0124 0.0175 0.012"/>
-            <geom name="right_knee_servo" class="servo" pos="0 0 -0.022" size="0.0124 0.0175 0.018"/>
-            <geom class="shell" pos="0 -0.021 -0.02" size="0.016 0.003 0.024"/>
-            <body name="right_shin" pos="0 0 -0.04">
-              <joint name="right_knee" axis="0 1 0" range="-2.4 0.1"/>
-              <geom class="hub"/>
-              <geom name="right_shin" type="capsule" fromto="0 0 0 0 0 -0.045" size="0.007" mass="0.015"
-                    rgba="0.75 0.75 0.78 1"/>
-              <geom name="right_ankle_servo" class="servo" pos="0 0 -0.03" size="0.0124 0.0175 0.012"/>
-              <body name="right_foot" pos="0 0 -0.045">
+          <geom name="right_roll_link" type="mesh" mesh="right_roll_link" mass="0.0144" class="petg"/>
+          <geom name="right_hip_roll_servo" type="mesh" mesh="servo" pos="0 -0 0" xyaxes="0 -1 0 0 0 -1" mass="0.055" rgba="0.12 0.12 0.13 1"/>
+          <geom name="right_hip_pitch_servo" type="mesh" mesh="servo" pos="0 -0 -0.02822" xyaxes="1 -0 0 0 0 1" mass="0.055" rgba="0.12 0.12 0.13 1"/>
+          <body name="right_thigh" pos="0 0 -0.02822">
+            <joint name="right_hip_pitch" axis="0 1 0" range="-0.29 1.29"/>
+            <geom name="right_thigh" type="mesh" mesh="right_thigh" mass="0.0132" class="petg"/>
+            <geom name="right_knee_servo" type="mesh" mesh="servo" pos="0 -0 -0.0333281" xyaxes="-1 -0 0 0 -0 -1" mass="0.055" rgba="0.12 0.12 0.13 1"/>
+            <body name="right_shin" pos="0 0 -0.03333">
+              <joint name="right_knee" axis="0 1 0" range="-1.74 0.1"/>
+              <geom name="right_shin" type="mesh" mesh="right_shin" mass="0.0108" class="petg"/>
+              <geom name="right_ankle_servo" type="mesh" mesh="servo" pos="0 -0 -0.0560781" xyaxes="0 -0 1 -1 0 0" mass="0.055" rgba="0.12 0.12 0.13 1"/>
+              <body name="right_ankle_link" pos="0 0 -0.05608">
                 <joint name="right_ankle" axis="0 1 0" range="-1.4 1.4"/>
-                <!-- Tobillo roll: mantiene el pie plano hacia los lados (eje cruzado con el pitch). -->
-                <joint name="right_ankle_roll" axis="1 0 0" range="-0.5 0.5"/>
-                <geom name="right_ankle_roll_servo" class="servo" pos="0 0 -0.006" size="0.0226 0.0124 0.009" contype="0" conaffinity="0"/>
-                <geom class="hub" size="0.007 0.016"/>
-                <geom name="right_sole" class="sole"/>
-                <!-- Sensores de pisada: microinterruptor SS-10 en punta y talón -->
-                <site name="right_toe_touch" type="box" pos="0.032 0 -0.019" size="0.016 0.022 0.004" rgba="0 0 0 0"/>
-                <site name="right_heel_touch" type="box" pos="-0.016 0 -0.019" size="0.016 0.022 0.004" rgba="0 0 0 0"/>
+                <geom name="right_ankle_cross" type="mesh" mesh="right_ankle_cross" mass="0.0134" class="petg"/>
+                <geom name="right_ankle_roll_servo" type="mesh" mesh="servo" pos="0 -0 -0.0333281" xyaxes="0 -1 0 0 0 -1" mass="0.055" rgba="0.12 0.12 0.13 1"/>
+                <body name="right_foot" pos="0 0 -0.03333">
+                  <joint name="right_ankle_roll" axis="1 0 0" range="-0.5 0.5"/>
+                  <geom name="right_foot_plate" type="mesh" mesh="right_foot" mass="0.0192" class="petg"/>
+                  <!-- Suela de TPU: es la que toca el piso (forma real, con bordes curvos) -->
+                  <geom name="right_sole" type="mesh" mesh="right_sole" mass="0.0084" class="tpu"/>
+                  <site name="right_toe_touch" type="box" pos="0.0370 0 -0.0325" size="0.012 0.022 0.004" rgba="0 0 0 0"/>
+                  <site name="right_heel_touch" type="box" pos="-0.0270 0 -0.0325" size="0.012 0.022 0.004" rgba="0 0 0 0"/>
+                  <site name="right_sole_bottom" pos="0 0 -0.0345" size="0.002"/>
+                </body>
               </body>
             </body>
           </body>
@@ -157,10 +143,9 @@
       </body>
 
       <!-- ============================ CUELLO Y CABEZA ============================ -->
-      <body name="neck" pos="0 0 0.088" childclass="micro">
+      <body name="neck" pos="0 0 0.1274" childclass="micro">
         <joint name="neck_pitch" axis="0 1 0" range="-0.8 0.8"/>
         <geom class="micro_servo"/>
-        <!-- Cuello muy corto (0.8 cm): prácticamente los servos apilados -->
         <geom name="neck" type="box" pos="0 0 0.004" size="0.009 0.012 0.004" mass="0.003" rgba="0.1 0.1 0.11 1"/>
         <body name="head_pitch_link" pos="0 0 0.008">
           <joint name="head_pitch" axis="0 1 0" range="-0.9 0.9"/>
@@ -171,11 +156,8 @@
             <body name="head" pos="0 0 0.008">
               <joint name="head_roll" axis="1 0 0" range="-0.5 0.5"/>
               <geom class="micro_servo" size="0.011 0.006 0.006"/>
-              <!-- Cabeza: carcasa -->
-              <geom name="head" type="box" pos="0.02 0 0.024" size="0.042 0.032 0.02" mass="0.04"
-                    rgba="0.55 0.82 0.9 1"/>
-              <!-- Cámara USB (UVC) compacta, placa 32 x 32 mm, ~6 g, al frente de la cabeza.
-                   Campo de visión ~70° horizontal (~55° vertical en 4:3). -->
+              <geom name="head" type="box" pos="0.02 0 0.024" size="0.042 0.032 0.02" mass="0.04" rgba="0.55 0.82 0.9 1"/>
+              <!-- Cámara USB compacta (placa 32 x 32 mm, ~6 g), ~70° de campo horizontal -->
               <geom name="camera_board" type="box" pos="0.0635 0 0.024" size="0.0015 0.016 0.016" mass="0.005"
                     contype="0" conaffinity="0" rgba="0.1 0.35 0.15 1"/>
               <geom name="camera_lens_mount" type="box" pos="0.0665 0 0.026" size="0.0015 0.0055 0.0055" mass="0.001"
@@ -192,16 +174,16 @@
   </worldbody>
 
   <actuator>
-    <position name="left_hip_yaw" joint="left_hip_yaw" ctrlrange="-0.6 0.6"/>
+    <position name="left_hip_yaw" joint="left_hip_yaw" ctrlrange="-0.35 0.35"/>
     <position name="left_hip_roll" joint="left_hip_roll" ctrlrange="-0.5 0.5"/>
-    <position name="left_hip_pitch" joint="left_hip_pitch" ctrlrange="-1.0 1.6"/>
-    <position name="left_knee" joint="left_knee" ctrlrange="-2.4 0.1"/>
+    <position name="left_hip_pitch" joint="left_hip_pitch" ctrlrange="-0.29 1.29"/>
+    <position name="left_knee" joint="left_knee" ctrlrange="-1.74 0.1"/>
     <position name="left_ankle" joint="left_ankle" ctrlrange="-1.4 1.4"/>
     <position name="left_ankle_roll" joint="left_ankle_roll" ctrlrange="-0.5 0.5"/>
-    <position name="right_hip_yaw" joint="right_hip_yaw" ctrlrange="-0.6 0.6"/>
+    <position name="right_hip_yaw" joint="right_hip_yaw" ctrlrange="-0.35 0.35"/>
     <position name="right_hip_roll" joint="right_hip_roll" ctrlrange="-0.5 0.5"/>
-    <position name="right_hip_pitch" joint="right_hip_pitch" ctrlrange="-1.0 1.6"/>
-    <position name="right_knee" joint="right_knee" ctrlrange="-2.4 0.1"/>
+    <position name="right_hip_pitch" joint="right_hip_pitch" ctrlrange="-0.29 1.29"/>
+    <position name="right_knee" joint="right_knee" ctrlrange="-1.74 0.1"/>
     <position name="right_ankle" joint="right_ankle" ctrlrange="-1.4 1.4"/>
     <position name="right_ankle_roll" joint="right_ankle_roll" ctrlrange="-0.5 0.5"/>
     <position name="neck_pitch" joint="neck_pitch" class="micro" ctrlrange="-0.8 0.8"/>
@@ -222,14 +204,7 @@
   </sensor>
 
   <keyframe>
-    <!-- De pie, rodillas flexionadas hacia atrás (cadera a 8.5 cm de la suela). -->
-    <key name="home"
-         qpos="0 0 0.0855 1 0 0 0
-               0 0 0.751 -1.403 0.652 0
-               0 0 0.751 -1.403 0.652 0
-               0 0 0 0"
-         ctrl="0 0 0.751 -1.403 0.652 0
-               0 0 0.751 -1.403 0.652 0
-               0 0 0 0"/>
+    <!-- De pie, rodillas flexionadas (calculado con la cinemática inversa de sim/gait.py) -->
+    <key name="home" qpos="0 0 0.1460 1 0 0 0 -0 0 0.856053 -1.02036 0.164306 -0 0 0 0.856053 -1.02036 0.164306 -0 0 0 0 0" ctrl="-0 0 0.856053 -1.02036 0.164306 -0 0 0 0.856053 -1.02036 0.164306 -0 0 0 0 0"/>
   </keyframe>
 </mujoco>
