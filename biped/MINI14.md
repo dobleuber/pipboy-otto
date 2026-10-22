@@ -45,7 +45,7 @@ vida útil. La alternativa segura es un regulador de 6 V / 5 A (con menos torque
 
 | Cant. | Componente | Masa | Precio aprox. | Notas |
 |---|---|---|---|---|
-| 14 | Dynamixel **XL330-M288-T** | 18 g c/u | ~24 USD c/u | 20 x 34 x 26 mm, bus TTL, cables en cadena |
+| 14 | Dynamixel **XL330-M288-T** | 18 g c/u | ~40 € c/u en Europa (~27 USD en EE. UU.) | 20 x 34 x 26 mm, bus TTL, cables en cadena |
 | 1 | **U2D2** (o circuito semidúplex con 74LVC2G241) | 9 g | ~32 USD | USB ↔ bus Dynamixel |
 | 1 | **Orange Pi Zero 3** | 25 g | ya la tienes | 50 Hz de control sobra |
 | 2 | 18650 alta descarga (Molicel P30B) + soporte + BMS 2S | 104 g | ~25 € | en la cabeza |
@@ -56,8 +56,9 @@ vida útil. La alternativa segura es un regulador de 6 V / 5 A (con menos torque
 | 4 | Microinterruptores SS-10 | 1 g c/u | ~1 € c/u | punta y talón |
 | — | Condensador 1000 µF, interruptor, XT30, cables | ~20 g | ~10 € | |
 
-**Total aproximado:** ~420 € (los servos son ~80 %). Más caro que Mini16 por servo, pero más
-liviano y con un diseño que ya funciona a este tamaño.
+**Total aproximado:** ~650 € en Europa (los servos, ~560 €, son ~85 %). Un STS3215 cuesta
+~25 € en tiendas europeas, así que cada XL330 sale ~60 % más caro. Alternativa en la misma clase:
+Feetech STS3032 (20 g), pero cuesta casi lo mismo (~30–40 €) y tiene menos torque (0.44 N·m a 6 V).
 
 ## Pesos (modelo)
 
