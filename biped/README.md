@@ -7,12 +7,12 @@ y Microduck. Hay dos variantes con el mismo código de simulación, caminata e I
 |---|---|---|
 | Motores | 13: 5 por pierna + 3 cabeza | 16: 6 por pierna + 4 cabeza |
 | Pierna | cadera yaw/roll/pitch, rodilla, tobillo pitch | ídem + **tobillo roll** |
-| Altura / masa | ~27 cm / 996 g | ~24 cm / 1.10 kg (con componentes reales) |
+| Altura / masa | ~27 cm / 996 g | ~32 cm / 1.18 kg (piezas reales del CAD) |
 | Pie | suela curva de TPU (punta, talón, costados) | plano |
 | Cámara | sí (simulada) | cámara USB al frente de la cabeza |
 | Sensores | IMU, pisada | IMU, 4 de pisada (punta/talón), ToF 8x8 mirando al piso |
-| Velocidad en plano (caminata programada) | ~5 cm/s | ~4 cm/s |
-| Rampas 10–15° (caminata programada) | no | **sí** |
+| Velocidad en plano (caminata programada) | ~5 cm/s | ~3.4 cm/s |
+| Rampas (caminata programada) | no | 10° sí, 15° no |
 | Escalones ≥ 1 cm | no (necesita IA) | no (necesita IA) |
 
 <p>
@@ -25,6 +25,19 @@ Videos: [Mini13 caminando](media/mini13_walk.mp4) · [Mini13 girando](media/mini
 [Mini16: lo que ve la cámara](media/mini16_camara.mp4)
 
 > Proyecto independiente de Pip-Boy Otto; vive en esta carpeta solo de forma temporal.
+
+## Piezas imprimibles (CAD)
+
+La pierna de Mini16 ya está diseñada en OpenSCAD con las medidas reales del STS3215:
+**[cad/README.md](cad/README.md)** (piezas, materiales, tornillería, rangos sin choques).
+El modelo de simulación `model/mini16.xml` se **genera** desde el CAD (`cad/build_mjcf.py`),
+así que usa las mismas distancias, mallas y masas que las piezas a imprimir.
+
+![Mini16 desde el CAD](media/mini16_cad.png)
+
+**Lo que cambió al usar las piezas reales:** el robot pasó de ~24 cm / 1.10 kg (modelo
+idealizado) a ~32 cm / 1.18 kg, y la caminata programada quedó bastante más frágil (sube rampas
+de 10°, ya no de 15°). Para terreno irregular, la IA vuelve a ser necesaria.
 
 ## Conclusiones de la exploración
 

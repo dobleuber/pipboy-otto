@@ -53,10 +53,10 @@ Todo esto ya está reflejado en el modelo de simulación (`model/mini16.xml`).
 | Batería 2x18650 + soporte | 98 g |
 | Orange Pi + reguladores + adaptadores + BMS + cableado | ~75 g |
 | Sensores (IMU, ToF, cámara, pisada) | ~15 g |
-| Plástico (torso, cabeza, piernas, pies con TPU) | ~200 g |
-| **Total** | **~1.10 kg** |
+| Plástico (piernas del CAD ~173 g, torso, cabeza) | ~280 g |
+| **Total** | **~1.18 kg** |
 
-Queda ~100 g por encima de la meta de 1 kg de la especificación. Los servos de las piernas son el
+Queda ~180 g por encima de la meta de 1 kg de la especificación. Los servos de las piernas son el
 60 % del peso; se puede recortar algo con carcasas más finas o una batería más chica (a costa de
 autonomía), pero con 12 STS3215 es difícil bajar de ~1.05 kg.
 

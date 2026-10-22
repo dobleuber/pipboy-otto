@@ -55,7 +55,7 @@
   </default>
 
   <worldbody>
-    <body name="torso" pos="0 0 0.1250">
+    <body name="torso" pos="0 0 0.1200">
       <freejoint name="root"/>
       <!-- IMU BNO055 nivelada entre los servos de cadera -->
       <site name="imu" pos="0 0 0.0732" size="0.005"/>
@@ -205,6 +205,6 @@
 
   <keyframe>
     <!-- De pie, rodillas flexionadas (calculado con la cinemática inversa de sim/gait.py) -->
-    <key name="home" qpos="0 0 0.1260 1 0 0 0 -0 0 0.767399 -0.861745 0.0943456 -0 0 0 0.767399 -0.861745 0.0943456 -0 0 0 0 0" ctrl="-0 0 0.767399 -0.861745 0.0943456 -0 0 0 0.767399 -0.861745 0.0943456 -0 0 0 0 0"/>
+    <key name="home" qpos="0 0 0.1210 1 0 0 0 -0 0 0.942963 -1.15376 0.2108 -0 0 0 0.942963 -1.15376 0.2108 -0 0 0 0 0" ctrl="-0 0 0.942963 -1.15376 0.2108 -0 0 0 0.942963 -1.15376 0.2108 -0 0 0 0 0"/>
   </keyframe>
 </mujoco>

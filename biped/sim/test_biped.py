@@ -15,7 +15,9 @@ ROBOTS = ["mini13", "mini16"]
 # caminata programada solo sirve en plano: rampas y escalones quedan para la IA.
 SPEC = {
     "mini13": dict(mass=(0.9, 1.0), height=(0.25, 0.30), min_x=0.4, yaw_tol=25, ramps=[]),
-    "mini16": dict(mass=(0.9, 1.2), height=(0.20, 0.25), min_x=0.3, yaw_tol=10, ramps=[10, 15]),
+    # Mini16 generado desde el CAD (servos reales): ~32 cm y ~1.18 kg; con caminata programada
+    # sube rampas de 10°, no de 15° (eso queda para la IA).
+    "mini16": dict(mass=(1.1, 1.25), height=(0.28, 0.36), min_x=0.3, yaw_tol=10, ramps=[10]),
 }
 
 

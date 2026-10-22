@@ -69,7 +69,7 @@ ROBOTS = {
         ankle_to_sole=0.03333 + 0.0345,  # tobillo pitch -> tobillo roll -> suela
         ankle_roll=True,
         n_head=4,
-        gait=dict(freq=1.2, step_len=0.008, lift=0.008, sway=0.02, sway_lead=0.0, hip_height=0.125,
+        gait=dict(freq=1.5, step_len=0.008, lift=0.006, sway=0.014, sway_lead=0.0, hip_height=0.12,
                   foot_x=-0.02, turn_yaw=0.4, stride_bias=0.0, steer_gain=0.3, steer_damping=0.0),
     ),
 }
