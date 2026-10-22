@@ -1,0 +1,9 @@
+-r requirements.txt
+# Entrenamiento con IA (CPU). Para PyTorch solo-CPU:
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
+torch
+stable-baselines3>=2.3
+gymnasium>=1.0
+onnx
+onnxruntime
+pillow
