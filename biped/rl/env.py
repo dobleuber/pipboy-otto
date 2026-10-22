@@ -268,8 +268,10 @@ class MiniEnv(gym.Env):
             self._renderer_model = self.m
             self._cam = mujoco.MjvCamera()
             self._cam.distance, self._cam.azimuth, self._cam.elevation = 0.6, 105, -10
+            self._vopt = mujoco.MjvOption()
+            self._vopt.flags[mujoco.mjtVisFlag.mjVIS_RANGEFINDER] = 0  # sin la línea del ToF
         self._cam.lookat[:] = [self.d.qpos[0], self.d.qpos[1], self.d.qpos[2] + 0.01]
-        self._renderer.update_scene(self.d, camera=self._cam)
+        self._renderer.update_scene(self.d, camera=self._cam, scene_option=self._vopt)
         return self._renderer.render()
 
 

@@ -70,8 +70,21 @@ liviano y con un diseño que ya funciona a este tamaño.
 | Plástico (torso 45 g, cabeza 30 g, piernas 112 g, cuello 8 g) | 195 g |
 | **Total** | **629 g** |
 
+## Resultado con IA
+
+Entrenamiento corto (2 M de pasos, 23 min en CPU, piso plano). La IA mueve las 10 articulaciones
+de las piernas y las 4 de la cabeza. Evaluado en 20 pruebas con variaciones aleatorias y empujones:
+
+| | Caminata de referencia | Con IA |
+|---|---|---|
+| Pruebas sin caerse y avanzando ≥ 30 cm | 0 % | **100 %** |
+| Avance medio en 10 s | −1 cm | **72 cm** (~7 cm/s) |
+
+Video: [media/mini14_ia_plano.mp4](media/mini14_ia_plano.mp4). Política: `rl/policies/mini14_flat.onnx`.
+
 ## Pendiente
 
-- Entrenar la IA (ver resultados en el README) y, si camina, diseñar las piezas en OpenSCAD con
-  las medidas reales del XL330, como se hizo con Mini16.
+- Entrenar con rampas, escalones y órdenes de giro (más largo: conviene la PC con NVIDIA).
+- Diseñar las piezas en OpenSCAD con las medidas reales del XL330, como se hizo con Mini16, y
+  volver a generar el modelo desde el CAD.
 - Medir un XL330 real con BAM (o usar sus parámetros publicados) antes de pasar al robot.

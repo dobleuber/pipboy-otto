@@ -26,6 +26,26 @@ Videos: [Mini13 caminando](media/mini13_walk.mp4) · [Mini13 girando](media/mini
 
 > Proyecto independiente de Pip-Boy Otto; vive en esta carpeta solo de forma temporal.
 
+## Nuevo: Mini14 (recomendado)
+
+Diseño desde cero con lo aprendido del Microduck ([LECCIONES.md](LECCIONES.md)):
+14 servos XL330 (5 por pierna + 4 en cuello y cabeza), batería en la cabeza como contrapeso,
+27.7 cm y 629 g. Detalles, componentes y pesos en **[MINI14.md](MINI14.md)**.
+
+Con un entrenamiento corto de IA (2 M de pasos, 23 min en 4 núcleos de CPU, solo piso plano)
+camina en el **100 % de 20 pruebas** con fricción, peso, rigidez de servos y retardo aleatorios
+y empujones: ~7 cm/s. Sin IA, la caminata de referencia no avanza.
+
+<img src="media/mini14_ia_plano.gif" width="70%" alt="Mini14 caminando con IA">
+
+[Video](media/mini14_ia_plano.mp4) · política exportada: `rl/policies/mini14_flat.onnx`
+
+```bash
+cd biped/model && python build_mini14.py          # regenera el modelo desde sus medidas
+cd ../rl && python train.py --robot mini14 --terrain flat --steps 2000000 --out runs/mini14_flat
+python evaluate.py --robot mini14 --terrain flat --policy policies/mini14_flat.onnx
+```
+
 ## Piezas imprimibles (CAD)
 
 La pierna de Mini16 ya está diseñada en OpenSCAD con las medidas reales del STS3215:
