@@ -7,9 +7,10 @@ y Microduck. Hay dos variantes con el mismo código de simulación, caminata e I
 |---|---|---|
 | Motores | 13: 5 por pierna + 3 cabeza | 16: 6 por pierna + 4 cabeza |
 | Pierna | cadera yaw/roll/pitch, rodilla, tobillo pitch | ídem + **tobillo roll** |
-| Altura / masa | ~27 cm / 996 g | ~22.4 cm / 1.055 kg |
+| Altura / masa | ~27 cm / 996 g | ~24 cm / 1.10 kg (con componentes reales) |
 | Pie | suela curva de TPU (punta, talón, costados) | plano |
-| Cámara | sí (simulada) | módulo tipo Raspberry Pi Camera Module 3 al frente de la cabeza |
+| Cámara | sí (simulada) | cámara USB al frente de la cabeza |
+| Sensores | IMU, pisada | IMU, 4 de pisada (punta/talón), ToF 8x8 mirando al piso |
 | Velocidad en plano (caminata programada) | ~5 cm/s | ~4 cm/s |
 | Rampas 10–15° (caminata programada) | no | **sí** |
 | Escalones ≥ 1 cm | no (necesita IA) | no (necesita IA) |
@@ -103,8 +104,8 @@ Archivos:
 
 ## Placa para el robot
 
-La red de la IA es chica (2 capas de 128): cualquier placa la corre a 50 Hz. El límite es el
-tamaño del torso (~7 x 9 cm en Mini13).
+La red de la IA es chica (2 capas de 128): cualquier placa la corre a 50 Hz. Elegida para Mini16:
+**Orange Pi Zero 3** con cámara USB (el torso mide 7 x 8 x 6.2 cm).
 
 | Placa | ¿Cabe? | Notas |
 |---|---|---|
@@ -112,19 +113,10 @@ tamaño del torso (~7 x 9 cm en Mini13).
 | Raspberry Pi Zero 2W | sí | la más fácil de meter; conector de cámara CSI |
 | Orange Pi 5 Pro | no | potente, pero exige un torso más grande y más batería |
 
-## Lista de piezas estimada (Mini13)
+## Componentes
 
-| Pieza | Cant. | Aprox. |
-|---|---|---|
-| Feetech STS3215 **7.4 V** (19 kg·cm) | 10 | 140 € |
-| Micro servo de bus con lectura de posición (p. ej. SCS0009) | 3 | 20–30 € |
-| Placa Waveshare Bus Servo Adapter (A) | 1 | 5 € |
-| IMU BNO055 (o clon) | 1 | 1–40 € |
-| Batería 2S (2x18650 alta descarga o NP-F550) + BMS + UBEC 5 V + interruptor + condensadores | 1 | 30–40 € |
-| Cámara, interruptores de pie, insertos M3, rodamientos, PLA/PETG, TPU | — | ~30 € |
-| **Total (sin placa)** | | **~225–285 €** |
-
-Mini16 suma 2 STS3215 (~28 €) y 1 micro servo.
+Lista completa de Mini16 (servos, placa, batería, sensores, conexiones, peso y qué verificar):
+**[COMPONENTES.md](COMPONENTES.md)**. Total aproximado: ~270–330 € sin la placa.
 
 ## Limitaciones
 

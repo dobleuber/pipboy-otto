@@ -68,8 +68,8 @@ ROBOTS = {
         ankle_to_sole=0.02,
         ankle_roll=True,
         n_head=4,
-        gait=dict(freq=1.2, step_len=0.01, lift=0.02, sway=0.025, sway_lead=0.0, hip_height=0.085,
-                  foot_x=-0.008, turn_yaw=0.4, stride_bias=0.0, steer_gain=0.3, steer_damping=0.0),
+        gait=dict(freq=1.2, step_len=0.01, lift=0.02, sway=0.03, sway_lead=0.0, hip_height=0.085,
+                  foot_x=-0.016, turn_yaw=0.4, stride_bias=0.0, steer_gain=0.3, steer_damping=0.0),
     ),
 }
 
