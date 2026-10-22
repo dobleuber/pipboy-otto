@@ -24,6 +24,7 @@ S_DISC_Z = _P["S_DISC_Z"]
 D_YAW_ROLL, D_ROLL_PITCH = _P["D_YAW_ROLL"], _P["D_ROLL_PITCH"]
 D_THIGH, D_SHIN, D_ANKLE = _P["D_THIGH"], _P["D_SHIN"], _P["D_ANKLE"]
 HIP_Y = _P["HIP_Y"]
+SHIN_X = [0, 0, 1] if _P["SHIN_UP"] else [1, 0, 0]
 DEPTH_TOL = 0.2  # mm
 
 
@@ -70,7 +71,7 @@ def leg_objects(q):
             ("servo_knee", "servo_check", L3 @ servo_frame([0, 0, -D_THIGH], [0, 1, 0], [-1, 0, 0]))]
     L4 = L3 @ tr(0, 0, -D_THIGH) @ rot("y", knee)
     out += [("shin", "shin", L4),
-            ("servo_ankle", "servo_check", L4 @ servo_frame([0, 0, -D_SHIN], [0, 1, 0], [0, 0, 1]))]
+            ("servo_ankle", "servo_check", L4 @ servo_frame([0, 0, -D_SHIN], [0, 1, 0], SHIN_X))]
     L5 = L4 @ tr(0, 0, -D_SHIN) @ rot("y", ankle)
     out += [("ankle_cross", "ankle_cross", L5),
             ("servo_ankle_roll", "servo_check", L5 @ servo_frame([0, 0, -D_ANKLE], [1, 0, 0], [0, 1, 0]))]

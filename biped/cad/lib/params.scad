@@ -31,9 +31,11 @@ D_YAW_ROLL   = T + R_CB + 5;         // cara del disco del servo yaw -> eje roll
                                      // (+5 mm: el servo roll, acostado hacia afuera, puede inclinarse ±29°)
 D_ROLL_PITCH = S_W / 2 + 3.5 + S_W / 2;   // eje roll -> eje pitch (servo roll sobre servo pitch)
 D_THIGH = R_CB + T + GAP + S_W / 2;  // eje cadera pitch -> eje rodilla
-// El servo del tobillo va parado a lo largo de la canilla: así no choca con el de la cadera
-// cuando la rodilla se dobla más de ~85°.
-D_SHIN  = R_CB + T + GAP + S_LONG;   // eje rodilla -> eje tobillo pitch
+// Servo del tobillo pitch en la canilla:
+//   "fwd": acostado hacia adelante -> canilla corta (33 mm); la rodilla llega a ~83°
+//   "up":  parado a lo largo de la canilla -> canilla de 56 mm; la rodilla llega a ~100°
+SHIN_SERVO = "fwd";
+D_SHIN  = SHIN_SERVO == "up" ? R_CB + T + GAP + S_LONG : R_CB + T + GAP + S_W / 2;
 D_ANKLE = D_THIGH;                   // eje tobillo pitch -> eje tobillo roll
 FOOT_CLEAR = 27.5;                   // eje tobillo roll -> cara superior de la plancha del pie
                                      // (deja inclinar el pie ±29° sin tocar el servo, que sobresale hacia afuera)

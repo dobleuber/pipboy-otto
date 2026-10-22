@@ -57,6 +57,14 @@ def servo_geom(name, origin_mm, Z, X, mirror):
             f'mass="{SERVO_MASS}" rgba="0.12 0.12 0.13 1"/>')
 
 
+def knee_lo(P):   # límites sin choques medidos con check_leg.py
+    return -1.74 if P["SHIN_UP"] else -1.45
+
+
+def ankle_lo(P):
+    return -1.4 if P["SHIN_UP"] else -0.19
+
+
 def leg_xml(side, P, M):
     s = 1 if side == "left" else -1
     mir = side == "right"
@@ -80,11 +88,11 @@ def leg_xml(side, P, M):
             {part('thigh')}
             {servo_geom(f'{side}_knee_servo', [0, 0, -P['D_THIGH']], [0, 1, 0], [-1, 0, 0], mir)}
             <body name="{side}_shin" pos="0 0 {-mm(P['D_THIGH']):.5f}">
-              <joint name="{side}_knee" axis="0 1 0" range="-1.74 0.1"/>
+              <joint name="{side}_knee" axis="0 1 0" range="{knee_lo(P)} 0.1"/>
               {part('shin')}
-              {servo_geom(f'{side}_ankle_servo', [0, 0, -P['D_SHIN']], [0, 1, 0], [0, 0, 1], mir)}
+              {servo_geom(f'{side}_ankle_servo', [0, 0, -P['D_SHIN']], [0, 1, 0], [0, 0, 1] if P['SHIN_UP'] else [1, 0, 0], mir)}
               <body name="{side}_ankle_link" pos="0 0 {-mm(P['D_SHIN']):.5f}">
-                <joint name="{side}_ankle" axis="0 1 0" range="-1.4 1.4"/>
+                <joint name="{side}_ankle" axis="0 1 0" range="{ankle_lo(P)} 1.4"/>
                 {part('ankle_cross')}
                 {servo_geom(f'{side}_ankle_roll_servo', [0, 0, -P['D_ANKLE']], [1, 0, 0], [0, 1, 0], mir)}
                 <body name="{side}_foot" pos="0 0 {-mm(P['D_ANKLE']):.5f}">
@@ -241,7 +249,7 @@ def build():
         f'    <position name="{side}_{j}" joint="{side}_{j}" ctrlrange="{lo} {hi}"/>'
         for side in ("left", "right")
         for j, lo, hi in [("hip_yaw", -0.35, 0.35), ("hip_roll", -0.5, 0.5), ("hip_pitch", -0.29, 1.29),
-                          ("knee", -1.74, 0.1), ("ankle", -1.4, 1.4), ("ankle_roll", -0.5, 0.5)]) + f"""
+                          ("knee", knee_lo(P), 0.1), ("ankle", ankle_lo(P), 1.4), ("ankle_roll", -0.5, 0.5)]) + f"""
     <position name="neck_pitch" joint="neck_pitch" class="micro" ctrlrange="-0.8 0.8"/>
     <position name="head_pitch" joint="head_pitch" class="micro" ctrlrange="-0.9 0.9"/>
     <position name="head_yaw" joint="head_yaw" class="micro" ctrlrange="-1.3 1.3"/>

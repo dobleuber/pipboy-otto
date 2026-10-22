@@ -65,12 +65,12 @@ ROBOTS = {
         scene=MODEL_DIR / "scene_mini16.xml",
         roll_to_pitch=0.02822,
         thigh=0.03333,
-        shin=0.05608,
+        shin=0.03333,
         ankle_to_sole=0.03333 + 0.0345,  # tobillo pitch -> tobillo roll -> suela
         ankle_roll=True,
         n_head=4,
-        gait=dict(freq=1.2, step_len=0.01, lift=0.015, sway=0.03, sway_lead=0.0, hip_height=0.145,
-                  foot_x=-0.016, turn_yaw=0.4, stride_bias=0.0, steer_gain=0.3, steer_damping=0.0),
+        gait=dict(freq=1.2, step_len=0.008, lift=0.008, sway=0.02, sway_lead=0.0, hip_height=0.125,
+                  foot_x=-0.02, turn_yaw=0.4, stride_bias=0.0, steer_gain=0.3, steer_damping=0.0),
     ),
 }
 

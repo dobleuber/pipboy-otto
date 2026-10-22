@@ -99,23 +99,30 @@ module thigh() {
     }
 }
 
-// Canilla: U sobre el servo de rodilla + cuna del servo de tobillo pitch (parado a lo largo de la
-// canilla, con el eje abajo).
+// Canilla: U sobre el servo de rodilla + cuna del servo de tobillo pitch
+// (SHIN_SERVO = "fwd": acostado hacia adelante; "up": parado a lo largo de la canilla).
 module shin() {
     za = -D_SHIN;
     cb = -R_CB - T;
     difference() {
         union() {
             for (y0 = Y_ARM) arm_y(y0, R_CB + T);
-            translate([-S_W / 2 - TF, -(S_DISC_Z + T), cb]) cube([S_W + 2 * TF, 2 * (S_DISC_Z + T), T]);
-            for (y0 = [S_CASE / 2, -S_CASE / 2 - TF])
-                translate([-S_W / 2 - TF, y0, za + 3]) cube([S_W + 2 * TF, TF, cb - (za + 3)]);
+            if (SHIN_SERVO == "up") {
+                translate([-S_W / 2 - TF, -(S_DISC_Z + T), cb]) cube([S_W + 2 * TF, 2 * (S_DISC_Z + T), T]);
+                for (y0 = [S_CASE / 2, -S_CASE / 2 - TF])
+                    translate([-S_W / 2 - TF, y0, za + 3]) cube([S_W + 2 * TF, TF, cb - (za + 3)]);
+            } else {
+                translate([-ARM_R, -(S_DISC_Z + T), cb]) cube([S_LONG + 2 + ARM_R, 2 * (S_DISC_Z + T), T]);
+                for (y0 = [S_CASE / 2, -S_CASE / 2 - TF])
+                    translate([3, y0, za - S_W / 2]) cube([S_LONG + 2 - 3, TF, cb - (za - S_W / 2)]);
+            }
         }
         horn_y();
         disc_clear_y(za);
-        servo_frame([0, 0, za], [0, 1, 0], [0, 0, 1]) case_holes();
+        servo_frame([0, 0, za], [0, 1, 0], shin_servo_x()) case_holes();
     }
 }
+function shin_servo_x() = SHIN_SERVO == "up" ? [0, 0, 1] : [1, 0, 0];
 
 // Tobillo: U sobre el servo de tobillo pitch + cuna del servo de tobillo roll (acostado hacia afuera).
 module ankle_cross() {
@@ -207,7 +214,7 @@ module leg(q = Q) {
                 if (SERVOS) servo_vis([0, 0, -D_THIGH], [0, 1, 0], [-1, 0, 0]);
                 translate([0, 0, -D_THIGH]) rotate([0, q[3], 0]) {
                     color(PETG) shin();
-                    if (SERVOS) servo_vis([0, 0, -D_SHIN], [0, 1, 0], [0, 0, 1]);
+                    if (SERVOS) servo_vis([0, 0, -D_SHIN], [0, 1, 0], shin_servo_x());
                     translate([0, 0, -D_SHIN]) rotate([0, q[4], 0]) {
                         color(PETG) ankle_cross();
                         if (SERVOS) servo_vis([0, 0, -D_ANKLE], [1, 0, 0], [0, 1, 0]);

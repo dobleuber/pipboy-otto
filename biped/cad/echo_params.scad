@@ -20,4 +20,5 @@ echo("FOOT_X1", FOOT_X1);
 echo("FOOT_HW", FOOT_HW);
 echo("SW_X0", SW_X[0]);
 echo("SW_X1", SW_X[1]);
+echo("SHIN_UP", SHIN_SERVO == "up" ? 1 : 0);
 cube(1);
