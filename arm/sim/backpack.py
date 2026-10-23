@@ -4,7 +4,9 @@
   ~2 cm a 1.8 pasos/s, se balancea de lado, gira un poco la cadera).
 - El morral + soporte es un cuerpo libre "soldado" (weld) al usuario: así el brazo recibe las
   aceleraciones reales del caminar (no se teletransporta).
-- La IMU va en la base del brazo (como un BNO055 en el soporte).
+- El soporte es el de arm/cad: placa en la espalda, tubo 20x20, y una cabeza con bisagra que se
+  dobla hacia atrás si el brazo se engancha (imanes: ~7 N·m cerrada, casi nada al abrirse).
+- La IMU va en la base del brazo, después de la bisagra (como un BNO055 en la bandeja).
 - En la vereda hay personas paradas (con cara color piel, que el detector busca).
 
 Ejes del usuario: x = adelante, y = izquierda, z = arriba; origen = centro de los hombros.
@@ -27,18 +29,34 @@ HEAD = np.array([0.02, 0.0, 0.2])  # centro de la cabeza del usuario
 HEAD_R = 0.10
 STEP_HZ = 1.8  # pasos por segundo
 WALK_SPEED = 1.2  # m/s
+# Del soporte en arm/cad/params.scad (mm -> m), relativos a la base del brazo:
+HINGE_REL = np.array([-0.0489, 0.0, -0.0314])   # eje de la bisagra (HINGE - ARM_BASE)
+TUBE_FROM = np.array([-0.054, 0.160, -0.060])   # FOOT_AT - ARM_BASE
+TUBE_TO = np.array([-0.054, 0.035, -0.045])     # HEAD_AT - ARM_BASE
+FOLD_TORQUE = 7.0  # N·m que sostienen los imanes cerrados
+MAGNET_DECAY = 0.05  # rad: al abrirse ~3°, la fuerza de los imanes cae a un tercio
+FITS = {"ajustado": [0.01, 1.0], "flojo": [0.05, 0.3]}  # cómo va el morral (weld: tiempo, amortiguación)
 # Personas en la vereda: (nombre, x, y). Las de la izquierda quedan del otro lado de la cabeza.
 BYSTANDERS = [("ana", 6.0, -1.7), ("beto", 10.0, 1.8), ("caro", 16.0, -0.9)]
 
 
 def mount_xml():
-    """so101.xml con la base del brazo dentro de un cuerpo libre "mount" (el morral)."""
+    """so101.xml con la base del brazo dentro de "fold" (bisagra) dentro de "mount" (el morral)."""
     src = scene.ensure_model()
     out = src.with_name("so101_mount.xml")
     xml = src.read_text()
     a = xml.index("<!-- Link base -->")
     b = xml.rindex("</worldbody>")
-    wrapped = (xml[:a] + '<body name="mount">\n<freejoint name="mount"/>\n' + xml[a:b] + "</body>\n" + xml[b:])
+    base = xml[a:b]
+    hx, hy, hz = HINGE_REL
+    base = base.replace('<body name="base" pos="0 0 0"', f'<body name="base" pos="{-hx} {-hy} {-hz}"', 1)
+    wrapped = (xml[:a] + '<body name="mount">\n<freejoint name="mount"/>\n'
+               f'<body name="fold" pos="{hx} {hy} {hz}">\n'
+               # Fricción de arandelas en el pasador (~0.8 N·m): se dobla sin golpear. El tope cerrado
+               # es rígido (cara contra cara): uno blando hace que la base se bambolee al caminar.
+               '<joint name="fold" type="hinge" axis="0 1 0" range="-1.6 0" damping="0.5" frictionloss="0.8" '
+               'armature="0.002" solreflimit="0.01 1" solimplimit="0.95 0.99 0.001"/>\n'
+               + base + "</body>\n</body>\n" + xml[b:])
     if not out.exists() or out.read_text() != wrapped:
         # Escritura atómica: varios procesos pueden armar la escena a la vez
         tmp = out.with_suffix(f".{os.getpid()}.tmp")
@@ -47,11 +65,26 @@ def mount_xml():
     return out
 
 
-def build(volts="12V") -> mujoco.MjModel:
-    return build_spec(volts).compile()
+def build(volts="12V", fit="ajustado", rigid=False, branch=None) -> mujoco.MjModel:
+    spec = build_spec(volts, fit, rigid)
+    if branch:
+        # Rama (o marco bajo) a la altura `branch` (m), solo del lado derecho: no toca la cabeza
+        g = spec.worldbody.add_geom()
+        g.name, g.type, g.size = "branch", mujoco.mjtGeom.mjGEOM_CAPSULE, [0.015, 0, 0]
+        g.fromto = [7.0, -0.7, branch, 7.0, -0.13, branch]
+        g.rgba = [0.4, 0.28, 0.15, 1]
+    return spec.compile()
 
 
-def build_spec(volts="12V") -> mujoco.MjSpec:
+def magnets(m, d, torque=FOLD_TORQUE):
+    """Torque de los imanes de la bisagra: máximo cerrada, cae rápido al abrirse."""
+    j = m.joint("fold")
+    th = d.qpos[j.qposadr[0]]  # 0 = cerrada, negativo = doblada hacia atrás
+    # (con el tope blando el ángulo puede pasar un poco de 0: ahí los imanes están pegados)
+    d.qfrc_applied[j.dofadr[0]] = torque * np.exp(min(th, 0.0) / MAGNET_DECAY)
+
+
+def build_spec(volts="12V", fit="ajustado", rigid=False) -> mujoco.MjSpec:
     """La escena sin compilar (para agregarle objetos)."""
     spec = mujoco.MjSpec.from_file(str(mount_xml()))
     scene.configure_arm(spec, volts)
@@ -96,18 +129,24 @@ def build_spec(volts="12V") -> mujoco.MjSpec:
     to_user = -MOUNT  # del soporte al centro de los hombros
     _geom(mb, "backpack", B, (0.08, 0.16, 0.22), to_user + [-0.2, 0, -0.18], (0.75, 0.35, 0.15, 1),
           mass=2.5, **nc)
-    _geom(mb, "bracket", CAP, (0.012, 0), rgba=(0.15, 0.15, 0.15, 1), mass=0.15, fromto=list(
-        np.r_[to_user + [-0.12, -0.12, -0.05], [0.0, 0.0, -0.005]]), **nc)
-    _geom(mb, "plate", B, (0.05, 0.04, 0.004), (0.0, 0, -0.004), (0.15, 0.15, 0.15, 1), mass=0.05, **nc)
-    s = mb.add_site()
-    s.name, s.pos = "mount_imu", [0, 0, -0.01]
+    _geom(mb, "tube", B, (0.01, 0.01, 0), rgba=(0.75, 0.76, 0.78, 1), mass=0.045, fromto=list(np.r_[TUBE_FROM, TUBE_TO]), **nc)
+    _geom(mb, "foot", B, (0.015, 0.035, 0.035), TUBE_FROM, (0.4, 0.42, 0.48, 1), mass=0.07, **nc)
+    _geom(mb, "head_fixed", B, (0.04, 0.035, 0.012), HINGE_REL + [0.03, 0, -0.012], (0.4, 0.42, 0.48, 1), mass=0.10, **nc)
+    fb = spec.body("fold")  # parte móvil de la cabeza + receptor + bandeja (lo que se dobla con el brazo)
+    _geom(fb, "head_moving", B, (0.055, 0.035, 0.012), [0.065, 0, 0.012], (0.6, 0.7, 0.85, 1), mass=0.22, **nc)
+    s = fb.add_site()
+    s.name, s.pos = "mount_imu", list(-HINGE_REL + [0, 0, -0.01])
     gyro = spec.add_sensor()
     gyro.name, gyro.type, gyro.objtype, gyro.objname = ("mount_gyro", mujoco.mjtSensor.mjSENS_GYRO,
                                                        mujoco.mjtObj.mjOBJ_SITE, "mount_imu")
     eq = spec.add_equality()
+    eq.name = "backpack_fit"
     eq.type, eq.objtype, eq.name1, eq.name2 = (mujoco.mjtEq.mjEQ_WELD, mujoco.mjtObj.mjOBJ_BODY,
                                                "mount", "wearer")
-    eq.solref = [0.01, 1]
+    eq.solref = FITS[fit]
+    if rigid:  # para comparar: soporte sin bisagra (la articulación queda trabada)
+        lock = spec.add_equality()
+        lock.name, lock.type, lock.objtype, lock.name1 = "fold_lock", mujoco.mjtEq.mjEQ_JOINT, mujoco.mjtObj.mjOBJ_JOINT, "fold"
 
     # Cámara que acompaña al usuario (de costado y adelante), sin el vaivén
     cb = w.add_body()

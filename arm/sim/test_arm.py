@@ -81,3 +81,48 @@ def test_holds_box_while_walking(mass):
     out = dw.run_hold(mass, "12V")
     assert out["held"] and out["slip_mm"] < 15
     assert out["max_torque"] < scene.STALL_TORQUE["12V"]
+
+
+def test_fold_hinge_protects_arm_from_branch():
+    """Rama a 1.74 m: con la bisagra el brazo se dobla y recibe mucho menos golpe que rígido."""
+    import demo_walk as dw
+
+    hinge = dw.run_snag(rigid=False, height=1.74)
+    rigid = dw.run_snag(rigid=True, height=1.74)
+    assert hinge["max_fold_deg"] > 60  # se dobló hacia atrás
+    assert hinge["max_crush"] < rigid["max_crush"] / 2
+    assert hinge["min_head"] > 0.09  # al doblarse se aleja de la cabeza
+
+
+def test_hinge_stays_closed_while_walking():
+    import demo_walk as dw
+
+    out = dw.run_look(imu=True, predict=True, seconds=12)
+    assert out["max_fold_deg"] < 1.0
+
+
+def test_cad_and_sim_agree():
+    """Las medidas del soporte en la simulación son las de arm/cad/params.scad."""
+    import re
+    import shutil
+    import subprocess
+    from pathlib import Path
+
+    import backpack as bp
+
+    if shutil.which("openscad") is None:
+        pytest.skip("OpenSCAD no instalado")
+    cad = Path(__file__).resolve().parent.parent / "cad"
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as tmp:
+        echo = Path(tmp) / "p.echo"
+        subprocess.run(["openscad", "-o", str(echo), str(cad / "echo_params.scad")], capture_output=True, check=True)
+        vals = dict(re.findall(r'"P:(\w+)=(.+?)"', echo.read_text()))
+    vec = lambda k: np.array([float(x) for x in vals[k].strip("[]").split(",")]) / 1000  # noqa: E731
+    arm_base = vec("ARM_BASE")
+    np.testing.assert_allclose(arm_base, bp.MOUNT, atol=1e-6)
+    np.testing.assert_allclose(vec("HINGE") - arm_base, bp.HINGE_REL, atol=1e-4)
+    np.testing.assert_allclose(vec("FOOT_AT") - arm_base, bp.TUBE_FROM, atol=1e-4)
+    np.testing.assert_allclose(vec("HEAD_AT") - arm_base, bp.TUBE_TO, atol=1e-4)
+    assert float(vals["FOLD_TORQUE"]) == bp.FOLD_TORQUE

@@ -67,14 +67,14 @@ cerca que estuvo fueron 9.8 cm.
 
 | Error de mirada (mediana / p90) | Sin predicción | Con predicción |
 |---|---|---|
-| Sin IMU | 8.6° / 22.6° | 3.6° / 14.0° |
-| **Con IMU** | 10.8° / 22.0° | **2.8° / 7.2°** |
+| Sin IMU | 9.3° / 22.6° | 3.5° / 14.5° |
+| **Con IMU** | 10.4° / 21.4° | **2.8° / 8.0°** |
 
 - **IMU en el soporte** (BNO055): mide el vaivén y los servos lo compensan.
 - **Predicción:** con dos detecciones seguidas se estima hacia dónde se mueve la persona en la
   imagen. Al pasar caminando junto a alguien, su dirección gira rápido (~0.7 rad/s) y sin esto
   la mirada va atrasada.
-- Con las dos, caminando se mira casi tan bien como parado (2.8°). Torque máximo 1.36 N·m:
+- Con las dos, caminando se mira casi tan bien como parado (2.8°). Torque máximo 1.38 N·m:
   alcanzan los servos de 7.4 V.
 
 ### Sostener algo mientras caminas
@@ -98,6 +98,34 @@ pueden robar); solo cosas livianas y sin valor, como una botella chica o una lin
 - **El soporte** tiene que aguantar ~16 N y ~3.3 N·m en el peor caso: con margen, diseñarlo para
   **6–7 N·m**.
 
+## El soporte (mesa y morral)
+
+Diseño completo en **[cad/README.md](cad/README.md)**: piezas para imprimir, qué comprar y cómo
+se arma. La misma unión (bandeja con riel cola de milano de 38 mm + receptor con perilla) sirve
+en la mesa y en el morral: el brazo se cambia de uno a otro en segundos.
+
+<p>
+<img src="media/soporte_morral.png" width="80%" alt="Soporte en el morral">
+</p>
+
+En el morral: placa rígida en el bolsillo de la laptop, tubo de aluminio sobre el hombro y una
+**bisagra con imanes** que deja doblar el brazo hacia atrás si se engancha (nunca hacia la
+cabeza). La simulación usa las mismas medidas que el CAD (hay una prueba que lo verifica).
+
+**Enganche con una rama** a 1.74 m mientras caminas ([video](media/morral_rama.mp4)):
+
+| | Con bisagra | Soporte rígido |
+|---|---|---|
+| Golpe contra el brazo | **39 N** | 248 N |
+| Carga en el hombro del usuario | **106 N, 24 N·m** | 262 N, 58 N·m |
+| El brazo | se dobla 92° hacia atrás y queda así | lo dobla la rama, a la fuerza |
+
+Con una rama a 1.78 m pasa algo parecido (57 N contra 190 N en el brazo). Si el golpe es a la
+altura del hombro (1.62 m), la bisagra no alcanza: el brazo doblado sigue en el camino.
+
+**Morral ajustado o flojo:** con las correas flojas, el error de la cámara en el p90 pasa de 8° a
+19°. El soporte no reemplaza a un buen ajuste: correa de pecho y cinturón.
+
 ## Lo que aprendimos al simular
 
 - La cámara de muñeca va montada a ~30° de la pinza y del lado: la postura de reposo tiene que
@@ -119,7 +147,7 @@ python demo_track.py --video seguir.mp4    # con video
 python demo_hold.py --mass 0.2 --volts 7.4V --video sostener.mp4
 python demo_walk.py                        # en el morral: mirar caminando (con y sin IMU)
 python demo_walk.py --hold                 # en el morral: sostener caminando (pesos y voltajes)
-python -m pytest -q                        # pruebas (10)
+python -m pytest -q                        # pruebas (13)
 ```
 
 En un servidor sin pantalla, anteponer `MUJOCO_GL=osmesa` (o `egl`).
@@ -137,5 +165,5 @@ Archivos:
 1. **Más realismo:** detector de caras real (p. ej. el de MediaPipe o un YOLO en la NPU de la
    Orange Pi 5 Pro) sobre la imagen simulada, y agarrar objetos ubicados con la cámara.
 2. **Voz:** preguntas y respuestas con un modelo de visión y lenguaje usando la imagen de la cámara.
-3. **Diseñar el soporte del morral** (6–7 N·m) y la caja de batería y placa.
+3. **Imprimir las probetas del riel** y medir la base real del SO-101 antes de imprimir el resto.
 4. **Lista de compras** (SO-101 con servos de 12 V, IMU, cámara, micrófono, parlante, batería).

@@ -48,11 +48,13 @@ class Safety:
         return dq
 
 
-def _walker(m, d, wearer, t0=0.0):
-    """Mueve al usuario en cada paso de la física (si no, el soporte recibe tirones)."""
+def _walker(m, d, wearer, t0=0.0, fold_torque=bp.FOLD_TORQUE):
+    """Mueve al usuario en cada paso de la física (si no, el soporte recibe tirones) y aplica los
+    imanes de la bisagra."""
 
     def f():
         wearer.update(d.time - t0, m.opt.timestep)
+        bp.magnets(m, d, fold_torque)
 
     return f
 
@@ -73,8 +75,8 @@ def mount_loads(m, d):
     return float(np.linalg.norm(f)), float(np.linalg.norm(tau_p))
 
 
-def run_look(imu=True, video=None, volts="12V", seconds=19.0, predict=True):
-    m = bp.build(volts)
+def run_look(imu=True, video=None, volts="12V", seconds=19.0, predict=True, fit="ajustado"):
+    m = bp.build(volts, fit)
     d = mujoco.MjData(m)
     arm = Arm(m, d)
     arm.set_pose(REST)
@@ -90,7 +92,7 @@ def run_look(imu=True, video=None, volts="12V", seconds=19.0, predict=True):
     mujoco.mj_forward(m, d)
     state, lost_for, nod_until = "buscar", 0.0, -1
     motion = TargetMotion(1 / CONTROL_HZ)
-    st = dict(err=[], err_t=[], torque=[], head=[], force=[], moment=[], states=[])
+    st = dict(err=[], err_t=[], torque=[], head=[], force=[], moment=[], states=[], fold=[], shake=[])
     for k in range(int(seconds * CONTROL_HZ)):
         t = k / CONTROL_HZ
         det.update_scene(d, camera="wrist_cam")
@@ -135,6 +137,8 @@ def run_look(imu=True, video=None, volts="12V", seconds=19.0, predict=True):
         st["force"].append(f)
         st["moment"].append(mo)
         st["states"].append(state)
+        st["fold"].append(-d.qpos[m.joint("fold").qposadr[0]])
+        st["shake"].append(np.linalg.norm(base_omega(m, d)))
         if rec:
             rec.frame(d, img, state, hit, t, wearer)
     if rec:
@@ -147,6 +151,8 @@ def run_look(imu=True, video=None, volts="12V", seconds=19.0, predict=True):
         "max_torque": float(np.max(st["torque"])), "p99_torque": float(np.percentile(st["torque"], 99)),
         "min_head": float(np.min(st["head"])), "safety_events": safety.events,
         "max_force": float(np.max(st["force"])), "max_moment": float(np.max(st["moment"])),
+        "max_fold_deg": float(np.degrees(np.max(st["fold"]))),
+        "shake_rms": float(np.sqrt(np.mean(np.square(st["shake"])))),  # giro de la base (rad/s)
         "err_series": st["err_t"], "states": states,
     }
 
@@ -154,6 +160,89 @@ def run_look(imu=True, video=None, volts="12V", seconds=19.0, predict=True):
 # Pinza respecto de la base: 28 cm adelante, 8 a la derecha y 12 arriba (a la altura del pecho y la
 # cara, como sosteniendo un celular). Con 5 articulaciones la pinza tiene que apuntar hacia donde
 # está (no puede correrse de lado apuntando recto adelante).
+def _wearer_load(m, d, wearer, ext_body=None, ext_force=None):
+    """Fuerza (N) y momento (N·m, respecto del centro de los hombros) que el usuario tiene que hacer
+    para sostener todo lo que cuelga del morral: masa x aceleración - peso - fuerzas externas.
+    (No incluye la inercia de giro de cada pieza, que es chica.)"""
+    mujoco.mj_rnePostConstraint(m, d)
+    W = d.mocap_pos[wearer.ids["wearer"]]
+    g = m.opt.gravity
+    F, M = np.zeros(3), np.zeros(3)
+    acc = np.zeros(6)
+    root = m.body("mount").id
+    for b in range(m.nbody):
+        if m.body_rootid[b] != root:
+            continue
+        mujoco.mj_objectAcceleration(m, d, mujoco.mjtObj.mjOBJ_BODY, b, acc, 0)
+        f = m.body_mass[b] * (acc[3:] - g)
+        F += f
+        M += np.cross(d.xipos[b] - W, f)
+    if ext_body is not None:
+        F -= ext_force
+        M -= np.cross(d.xipos[ext_body] - W, ext_force)
+    return float(np.linalg.norm(F)), float(np.linalg.norm(M))
+
+
+def run_snag(rigid=False, seconds=11.0, video=None, height=1.78):
+    """Caminando, el brazo choca con una rama a `height` m del lado derecho (no toca la cabeza).
+
+    rigid=True: soporte sin bisagra, para comparar.
+    """
+    m = bp.build(rigid=rigid, branch=height)
+    d = mujoco.MjData(m)
+    arm = Arm(m, d)
+    arm.set_pose(REST)
+    wearer = bp.Wearer(m, d)
+    safety = Safety(m, d, wearer)
+    walk = _walker(m, d, wearer)
+    walk()
+    mujoco.mj_forward(m, d)
+    fold_q = m.joint("fold").qposadr[0]
+    branch = m.geom("branch").id
+    rec = Recorder(m, f"Rama a {height:.2f} m: " + ("soporte rígido" if rigid else "con bisagra")) if video else None
+    st = dict(fold=[], load=[], moment=[], torque=[], head=[], hit=[], crush=[])
+    for k in range(int(seconds * CONTROL_HZ)):
+        t = k / CONTROL_HZ
+        arm.move(2.0 * (REST - d.qpos[arm.qadr]))
+        arm.step(walk)
+        f, mo = _wearer_load(m, d, wearer)
+        touching, crush = False, 0.0
+        cf = np.zeros(6)
+        for i in range(d.ncon):
+            c = d.contact[i]
+            if branch in (c.geom1, c.geom2):
+                touching = True
+                mujoco.mj_contactForce(m, d, i, cf)
+                crush += abs(cf[0])
+        st["crush"].append(crush)
+        st["fold"].append(-d.qpos[fold_q])
+        st["load"].append(f)
+        st["moment"].append(mo)
+        st["torque"].append(np.abs(d.actuator_force[arm.act]).max())
+        st["head"].append(safety.head_distance())
+        st["hit"].append(touching)
+        if rec:
+            rec.frame(d, None, "reposo", None, t, wearer)
+    if rec:
+        rec.save(video)
+    hit = np.array(st["hit"])
+    idx = np.nonzero(hit)[0]
+    win = slice(max(0, idx[0] - 5), idx[-1] + 15) if len(idx) else slice(0, 0)
+    walking = slice(25, idx[0] - 10) if len(idx) else slice(25, None)
+    return {
+        "contact_s": float(hit.sum() / CONTROL_HZ),
+        "max_crush": float(np.max(st["crush"])),  # N: fuerza de la rama contra el brazo
+        "max_fold_deg": float(np.degrees(np.max(st["fold"]))),
+        "fold_after_deg": float(np.degrees(st["fold"][-1])),
+        "peak_moment": float(np.max(st["moment"][win])) if len(idx) else 0.0,
+        "walking_moment": float(np.max(st["moment"][walking])),
+        "peak_force": float(np.max(st["load"][win])) if len(idx) else 0.0,
+        "walking_force": float(np.max(st["load"][walking])),
+        "peak_servo_torque": float(np.max(st["torque"][win])) if len(idx) else 0.0,
+        "min_head": float(np.min(st["head"])),
+    }
+
+
 HOLD_TARGET = np.array([0.28, -0.08, 0.12])
 HOLD_APPROACH = np.array([HOLD_TARGET[0], HOLD_TARGET[1], 0.0]) / np.linalg.norm(HOLD_TARGET[:2])
 HOLD_SEED = np.array([0.2, -0.8, 0.66, 0.14, -1.56])  # punto de partida de la cinemática inversa
@@ -258,7 +347,8 @@ def _add_box(volts, mass):
 
 
 class Recorder:
-    LABEL = {"buscar": "buscando...", "saludar": "¡hola!", "seguir": "siguiendo", "sostener": "sosteniendo"}
+    LABEL = {"buscar": "buscando...", "saludar": "¡hola!", "seguir": "siguiendo", "sostener": "sosteniendo",
+             "reposo": "en reposo"}
 
     def __init__(self, m, title):
         from PIL import ImageFont
