@@ -44,8 +44,8 @@ Cuánto peso aguanta en la pose de "mostrar" (torque del servo más cargado al s
 | 600 g | ✘ se le cae | 2.26 ✔ (77 %) |
 
 Para sostener **un rato** conviene quedarse por debajo de ~50 % del torque máximo (los servos se
-calientan): **~150 g con 7.4 V** y **~300 g con 12 V** con el brazo así de estirado. Un celular
-(~200 g) pide la versión de 12 V. Más cerca del cuerpo, aguanta bastante más.
+calientan): **~150 g con 7.4 V** y **~300 g con 12 V** con el brazo así de estirado. Más cerca
+del cuerpo, aguanta bastante más.
 
 ## Demo 3: en el morral, sobre el hombro, caminando
 
@@ -79,8 +79,9 @@ cerca que estuvo fueron 9.8 cm.
 
 ### Sostener algo mientras caminas
 
-Una caja de 4 x 4 x 6 cm sostenida a la altura del pecho y la cara, 28 cm adelante del hombro
-(como un celular), durante 17 s caminando:
+Una caja de 4 x 4 x 6 cm sostenida a la altura del pecho y la cara, 28 cm adelante del hombro,
+durante 17 s caminando. **Decisión:** el brazo nunca sostiene el celular (se puede caer o lo
+pueden robar); solo cosas livianas y sin valor, como una botella chica o una linterna.
 
 | Peso | Torque (servo más cargado) | Se deslizó | Fuerza / momento en el soporte |
 |---|---|---|---|
@@ -92,9 +93,8 @@ Una caja de 4 x 4 x 6 cm sostenida a la altura del pecho y la cara, 28 cm adelan
 | 500 g | 1.91 con 7.4 V (al límite) · 2.06 con 12 V | 7–8 mm | 16 N / 3.3 N·m |
 
 - Para sostener un rato (menos de ~50 % del torque máximo): **~150 g con 7.4 V** y **~300 g con
-  12 V**. Un celular (~200 g) pide la versión de 12 V o sostenerlo más cerca del cuerpo.
-- La caja se sacude ~3.5 m/s² (un tercio de la gravedad): para grabar con un celular haría falta
-  estabilizarlo con la IMU, como un gimbal (pendiente).
+  12 V**.
+- La caja se sacude ~3.5 m/s² (un tercio de la gravedad) por el vaivén de la marcha.
 - **El soporte** tiene que aguantar ~16 N y ~3.3 N·m en el peor caso: con margen, diseñarlo para
   **6–7 N·m**.
 
@@ -137,6 +137,5 @@ Archivos:
 1. **Más realismo:** detector de caras real (p. ej. el de MediaPipe o un YOLO en la NPU de la
    Orange Pi 5 Pro) sobre la imagen simulada, y agarrar objetos ubicados con la cámara.
 2. **Voz:** preguntas y respuestas con un modelo de visión y lenguaje usando la imagen de la cámara.
-3. **Estabilizar lo que sostiene** con la IMU (modo gimbal), para grabar caminando.
-4. **Diseñar el soporte del morral** (6–7 N·m) y la caja de batería y placa.
-5. **Lista de compras** (SO-101 con servos de 12 V, IMU, cámara, micrófono, parlante, batería).
+3. **Diseñar el soporte del morral** (6–7 N·m) y la caja de batería y placa.
+4. **Lista de compras** (SO-101 con servos de 12 V, IMU, cámara, micrófono, parlante, batería).
