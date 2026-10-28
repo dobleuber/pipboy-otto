@@ -166,4 +166,4 @@ Archivos:
    Orange Pi 5 Pro) sobre la imagen simulada, y agarrar objetos ubicados con la cámara.
 2. **Voz:** preguntas y respuestas con un modelo de visión y lenguaje usando la imagen de la cámara.
 3. **Imprimir las probetas del riel** y medir la base real del SO-101 antes de imprimir el resto.
-4. **Lista de compras** (SO-101 con servos de 12 V, IMU, cámara, micrófono, parlante, batería).
+4. **Comprar** según **[COMPRAS.md](COMPRAS.md)**, por fases: mesa ~250 €, morral ~150 €, voz ~40 €.
