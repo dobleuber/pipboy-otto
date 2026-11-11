@@ -36,6 +36,16 @@ openscad cad/otto-real-v0.2.scad -o preview.png
 openscad cad/otto-real-v0.2.scad -o otto-body.stl
 ```
 
+### AI-assisted CAD (text-to-cad)
+
+[text-to-cad](https://github.com/earthtojake/text-to-cad) gives Claude Code and Codex CAD skills: build123d models, live viewer, interference checks and 3D-print/DFM checks. Install it on your machine (pinned release, checksum-verified, telemetry off):
+
+```bash
+sh scripts/install-text-to-cad.sh
+```
+
+Then start a new Claude Code / Codex session. Remove it with `cad uninstall`.
+
 ## Requirements (Software)
 
 - Python 3.8+
