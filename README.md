@@ -36,6 +36,17 @@ openscad cad/otto-real-v0.2.scad -o preview.png
 openscad cad/otto-real-v0.2.scad -o otto-body.stl
 ```
 
+## Doll Accessories
+
+Small side project living in `cad/`: a miniature **hair-dye (tint) brush** for a crocheted doll.
+
+![Doll tint brush](cad/doll-tint-brush.png)
+
+- `cad/doll-tint-brush.scad` — parametric source (length, tuft count, groove depth…)
+- `cad/doll-tint-brush.stl` — ready to slice, 50 × 13.2 × 2.6 mm
+
+Print it flat as exported (no supports), 0.2 mm layers or finer, 0.4 mm nozzle. The bristles are solid: tufts are separated by grooves on both faces and open notches at the tips so they read clearly after printing.
+
 ## Requirements (Software)
 
 - Python 3.8+
@@ -75,7 +86,8 @@ pipboy-octopus/
 ├── test_pipboy.py     # Unit tests
 ├── launch.sh          # Launcher script
 ├── cad/
-│   └── otto-real-v0.2.scad  # 3D printable body (OpenSCAD)
+│   ├── otto-real-v0.2.scad  # 3D printable body (OpenSCAD)
+│   └── doll-tint-brush.*    # Doll accessory: 50 mm tint brush (SCAD + STL)
 ├── assets/            # Images and media
 └── README.md          # This file
 ```
