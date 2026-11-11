@@ -38,7 +38,7 @@ openscad cad/otto-real-v0.2.scad -o otto-body.stl
 
 ### Wrist Pip-Boy (Orange Pi Zero 3)
 
-`cad/pipboy-zero3-v0.1.scad` is a separate, wrist-mounted enclosure for an **Orange Pi Zero 3**
+`cad/pipboy-zero3-v0.2.scad` is a separate, wrist-mounted enclosure for an **Orange Pi Zero 3**
 and a 5" HDMI display: body, bezel, cuff and encoder knob. See
 [docs/pipboy-zero3.md](docs/pipboy-zero3.md) (Spanish) for parts, print settings, wiring and
 the dimensions to check before printing.

@@ -1,38 +1,53 @@
 # Pip-Boy de muñeca: Orange Pi Zero 3 + pantalla HDMI de 5"
 
-Carcasa imprimible en 3D, paramétrica, en [`cad/pipboy-zero3-v0.1.scad`](../cad/pipboy-zero3-v0.1.scad).
-Es la **v0.1**: un primer bloque funcional para validar medidas y encaje, todavía sin el
-acabado estético del Pip-Boy.
+Carcasa imprimible en 3D, paramétrica, en [`cad/pipboy-zero3-v0.2.scad`](../cad/pipboy-zero3-v0.2.scad).
 
-![Conjunto montado](img/zero3-assembly.png)
-![Vista explosionada](img/zero3-exploded.png)
+![Conjunto montado sobre el antebrazo](img/zero3-assembly.png)
+![Vista frontal](img/zero3-front.png)
 
-Tamaño exterior: **168 × 96 × 38,5 mm**, más un brazalete de 5,5 a 16 mm de grosor.
+La v0.2 añade el aspecto Pip-Boy sobre la base funcional de la v0.1:
+
+- **Visera de pantalla** en relieve, con la abertura abocinada como el marco de un CRT.
+- **Cilindro superior** con collares y anillos, y **placa de nombre** en relieve (`LABEL`).
+- **Panel de controles**: aro del altavoz, riel alrededor de los tres pulsadores y embellecedor del LED.
+- **Nervaduras** en las paredes largas y **aletas de disipador** entre las ranuras de ventilación.
+- **Perilla dentada** con collar cónico en el lateral.
+- **Brazalete envolvente** con alas que abrazan el antebrazo y extremos inclinados.
+
+Tamaño: cuerpo de **169 × 96 mm** y 47 mm de alto hasta el cilindro superior. El brazalete
+cuelga 32 mm por debajo.
+
+Pensada para imprimir en dos tonos: cuerpo y brazalete en verde oliva, marco en negro o gris
+oscuro y perilla en latón o dorado.
 
 ## Piezas
 
 | Pieza | `PART` | Orientación de impresión | Soportes |
 |---|---|---|---|
 | Cuerpo | `body` | Suelo sobre la cama, abierto hacia arriba | No |
-| Marco frontal | `bezel` | Cara vista sobre la cama (el archivo ya sale girado) | No |
-| Brazalete | `cuff` | Cara plana sobre la cama (ya sale girado) | No |
+| Marco frontal | `bezel` | Cara inferior plana sobre la cama, relieve hacia arriba | No |
+| Brazalete | `cuff` | Cara plana sobre la cama, alas hacia arriba (el archivo ya sale girado) | No |
 | Perilla del encoder | `knob` | Tal cual | No |
 
 ```bash
 # Exportar cada pieza
 for p in body bezel cuff knob; do
-  openscad -o pipboy-$p.stl -D "PART=\"$p\"" cad/pipboy-zero3-v0.1.scad
+  openscad -o pipboy-$p.stl -D "PART=\"$p\"" cad/pipboy-zero3-v0.2.scad
 done
 
 # Vista previa (assembly | exploded)
-openscad -D 'PART="exploded"' cad/pipboy-zero3-v0.1.scad
+openscad -D 'PART="exploded"' cad/pipboy-zero3-v0.2.scad
 ```
 
-Las cuatro piezas exportan como sólidos válidos en OpenSCAD 2021.01. La pieza más larga mide
-168 mm, así que cabe en camas de 180 × 180 mm o mayores.
+Las cuatro piezas exportan como sólidos válidos en OpenSCAD 2021.01 y no se solapan entre sí
+ni con la electrónica modelada. La pieza más larga mide 174 mm (cuerpo con aletas y collar),
+así que cabe en camas de 180 × 180 mm o mayores.
 
-Ajustes sugeridos: PETG (aguanta mejor el calor de la placa que el PLA), capa de 0,2 mm,
-3 perímetros, 20 % de relleno.
+Ajustes sugeridos: PETG (aguanta mejor el calor de la placa que el PLA), capa de 0,2 mm y
+3 perímetros. El brazalete es macizo (237 cm³): imprímelo con 10-15 % de relleno. Las ranuras
+de las correas son puentes de 40 mm.
+
+![Vista explosionada](img/zero3-exploded.png)
 
 ## Qué va dentro
 
@@ -44,20 +59,21 @@ Ajustes sugeridos: PETG (aguanta mejor el calor de la placa que el PLA), capa de
 | Bahía bajo la pantalla (26 mm) | Orange Pi Zero 3 (55 × 50 mm) | 4 separadores de 4 mm, tornillos M2,5 autorroscantes |
 | Bahía, borde inferior | Celda 21700 | Dos cunas y topes; fijar con brida o cinta de doble cara |
 | Canal superior (12 mm) | Cable plano HDMI y USB de la pantalla | Libre |
-| Módulo lateral (34 mm) | Altavoz de 28 mm, 3 pulsadores de 7 mm, LED de 5 mm, módulo de carga | Al marco y al suelo |
+| Módulo lateral (34 mm) | Altavoz de 28 mm, 3 pulsadores de 7 mm, LED de 5 mm, módulo de carga | Altavoz pegado tras la rejilla; pulsadores con su tuerca |
 | Pared derecha | Encoder rotativo EC11 con perilla | Rosca M7 |
 | Pared superior | Interruptor de palanca de 6 mm (encendido) | Rosca M6 |
 | Pared inferior | Puerto USB-C de carga | Ventana con rebaje para el conector |
 
-Hay ranuras de ventilación en la pared superior y en el extremo izquierdo, junto a la placa.
+## Brazalete
 
-El brazalete se atornilla desde el lado del brazo (4 × M3×10, cabezas embutidas) y deja dos
-canales de 40 × 3 mm entre él y el cuerpo para pasar correas de velcro de 38 mm. La curva es
-suave (radio 80 mm): está pensada para forrarla con goma EVA.
+![Vista lateral](img/zero3-side.png)
 
-![Brazalete](img/zero3-cuff.png)
+El brazalete se atornilla desde el lado del brazo (4 × M3×8, cabezas embutidas). Tiene radio
+interior de 43 mm (`R_ARM`) y alas que bajan 68° por cada lado (`WRAP`). Cuatro ranuras de
+40 × 4,5 mm en las alas llevan dos correas de velcro de 38 mm. Para antebrazos más delgados,
+fórralo con goma EVA o reduce `R_ARM`.
 
-Tornillería: 5 × M3×8 avellanados (marco), 4 × M3×10 (brazalete), 9 insertos roscados M3 de
+Tornillería: 5 × M3×8 avellanados (marco), 4 × M3×8 (brazalete), 9 insertos roscados M3 de
 calor (Ø exterior 4,2 mm), 4 × M2,5×6 autorroscantes (placa).
 
 ## Medidas que debes comprobar antes de imprimir
@@ -74,6 +90,7 @@ del archivo; mídelas con un calibre en tus piezas.
 | `OPI_ROT` | 0 | Gira la placa 90° si el micro-HDMI queda contra una pared |
 | `USBC_Z` | 5,2 mm | Depende del módulo de carga |
 | `BATT_D`, `BATT_L` | 21,4 × 71 mm | Celda desnuda con lengüetas. Un portapilas no cabe sin ajustar |
+| `R_ARM` | 43 mm | Mide el ancho de tu antebrazo donde irá puesto |
 
 Dos puntos de encaje dependen del modelo exacto de pantalla:
 
@@ -132,12 +149,12 @@ estimación, no una medida.
 - Alimentar por los pines de 5 V es práctica habitual, pero se salta la entrada USB-C y no lo
   he visto confirmado en la documentación oficial.
 
-## Pendiente para la v0.2
+## Pendiente
 
 - Ajustar las cotas con las medidas reales de la pantalla y la placa.
-- Estética Pip-Boy: marco con relieve, extremos redondeados, nervaduras.
 - Sujeción para el encoder (pestaña antigiro) y soporte del amplificador.
 - Acceso exterior a la microSD y al USB-A.
+- Aligerar el brazalete, o cerrarlo del todo con bisagra y pestillo.
 
 ## Fuentes
 
