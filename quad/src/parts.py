@@ -4,14 +4,18 @@ Printed parts are PLA on an FDM printer and are modelled as they print: flat fac
 
 Check: cad model dfm "$ID" --process printing --technology fdm --material pla
 """
+import math
+
 import build123d as bd
 from bd_materials import plastics
 from cad import model
+from cad.build123d import paint
 
 import params as p
 
-PRINTED = "#f2a53a"   # orange PLA
-DARK = "#30343a"
+SHELL = "#ff8c42"     # tangerine: the shell and its horns
+SKIN = "#fff1d6"      # cream: chassis and legs
+DARK = "#262a30"      # servos and feet
 
 
 def box(x0, x1, y0, y1, z0, z1):
@@ -24,6 +28,11 @@ def box(x0, x1, y0, y1, z0, z1):
 def zcyl(x, y, z0, z1, d):
     """A cylinder along Z."""
     return bd.Pos(x, y, (z0 + z1) / 2) * bd.Cylinder(d / 2, abs(z1 - z0))
+
+
+def stadium(half_length, radius, height):
+    """A stadium (two half discs joined by a rectangle) along X, extruded up from z = 0."""
+    return bd.extrude(bd.SlotOverall(2 * (half_length + radius), 2 * radius), height)
 
 
 # ----------------------------------------------------------------------------- bought parts
@@ -52,7 +61,7 @@ def servo():
         body -= zcyl(x, 0, p.SERVO_TAB_Z - 1, p.SERVO_TAB_Z + p.SERVO_TAB_T + 1, 1.6)
     body.label = "servo"
     body.material = plastics.abs_()
-    body.color = "#2f6fb5"
+    body.color = DARK
     return body
 
 
@@ -105,6 +114,12 @@ def hip_servo_cut(sx, sy):
     return cuts
 
 
+CORNER_R = 3.0
+
+# The deck's lip: a stadium ring. The shell's collar presses over it and the controller board rests on it.
+LIP_HALF, LIP_R, LIP_WALL = 9.0, 9.5, 1.2
+LIP_H = 6.0
+
 DECK_SCREWS = [(sx * 17.3, sy * 14.4) for sx in (1, -1) for sy in (1, -1)]
 
 
@@ -112,6 +127,8 @@ DECK_SCREWS = [(sx * 17.3, sy * 14.4) for sx in (1, -1) for sy in (1, -1)]
 def tray():
     """Chassis tray: four hip-servo pockets and the battery bay, open at the top. Prints as modelled."""
     body = box(-p.TRAY_X, p.TRAY_X, -p.TRAY_Y, p.TRAY_Y, p.TRAY_Z0, p.TRAY_Z1)
+    body = bd.fillet(body.edges().filter_by(bd.Axis.Z), CORNER_R)             # rounded plan
+    body = bd.chamfer(body.edges().group_by(bd.Axis.Z)[0], 0.8)               # a soft belly, 45 deg: prints
     cuts = []
     for sx, sy in p.LEGS.values():
         cuts += hip_servo_cut(sx, sy)
@@ -130,25 +147,27 @@ def tray():
     body -= cuts
     body.label = "tray"
     body.material = plastics.pla()
-    body.color = PRINTED
+    body.color = SKIN
     return body
 
 
 @model
 def deck():
-    """Top plate: closes the tray, clamps the servos and carries the controller. Origin at its underside centre."""
+    """Top plate: closes the tray, clamps the servos; its lip locates the shell and carries the controller.
+
+    Origin at its underside centre.
+    """
     body = box(-p.TRAY_X, p.TRAY_X, -p.TRAY_Y, p.TRAY_Y, 0, p.DECK_T)
-    L, W, _ = p.MCU
-    for sx in (1, -1):
-        for sy in (1, -1):
-            body += zcyl(sx * (L / 2 - 2), sy * (W / 2 - 2), p.DECK_T, p.DECK_T + 2.0, 3.6)   # board standoffs
+    body = bd.fillet(body.edges().filter_by(bd.Axis.Z), CORNER_R)
+    lip = stadium(LIP_HALF, LIP_R, LIP_H) - stadium(LIP_HALF, LIP_R - LIP_WALL, LIP_H)
+    body += bd.Pos(0, 0, p.DECK_T) * lip
     cuts = [zcyl(x, y, -1, p.DECK_T + 1, 1.9) for x, y in DECK_SCREWS]
-    cuts.append(box(-4, 4, -W / 2 - 5, -W / 2 - 1.5, -1, p.DECK_T + 1))                    # cable slot
-    cuts.append(box(-4, 4, W / 2 + 1.5, W / 2 + 5, -1, p.DECK_T + 1))
+    for sx in (1, -1):
+        cuts.append(box(sx * 9.5, sx * 13.5, -3, 3, -1, p.DECK_T + 1))        # cables come up under the board
     body -= cuts
     body.label = "deck"
     body.material = plastics.pla()
-    body.color = PRINTED
+    body.color = SKIN
     return body
 
 
@@ -162,7 +181,12 @@ def thigh():
     w = p.SERVO_W / 2
     c0, c1 = p.L1 + p.SERVO_SHAFT_END - p.SERVO_L, p.L1 + p.SERVO_SHAFT_END     # knee servo case along X
     x0, x1 = -6.0, c1 + p.SERVO_TAB_L + 2.5
-    body = bd.extrude(bd.Pos((x0 + x1) / 2, 0) * bd.SlotOverall(x1 - x0, 13.0), t)
+    # Outline: a round hip, a waist, then the knee servo's bed.
+    upper = bd.Spline([(2.5, 6.0), (7.0, 4.7), (11.0, 5.3), (15.5, 6.5)], tangents=[(1, -0.6), (1, 0.45)])
+    lower = bd.Spline([(15.5, -6.5), (11.0, -5.3), (7.0, -4.7), (2.5, -6.0)], tangents=[(-1, 0.45), (-1, -0.6)])
+    neck = bd.make_face([upper, bd.Line((15.5, 6.5), (15.5, -6.5)), lower, bd.Line((2.5, -6.0), (2.5, 6.0))])
+    outline = bd.Circle(6.5) + neck + bd.Pos((9.0 + x1) / 2, 0) * bd.SlotOverall(x1 - 9.0, 13.0)
+    body = bd.extrude(outline, t)
     tab_z = t + p.SERVO_TAB_Z
     body += box(c0 - p.SERVO_TAB_L, c0 - p.FIT, -w, w, t, tab_z)                 # posts under the servo tabs
     body += box(c1 + p.FIT, c1 + p.SERVO_TAB_L, -w, w, t, tab_z)
@@ -175,29 +199,54 @@ def thigh():
     body -= cuts
     body.label = "thigh"
     body.material = plastics.pla()
-    body.color = PRINTED
-    return body
-
-
-@model
-def shank():
-    """Shank: a plate on the knee horn ending in a peg for the foot.
-
-    Origin on the knee axis at the plate's underside (the knee horn's top face); +X to the foot, +Z outward.
-    """
-    t = p.SHANK_T
-    x0, x1 = -5.5, p.L2 - p.FOOT_R - 0.5
-    body = bd.extrude(bd.Pos((x0 + x1) / 2, 0) * bd.SlotOverall(x1 - x0, 9.0), t)
-    body += box(x1 - 3, p.L2 + 1.5, -t / 2, t / 2, 0, t)                        # square peg into the foot
-    cuts = [zcyl(0, 0, -1, t + 1, 2.4)] + [zcyl(x, 0, -1, t + 1, 1.2) for x in (6.0, 11.0)]
-    body -= cuts
-    body.label = "shank"
-    body.material = plastics.pla()
-    body.color = PRINTED
+    body.color = SKIN
     return body
 
 
 FOOT_FLAT = 3.1   # the foot's flat face below the ball's centre: it stands on it to print
+
+
+def leg_line(hand, x):
+    """The lower leg's centreline (y at x): straight over the horn, one smooth bow, straight into the foot."""
+    xs, xe = 9.0, p.L2 - FOOT_FLAT - 0.4
+    if x <= xs:
+        return 0.0
+    u = ((x - xs) / (xe - xs)) ** 1.4          # the bow leans towards the foot
+    return hand * 4.2 * math.sin(math.pi * u) ** 2
+
+
+def lower_leg(hand):
+    """Lower leg: a tapered, bowed plate on the knee horn ending in a peg for the foot.
+
+    Origin on the knee axis at the plate's underside (the knee horn's top face); +X to the foot, +Z outward.
+    hand = +1 or -1 picks the side the bow bulges to, so left and right legs mirror each other.
+    """
+    t = p.SHANK_T
+    xe = p.L2 - FOOT_FLAT - 0.4                      # the plate stops just short of the foot's flat
+    xs = [3.5 + (xe - 3.5) * i / 11 for i in range(12)]
+    half = lambda x: 4.3 - 2.6 * (x - 3.5) / (xe - 3.5)     # 8.6 mm wide at the knee, 3.4 mm at the foot
+    up = [(x, leg_line(hand, x) + half(x)) for x in xs]
+    down = [(x, leg_line(hand, x) - half(x)) for x in reversed(xs)]
+    face = bd.make_face([bd.Spline(up, tangents=[(1, 0), (1, 0)]), bd.Line(up[-1], down[0]),
+                         bd.Spline(down, tangents=[(-1, 0), (-1, 0)]), bd.Line(down[-1], up[0])])
+    body = bd.extrude(bd.Circle(5.6) + face, t)
+    body += box(xe - 1.0, p.L2 + 1.5, -t / 2, t / 2, 0, t)                        # square peg into the foot
+    cuts = [zcyl(0, 0, -1, t + 1, 2.4)] + [zcyl(x, 0, -1, t + 1, 1.2) for x in (6.0, 11.0)]
+    body -= cuts
+    body.label = "shank"
+    body.material = plastics.pla()
+    body.color = SKIN
+    return body
+
+
+@model
+def shank_a():
+    return lower_leg(1)
+
+
+@model
+def shank_b():
+    return lower_leg(-1)
 
 
 @model
@@ -216,6 +265,103 @@ def foot():
     return body
 
 
+# ----------------------------------------------------------------------------- shell and face
+
+# The shell: a river-pebble dome with a stadium plan, over the whole chassis. Its cross-section is two
+# tangent arcs: a tight shoulder from the rim, then a wide crown. Numbers are in the shell's own frame,
+# its rim on z = 0. In the robot the rim stands SHELL_GAP above the deck, clear of the legs.
+SHELL_HALF = 13.5     # half length of the straight middle
+SHELL_RIM = 36.0      # radius at the rim: half the shell's width
+SHELL_R1 = 14.0       # shoulder radius
+SHELL_TURN = 60.0     # degrees the shoulder turns before the crown takes over
+SHELL_WALL = 1.0
+SHELL_GAP = 2.0       # rim above the deck's top
+SHELL_R2 = (SHELL_RIM - SHELL_R1 * (1 - math.cos(math.radians(SHELL_TURN)))) / math.cos(math.radians(SHELL_TURN))
+SHELL_H = SHELL_R2 - (SHELL_R2 - SHELL_R1) * math.sin(math.radians(SHELL_TURN))   # rim to the top of the crown
+
+EYE_R = 4.9           # a 9.8 mm eye
+EYE_LEN = 7.0         # the plug behind the eye's dome
+EYE_AZ = 27.0         # each eye this far to its side of straight ahead, around the front end's axis
+EYE_TURN = 36.0       # and this far up the shoulder: the hole stays on the shoulder, square to it
+
+
+def pebble(inset):
+    """The dome as a solid, `inset` mm inside the outer surface (0 = the outer surface itself)."""
+    r1, r2, rim = SHELL_R1 - inset, SHELL_R2 - inset, SHELL_RIM - inset
+    a = math.radians(SHELL_TURN)
+    c1 = (SHELL_RIM - SHELL_R1, 0.0)                                  # shoulder centre (r, z)
+    c2 = (0.0, (SHELL_R1 - SHELL_R2) * math.sin(a))                   # crown centre, on the axis
+    top = (0.0, c2[1] + r2)
+    half = [bd.Line((0, -3), (rim, -3)), bd.Line((rim, -3), (rim, 0)),
+            bd.Pos(*c1) * bd.CenterArc((0, 0), r1, 0, SHELL_TURN),
+            bd.Pos(*c2) * bd.CenterArc((0, 0), r2, SHELL_TURN, 90 - SHELL_TURN),
+            bd.Line(top, (0, -3))]
+    face = bd.make_face(half)                                         # the half section: x = radius, y = height
+    ends = [bd.Pos(sx * SHELL_HALF, 0, 0) * bd.revolve(bd.Plane.XZ * face, bd.Axis.Z) for sx in (1, -1)]
+    full = face + bd.mirror(face, about=bd.Plane.YZ)                   # the full section, across the robot
+    middle = bd.extrude(bd.Plane.YZ * full, SHELL_HALF, both=True)
+    return middle + ends
+
+
+def eye_plane(side, back=0.0):
+    """An eye's frame in the shell's: origin on its axis `back` mm behind the surface, +Z out along the axis.
+
+    The axis is the surface's own normal there, so the hole meets the shell squarely.
+    """
+    az, turn = math.radians(side * EYE_AZ), math.radians(EYE_TURN)
+    r = SHELL_RIM - SHELL_R1 + SHELL_R1 * math.cos(turn)             # distance from the front end's axis
+    seat = (SHELL_HALF + r * math.cos(az), r * math.sin(az), SHELL_R1 * math.sin(turn))
+    d = (math.cos(turn) * math.cos(az), math.cos(turn) * math.sin(az), math.sin(turn))
+    origin = tuple(c - back * k for c, k in zip(seat, d))
+    return bd.Plane(origin=origin, x_dir=(-math.sin(az), math.cos(az), 0), z_dir=d)
+
+
+@model
+def shell():
+    """The creature's shell: a hollow pebble with eye holes, a smile, two little horns and a collar inside.
+
+    Origin at the centre of its rim. Prints rim down; the ceiling needs support inside, where it is not seen.
+    """
+    body = pebble(0) - pebble(SHELL_WALL)
+    # Two little horns on the crown, each a cone steeper than 45 deg with a rounded tip.
+    drop = (SHELL_R1 - SHELL_R2) * math.sin(math.radians(SHELL_TURN))        # the crown's centre below the rim
+    for side in (1, -1):
+        x, y = 20.0, side * 11.0
+        z = math.sqrt((SHELL_R2 - 0.3) ** 2 - y * y - (x - SHELL_HALF) ** 2) + drop
+        body += bd.Pos(x, y, z) * (bd.Pos(0, 0, 3.0) * bd.Cone(3.4, 1.0, 6.0) + bd.Pos(0, 0, 6.0) * bd.Sphere(1.0))
+    body -= box(-80, 80, -80, 80, -6, 0)
+    # The collar that presses over the deck's lip: from the rim's plane up to the ceiling.
+    grip = LIP_R + 0.2
+    collar = stadium(LIP_HALF, grip + 1.2, SHELL_H) - stadium(LIP_HALF, grip, SHELL_H)
+    body += collar & pebble(SHELL_WALL / 2)
+    cuts = [eye_plane(side, back=8).location * zcyl(0, 0, 0, 14, 2 * EYE_R + 0.2) for side in (1, -1)]
+    # A smile: an arc slit through the front wall, low between the eyes.
+    band = bd.Circle(4.4) - bd.Circle(3.4) - bd.Pos(0, 4.0) * bd.Rectangle(12, 11)
+    cuts.append(bd.extrude(bd.Plane.YZ.offset(SHELL_HALF + SHELL_RIM - 8) * bd.Pos(0, 6.6) * band, 10))
+    body -= cuts
+    body.label = "shell"
+    body.material = plastics.pla()
+    body.color = SHELL
+    return body
+
+
+@model
+def eye():
+    """A bulging eye: a domed plug glued into its hole. As printed: flat back down, pupil up.
+
+    The dome starts at z = EYE_LEN; the pupil is a shallow pocket to fill with black paint.
+    """
+    body = zcyl(0, 0, 0, EYE_LEN, 2 * EYE_R) + (bd.Pos(0, 0, EYE_LEN) * bd.Sphere(EYE_R) - box(-9, 9, -9, 9, -9, EYE_LEN))
+    top = EYE_LEN + EYE_R
+    body -= zcyl(0, 0, top - 1.3, top + 1, 5.0)
+    body.label = "eye"
+    body.material = plastics.pla()
+    body.color = "#f7f7f2"
+    pupil = body.faces().filter_by(lambda f: f.center().Z > top - 1.5 and f.geom_type != bd.GeomType.SPHERE)
+    paint(body, pupil, "#101214")
+    return body
+
+
 if __name__ == "__main__":
-    for part in (servo, horn, battery, mcu, tray, deck, thigh, shank, foot):
+    for part in (servo, horn, battery, mcu, tray, deck, thigh, shank_a, shank_b, foot, shell, eye):
         part()

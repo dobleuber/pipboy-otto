@@ -1,4 +1,4 @@
-"""Mini quadruped: 8 x 4 g servos (hip and knee pitch per leg), 1S LiPo, printed PLA.
+"""Mini quadruped critter: 8 x 4 g servos (hip and knee pitch per leg), 1S LiPo, printed PLA, under a pebble shell.
 
 As built = every servo at its centre = the standing pose; every joint turns about world +Y.
 """
@@ -7,8 +7,9 @@ from cad import model
 from cad.build123d import configuration_sequence, frame, free, limits, mass, mechanism_state, point_mass
 
 import params as p
-from gait import stand, trot
-from parts import FOOT_FLAT, battery, deck, foot, horn, mcu, servo, shank, thigh, tray
+from gait import crawl, dance, stand, trot, wave
+from parts import (EYE_LEN, FOOT_FLAT, LIP_H, SHELL_GAP, battery, deck, eye, eye_plane, foot, horn, mcu, servo,
+                   shank_a, shank_b, shell, thigh, tray)
 
 
 def placed(part, plane, label, local=None):
@@ -30,10 +31,20 @@ def quad():
     battery_ = bd.Pos(0, 0, floor + p.BATTERY[2] / 2) * battery().shape
     battery_.label = "battery"
     mass(battery_, p.BATTERY_MASS)
-    mcu_ = bd.Pos(0, 0, p.TRAY_Z1 + p.DECK_T + 2.0) * mcu().shape
+    mcu_ = bd.Pos(0, 0, p.TRAY_Z1 + p.DECK_T + LIP_H) * mcu().shape     # resting on the deck's lip
     mcu_.label = "mcu"
     mass(mcu_, p.MCU_MASS)
-    chassis_parts = [tray_, deck_, battery_, mcu_]
+    # The shell over everything, its rim just above the deck, and an eye in each of its holes
+    # (the eye is modelled as printed, +Z out of its dome, which starts 1 mm proud of the shell).
+    shell_z = p.TRAY_Z1 + p.DECK_T + SHELL_GAP
+    shell_ = bd.Pos(0, 0, shell_z) * shell().shape
+    shell_.label = "shell"
+    eyes = []
+    for side, name in ((1, "eye_left"), (-1, "eye_right")):
+        e = bd.Pos(0, 0, shell_z) * eye_plane(side, back=EYE_LEN - 1.0).location * eye().shape
+        e.label = name
+        eyes.append(e)
+    chassis_parts = [tray_, deck_, battery_, mcu_, shell_, *eyes]
     for name, (sx, sy) in p.LEGS.items():
         plane = bd.Plane(origin=(sx * p.HIP_X, sy * p.HIP_Y0, 0), x_dir=(sx, 0, 0), z_dir=(0, sy, 0))
         s = placed(servo_, plane, f"hip_servo_{name}")
@@ -59,7 +70,7 @@ def quad():
 
         knee_horn = placed(horn_, shank_plane, "knee_horn")
         mass(knee_horn, p.HORN_MASS)
-        plate = placed(shank().shape, shank_plane, "shank")
+        plate = placed((shank_a if sx * sy > 0 else shank_b)().shape, shank_plane, "shank")   # curls mirror left/right
         # The foot is modelled as printed (flat down, socket up): turn its +Z onto the shank's +X.
         ball = placed(foot().shape, shank_plane, "foot",
                       bd.Pos(p.L2 - FOOT_FLAT, 0, p.SHANK_T / 2) * bd.Rot(0, 90, 0))
@@ -84,8 +95,12 @@ def quad():
     mechanism_state(robot, "home")
     mechanism_state(robot, "stand", **stand(height=46.0))
     mechanism_state(robot, "crouch", **stand(height=36.0))
-    # One steady stride of the trot the simulation uses (the chassis is the fixed link here).
+    # The moves the simulation uses, here with the chassis as the fixed link: one steady stride of each gait,
+    # and the two tricks whole.
     configuration_sequence(robot, "trot", lambda t: trot(t + 1.0, freq=2.0), duration=0.5)
+    configuration_sequence(robot, "crawl", lambda t: crawl(t + 1.0, freq=1.0), duration=1.0)
+    configuration_sequence(robot, "wave", wave, duration=5.0)
+    configuration_sequence(robot, "dance", dance, duration=6.0)
     return robot
 
 

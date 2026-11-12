@@ -32,7 +32,7 @@ def quad_mujoco(kp=KP, stall=p.SERVO_STALL_NM, foot_friction=FOOT_FRICTION) -> m
                 geom.pos = s.site(f"foot_{leg}").pos
                 geom.friction = foot_friction
                 geom.condim = 4
-        elif leaf in ("tray", "knee_servo", "shank"):
+        elif leaf in ("tray", "shell", "knee_servo", "shank"):
             fit(s, path, "box")
         else:
             for geom in collisions(s, path):

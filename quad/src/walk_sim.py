@@ -1,7 +1,7 @@
 # /// script
 # dependencies = ["glfw", "pyopengl"]
 # ///
-"""Walking tests of the mini quadruped in MuJoCo: an open-loop trot on position servos.
+"""Walking tests of the mini quadruped in MuJoCo: open-loop gaits and tricks on position servos.
 
     cad run src/walk_sim.py                      # the baseline walk, numbers only
     cad run src/walk_sim.py --suite              # every test -> results/results.json and results/RESULTS.md
@@ -21,7 +21,7 @@ import mujoco
 import numpy as np
 
 import params as p
-from gait import crawl, stand, trot
+from gait import MOVES, crawl, legs_clear, stand, trot
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -29,8 +29,12 @@ SCENE = os.path.join(ROOT, "sim", "scene.xml")
 CTRL_DT = 0.02          # s: one servo PWM frame (50 Hz)
 SETTLE, RISE = 0.4, 0.6  # s: hold as built, then move to the walking height
 FLOOR_Z = -0.0538        # the scene's floor (sim/scene.xml)
-BASELINE = dict(gait="trot", freq=2.0, step=20.0, lift=8.0, height=46.0, duty=0.5, x0=0.0, turn=0.0, sway=10.0)
+# A low step (5 mm) keeps the open-loop trot straight and smooth; obstacles take the high step (8 mm).
+BASELINE = dict(gait="trot", freq=2.0, step=20.0, lift=5.0, height=46.0, duty=0.5, x0=0.0, turn=0.0, sway=10.0)
 CRAWL = dict(gait="crawl", freq=1.0, step=16.0, lift=8.0, duty=0.75)
+WAVE = dict(gait="wave", height=46.0)      # tricks: they start and end standing
+DANCE = dict(gait="dance", height=44.0)
+TRICKS = ("wave", "dance")
 
 
 def load(stall=None, noload=None, friction=None, payload_g=0.0, kp=None, slope_deg=0.0, step_mm=0.0):
@@ -81,7 +85,10 @@ def targets(t, gait):
         s = 3 * s * s - 2 * s * s * s
         return {k: v * s for k, v in pose.items()}
     kw = {k: v for k, v in gait.items() if k != "gait"}
-    return (crawl if gait["gait"] == "crawl" else trot)(t - SETTLE - RISE, **kw)
+    fn, seconds = MOVES[gait["gait"]]
+    if gait["gait"] in TRICKS:
+        return fn(min(t - SETTLE - RISE, seconds), height=gait["height"])   # once, then stand
+    return fn(t - SETTLE - RISE, **kw)
 
 
 def euler(q):
@@ -103,6 +110,8 @@ def run(m, stall, noload, gait=None, duration=8.0, push=None, video=None, fps=30
     qadr = [m.jnt_qposadr[m.actuator_trnid[a, 0]] for a in range(m.nu)]
     chassis = mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_BODY, "chassis")
     floor_z = m.geom_pos[mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_GEOM, "floor"), 2]
+    paw = mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_SITE, "foot_fl")
+    paw_lift = 0.0
     steps_per_frame = round(CTRL_DT / m.opt.timestep)
     n = round(duration / m.opt.timestep)
 
@@ -112,8 +121,8 @@ def run(m, stall, noload, gait=None, duration=8.0, push=None, video=None, fps=30
         cam = mujoco.MjvCamera()
         cam.type = mujoco.mjtCamera.mjCAMERA_TRACKING
         cam.trackbodyid = chassis
-        cam.distance, cam.azimuth, cam.elevation = 0.27, 125, -16
-        cam.lookat[:] = [0, 0, -0.02]
+        cam.distance, cam.azimuth, cam.elevation = 0.30, 140, -14
+        cam.lookat[:] = [0, 0, -0.01]
         renderer.scene.flags[mujoco.mjtRndFlag.mjRND_SHADOW] = 0
         renderer.scene.flags[mujoco.mjtRndFlag.mjRND_REFLECTION] = 0
         os.makedirs(os.path.dirname(os.path.abspath(video)), exist_ok=True)
@@ -129,12 +138,14 @@ def run(m, stall, noload, gait=None, duration=8.0, push=None, video=None, fps=30
         t = i * m.opt.timestep
         if i % steps_per_frame == 0:
             q = targets(t, gait)
+            assert legs_clear(q), f"targets at {t:.2f} s bring two legs together"
             target = np.radians([q[name] for name in names])
             d.ctrl[:] = target
         d.xfrc_applied[chassis, :] = 0
         if push and push[0] <= t < push[0] + 0.1:
             d.xfrc_applied[chassis, 1] = push[1]
         mujoco.mj_step(m, d)
+        paw_lift = max(paw_lift, d.site_xpos[paw][2] - floor_z - p.FOOT_R / 1000)
         roll, pitch, yaw = euler(d.qpos[3:7])
         log["t"].append(t)
         log["x"].append(d.qpos[0]); log["y"].append(d.qpos[1]); log["z"].append(d.qpos[2] - floor_z)
@@ -164,6 +175,8 @@ def run(m, stall, noload, gait=None, duration=8.0, push=None, video=None, fps=30
     tau = np.abs(a["tau"][w]) / stall                                  # the loop's command (PWM duty)
     load = np.abs(a["tau"][w] - (stall / noload) * a["vel"][w]) / stall   # torque delivered at the horn (motor current)
     ideal = gait["step"] / 1000 * gait["freq"] / gait["duty"]         # stance sweeps `step` in duty/freq seconds
+    if gait["gait"] in TRICKS:
+        ideal = 0.0
     return {
         "fell_at_s": fell,
         "speed_mm_s": 1000 * dx / span,
@@ -171,7 +184,9 @@ def run(m, stall, noload, gait=None, duration=8.0, push=None, video=None, fps=30
         "sideways_mm": 1000 * dy,
         "climbed_mm": 1000 * (a["z"][w][-1] - a["z"][w][0]),
         "ideal_speed_mm_s": 1000 * ideal,
-        "slip_pct": 100 * (1 - (dx / span) / ideal) if ideal else None,
+        "slip_pct": 100 * (1 - (dx / span) / ideal) if ideal else 0.0,
+        "paw_lift_mm": 1000 * paw_lift,
+        "moved_mm": 1000 * math.hypot(a["x"][-1] - a["x"][0], a["y"][-1] - a["y"][0]),
         "drift_mm_per_m": 1000 * dy / dx if abs(dx) > 1e-3 else None,
         "yaw_rate_deg_s": math.degrees((yaw[w][-1] - yaw[w][0]) / span),
         "roll_max_deg": math.degrees(np.abs(a["roll"][w]).max()),
@@ -194,6 +209,10 @@ def verdict(r):
     """fell / no advance / walks, by what the body did."""
     if r["fell_at_s"] is not None:
         return f"fell at {r['fell_at_s']:.1f} s"
+    if r["gait"]["gait"] == "wave":
+        return "waves" if r["paw_lift_mm"] > 8 else "paw stays down"
+    if r["gait"]["gait"] == "dance":
+        return "dances"
     if r.get("step_mm"):
         return "climbs" if r["climbed_mm"] > 0.9 * r["step_mm"] and r["speed_mm_s"] > 0.4 * r["ideal_speed_mm_s"] else "stuck at the step"
     if r["gait"]["turn"]:
@@ -211,11 +230,11 @@ def line(label, r):
 
 def suite():
     kgcm = 0.0980665
-    tests = [("baseline (0.5 kg*cm, 2 Hz, 20 mm)", {}, {}, {})]
+    tests = [("baseline (0.5 kg*cm, 2 Hz, step 20, lift 5 mm)", {}, {}, {})]
     for freq in (1.0, 1.5, 2.0, 2.5, 3.0, 4.0):
         for step in (12.0, 20.0, 28.0, 36.0):
             tests.append((f"gait f={freq} Hz step={step:.0f} mm", {}, {"freq": freq, "step": step}, {}))
-    for lift in (4.0, 12.0):
+    for lift in (3.0, 8.0, 12.0):
         tests.append((f"gait lift={lift:.0f} mm", {}, {"lift": lift}, {}))
     for height in (40.0, 52.0):
         tests.append((f"gait height={height:.0f} mm", {}, {"height": height}, {}))
@@ -244,8 +263,13 @@ def suite():
     tests.append(("crawl, step up 6 mm (16 s)", {"step_mm": 6}, dict(CRAWL), {"duration": 16.0}))
     tests.append(("crawl, friction 0.3", {"friction": 0.3}, dict(CRAWL), {}))
     tests.append(("PLANTED: servo 0.03 kg*cm (must fail)", {"stall": 0.03 * kgcm, "noload": math.radians(60) / 0.15}, {}, {}))
+    tests.append(("wave hello", {}, dict(WAVE), {}))
+    tests.append(("wave hello, friction 0.3", {"friction": 0.3}, dict(WAVE), {}))
+    tests.append(("wave hello, servo 0.3 kg*cm", {"stall": 0.3 * kgcm, "noload": math.radians(60) / 0.15}, dict(WAVE), {}))
+    tests.append(("dance", {}, dict(DANCE), {"duration": 9.0}))
+    tests.append(("dance, payload +30 g", {"payload_g": 30}, dict(DANCE), {"duration": 9.0}))
     for mm in (2, 4, 6, 8, 10):
-        tests.append((f"step up {mm} mm", {"step_mm": mm}, {}, {}))
+        tests.append((f"step up {mm} mm, lift 8 mm", {"step_mm": mm}, {"lift": 8.0}, {}))
     for mm in (6, 10):
         tests.append((f"step up {mm} mm, lift 14 mm", {"step_mm": mm}, {"lift": 14.0}, {}))
     for turn in (0.5, 1.0):
@@ -281,7 +305,7 @@ if __name__ == "__main__":
     ap.add_argument("--suite", action="store_true")
     ap.add_argument("--video")
     ap.add_argument("--duration", type=float, default=8.0)
-    ap.add_argument("--gait", choices=("trot", "crawl"), default="trot")
+    ap.add_argument("--gait", choices=("trot", "crawl", "wave", "dance"), default="trot")
     ap.add_argument("--slope", type=float, default=0.0)
     ap.add_argument("--step-up", type=float, default=0.0, help="a step up, mm")
     for k, v in BASELINE.items():
@@ -292,9 +316,9 @@ if __name__ == "__main__":
         suite()
     else:
         m, stall, noload = load(slope_deg=args.slope, step_mm=args.step_up)
-        gait = dict(CRAWL) if args.gait == "crawl" else {}
+        gait = dict({"crawl": CRAWL, "wave": WAVE, "dance": DANCE}.get(args.gait, {}))
         gait.update({k: getattr(args, k) for k in BASELINE if k != "gait" and getattr(args, k) is not None})
         r = run(m, stall, noload, gait=gait, duration=args.duration, video=args.video)
         r["step_mm"] = args.step_up
-        print(line(args.gait, r))
+        print(line(args.gait, r), f" paw lift {r['paw_lift_mm']:.1f} mm  moved {r['moved_mm']:.1f} mm")
         print(json.dumps(r, indent=1))
