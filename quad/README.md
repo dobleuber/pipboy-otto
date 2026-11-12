@@ -44,7 +44,7 @@ Nada de esta lista se ha comprado ni montado todavía; las cantidades salen del 
 | 1 | Cargador para LiPo 1S | Con el conector de tu batería |
 | 1 | Interruptor deslizante miniatura | Sin alojamiento en el modelo todavía |
 | 4 | Tornillo autorroscante M1.6 × 6 | Tapa a bandeja |
-| ~20 | Tornillos pequeños de servo (~1.2 mm) | 8 centrales de cuerno, 12 de brazo de cuerno (1 por muslo, 2 por pierna) y 8 de orejas de los servos de rodilla. Suelen venir con los servos, pero no siempre en esa cantidad |
+| 28 | Tornillos pequeños de servo (~1.2 mm) | 8 centrales de cuerno, 12 de brazo de cuerno (1 por muslo, 2 por pierna) y 8 de orejas de los servos de rodilla. Suelen venir con los servos, pero no siempre en esa cantidad |
 | | Cable fino, conector para la batería, cinta de doble cara, pegamento | La placa y la batería van con cinta; el visor, pegado |
 
 Opcional: un LED o un sensor de distancia detrás del visor.
