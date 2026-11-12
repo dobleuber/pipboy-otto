@@ -1,0 +1,155 @@
+<mujoco model="quad">
+  <compiler angle="radian" meshdir="assets"/>
+
+  <option integrator="implicitfast"/>
+
+  <size nkey="3"/>
+
+  <default>
+    <default class="quad">
+      <default class="visual">
+        <geom contype="0" conaffinity="0" group="2"/>
+      </default>
+      <default class="collision">
+        <geom group="3"/>
+      </default>
+    </default>
+  </default>
+
+  <asset>
+    <material name="PLA_GENERIC" rgba="0.94902 0.647059 0.22745 1"/>
+    <material name="ABS_GENERIC" rgba="0.184314 0.435294 0.709804 1"/>
+    <material name="POM_GENERIC" rgba="0.956863 0.956863 0.941176 1"/>
+    <material name="TPU_SHORE_95A" rgba="0.188236 0.203922 0.22745 1"/>
+    <mesh name="tray" content_type="model/stl" file="quad_tray.stl"/>
+    <mesh name="deck" content_type="model/stl" file="quad_deck.stl"/>
+    <mesh name="battery" content_type="model/stl" file="quad_battery.stl"/>
+    <mesh name="mcu" content_type="model/stl" file="quad_mcu.stl"/>
+    <mesh name="hip_servo_fl" content_type="model/stl" file="quad_hip_servo_fl.stl"/>
+    <mesh name="hip_horn" content_type="model/stl" file="quad_hip_horn.stl"/>
+    <mesh name="thigh" content_type="model/stl" file="quad_thigh.stl"/>
+    <mesh name="shank" content_type="model/stl" file="quad_shank.stl"/>
+    <mesh name="foot" content_type="model/stl" file="quad_foot.stl"/>
+  </asset>
+
+  <worldbody>
+    <body name="chassis" childclass="quad" pos="-9.19993e-05 0 0.000492245">
+      <inertial pos="0 0 0" quat="1 0 0.000653098 0" mass="0.052267" diaginertia="5.43741e-06 4.02958e-05 4.42355e-05"/>
+      <joint name="quad" type="free"/>
+      <geom name="tray" class="visual" pos="9.19993e-05 0 -0.000492245" quat="1 0 0 0" type="mesh" material="PLA_GENERIC" mesh="tray"/>
+      <geom name="deck" class="visual" pos="9.19993e-05 0 0.00387775" quat="1 0 0 0" type="mesh" material="PLA_GENERIC" mesh="deck"/>
+      <geom name="battery" class="visual" pos="9.19993e-05 0 -0.00196225" quat="1 0 0 0" type="mesh" rgba="0.541176 0.560784 0.596079 1" mesh="battery"/>
+      <geom name="mcu" class="visual" pos="9.19993e-05 0 0.00747775" quat="1 0 0 0" type="mesh" rgba="0.121568 0.419607 0.22745 1" mesh="mcu"/>
+      <geom name="hip_servo_fl" class="visual" pos="0.038092 0.001 -0.000492245" quat="0.707107 -0.707107 0 0" type="mesh" material="ABS_GENERIC" mesh="hip_servo_fl"/>
+      <geom name="hip_servo_fr" class="visual" pos="0.038092 -0.001 -0.000492245" quat="0.707107 0.707107 0 0" type="mesh" material="ABS_GENERIC" mesh="hip_servo_fl"/>
+      <geom name="hip_servo_rl" class="visual" pos="-0.037908 0.001 -0.000492245" quat="0 0 0.707107 0.707107" type="mesh" material="ABS_GENERIC" mesh="hip_servo_fl"/>
+      <geom name="hip_servo_rr" class="visual" pos="-0.037908 -0.001 -0.000492245" quat="0 0 -0.707107 0.707107" type="mesh" material="ABS_GENERIC" mesh="hip_servo_fl"/>
+      <geom name="tray_collision" class="collision" size="0.049 0.0165 0.005185" pos="9.19993e-05 0 -0.00130725" type="box"/>
+      <body name="thigh_fl" pos="0.038092 0.02425 -0.000492245" quat="0.5 -0.5 -0.5 -0.5">
+        <inertial pos="-0.0191897 -0.0134368 0.00795717" quat="0.699452 0.632475 0.316189 0.103766" mass="0.00692095" diaginertia="2.84003e-07 7.5614e-07 9.20118e-07"/>
+        <joint name="hip_fl" range="-0.785398 0.785398" actuatorfrcrange="-0.0490333 0.0490333" armature="6e-05" damping="0.0056188" frictionloss="0.002"/>
+        <geom name="hip_horn" class="visual" quat="0.300706 0 0 -0.953717" type="mesh" material="POM_GENERIC" mesh="hip_horn"/>
+        <geom name="thigh" class="visual" quat="0.300706 0 0 -0.953717" type="mesh" material="PLA_GENERIC" mesh="thigh"/>
+        <geom name="knee_servo" class="visual" pos="-0.0245746 -0.0172073 0.002" quat="0.300706 0 0 -0.953717" type="mesh" material="ABS_GENERIC" mesh="hip_servo_fl"/>
+        <geom name="knee_servo_collision" class="collision" size="0.00417 0.0120058 0.013675" pos="-0.0213545 -0.0149525 0.010406" quat="0.786574 0.409988 -0.213426 -0.409464" type="box"/>
+        <body name="shank_fl" pos="-0.0245746 -0.0172073 0.02525">
+          <inertial pos="-0.0127293 0.00891317 0.000925757" quat="0.953636 0.00390891 0.0123975 -0.30068" mass="0.0014206" diaginertia="1.05928e-08 2.05976e-07 2.10389e-07"/>
+          <joint name="knee_fl" range="-0.785398 0.785398" actuatorfrcrange="-0.0490333 0.0490333" armature="6e-05" damping="0.0056188" frictionloss="0.002"/>
+          <geom name="knee_horn" class="visual" quat="0.300706 0 0 0.953717" type="mesh" material="POM_GENERIC" mesh="hip_horn"/>
+          <geom name="shank" class="visual" quat="0.300706 0 0 0.953717" type="mesh" material="PLA_GENERIC" mesh="shank"/>
+          <geom name="foot" class="visual" pos="-0.0220352 0.0154292 0.00125" quat="0.212631 -0.67438 0.212631 0.67438" type="mesh" material="TPU_SHORE_95A" mesh="foot"/>
+          <geom name="foot_collision" class="collision" size="0.0045" pos="-0.0245746 0.0172073 0.00125" quat="0.212631 -0.67438 0.212631 0.67438" condim="4" friction="0.8"/>
+          <geom name="shank_collision" class="collision" size="0.0185 0.0045 0.00125" pos="-0.010649 0.00745649 0.00125" quat="0.300706 0 0 0.953717" type="box"/>
+          <site name="foot_fl" pos="-0.0245746 0.0172073 0.00125" quat="0.212631 -0.67438 0.212631 0.67438"/>
+        </body>
+      </body>
+      <body name="thigh_fr" pos="0.038092 -0.02425 -0.000492245" quat="0.5 -0.5 -0.5 -0.5">
+        <inertial pos="-0.0191897 -0.0134368 -0.00795717" quat="0.632475 0.699452 0.103766 0.316189" mass="0.00692095" diaginertia="2.84003e-07 7.5614e-07 9.20118e-07"/>
+        <joint name="hip_fr" range="-0.785398 0.785398" actuatorfrcrange="-0.0490333 0.0490333" armature="6e-05" damping="0.0056188" frictionloss="0.002"/>
+        <geom name="hip_horn_2" class="visual" quat="0 -0.300706 0.953717 0" type="mesh" material="POM_GENERIC" mesh="hip_horn"/>
+        <geom name="thigh_2" class="visual" quat="0 -0.300706 0.953717 0" type="mesh" material="PLA_GENERIC" mesh="thigh"/>
+        <geom name="knee_servo_2" class="visual" pos="-0.0245746 -0.0172073 -0.002" quat="0 -0.300706 0.953717 0" type="mesh" material="ABS_GENERIC" mesh="hip_servo_fl"/>
+        <geom name="knee_servo_collision_2" class="collision" size="0.00417 0.0120058 0.013675" pos="-0.0213545 -0.0149525 -0.010406" quat="0.213426 -0.409464 -0.786574 0.409988" type="box"/>
+        <body name="shank_fr" pos="-0.0245746 -0.0172073 -0.02525">
+          <inertial pos="-0.0127293 0.00891317 -0.000925757" quat="0.953636 -0.00390891 -0.0123975 -0.30068" mass="0.0014206" diaginertia="1.05928e-08 2.05976e-07 2.10389e-07"/>
+          <joint name="knee_fr" range="-0.785398 0.785398" actuatorfrcrange="-0.0490333 0.0490333" armature="6e-05" damping="0.0056188" frictionloss="0.002"/>
+          <geom name="knee_horn_2" class="visual" quat="0 0.300706 0.953717 0" type="mesh" material="POM_GENERIC" mesh="hip_horn"/>
+          <geom name="shank_2" class="visual" quat="0 0.300706 0.953717 0" type="mesh" material="PLA_GENERIC" mesh="shank"/>
+          <geom name="foot_2" class="visual" pos="-0.0220352 0.0154292 -0.00125" quat="0.67438 -0.212631 -0.67438 -0.212631" type="mesh" material="TPU_SHORE_95A" mesh="foot"/>
+          <geom name="foot_collision_2" class="collision" size="0.0045" pos="-0.0245746 0.0172073 -0.00125" quat="0.67438 -0.212631 -0.67438 -0.212631" condim="4" friction="0.8"/>
+          <geom name="shank_collision_2" class="collision" size="0.0185 0.0045 0.00125" pos="-0.010649 0.00745649 -0.00125" quat="0 0.300706 0.953717 0" type="box"/>
+          <site name="foot_fr" pos="-0.0245746 0.0172073 -0.00125" quat="0.67438 -0.212631 -0.67438 -0.212631"/>
+        </body>
+      </body>
+      <body name="thigh_rl" pos="-0.037908 0.02425 -0.000492245" quat="0.5 -0.5 -0.5 -0.5">
+        <inertial pos="-0.0191897 0.0134368 0.00795717" quat="0.632475 0.699452 -0.103766 -0.316189" mass="0.00692095" diaginertia="2.84003e-07 7.5614e-07 9.20118e-07"/>
+        <joint name="hip_rl" range="-0.785398 0.785398" actuatorfrcrange="-0.0490333 0.0490333" armature="6e-05" damping="0.0056188" frictionloss="0.002"/>
+        <geom name="hip_horn_3" class="visual" quat="0.300706 0 0 0.953717" type="mesh" material="POM_GENERIC" mesh="hip_horn"/>
+        <geom name="thigh_3" class="visual" quat="0.300706 0 0 0.953717" type="mesh" material="PLA_GENERIC" mesh="thigh"/>
+        <geom name="knee_servo_3" class="visual" pos="-0.0245746 0.0172073 0.002" quat="0.300706 0 0 0.953717" type="mesh" material="ABS_GENERIC" mesh="hip_servo_fl"/>
+        <geom name="knee_servo_collision_3" class="collision" size="0.00417 0.0120058 0.013675" pos="-0.0213545 0.0149525 0.010406" quat="0.409464 0.213426 -0.409988 -0.786574" type="box"/>
+        <body name="shank_rl" pos="-0.0245746 0.0172073 0.02525">
+          <inertial pos="-0.0127293 -0.00891317 0.000925757" quat="0.953636 -0.00390891 0.0123975 0.30068" mass="0.0014206" diaginertia="1.05928e-08 2.05976e-07 2.10389e-07"/>
+          <joint name="knee_rl" range="-0.785398 0.785398" actuatorfrcrange="-0.0490333 0.0490333" armature="6e-05" damping="0.0056188" frictionloss="0.002"/>
+          <geom name="knee_horn_3" class="visual" quat="0.300706 0 0 -0.953717" type="mesh" material="POM_GENERIC" mesh="hip_horn"/>
+          <geom name="shank_3" class="visual" quat="0.300706 0 0 -0.953717" type="mesh" material="PLA_GENERIC" mesh="shank"/>
+          <geom name="foot_3" class="visual" pos="-0.0220352 -0.0154292 0.00125" quat="0.212631 0.67438 0.212631 -0.67438" type="mesh" material="TPU_SHORE_95A" mesh="foot"/>
+          <geom name="foot_collision_3" class="collision" size="0.0045" pos="-0.0245746 -0.0172073 0.00125" quat="0.212631 0.67438 0.212631 -0.67438" condim="4" friction="0.8"/>
+          <geom name="shank_collision_3" class="collision" size="0.0185 0.0045 0.00125" pos="-0.010649 -0.00745649 0.00125" quat="0.300706 0 0 -0.953717" type="box"/>
+          <site name="foot_rl" pos="-0.0245746 -0.0172073 0.00125" quat="0.212631 0.67438 0.212631 -0.67438"/>
+        </body>
+      </body>
+      <body name="thigh_rr" pos="-0.037908 -0.02425 -0.000492245" quat="0.5 -0.5 -0.5 -0.5">
+        <inertial pos="-0.0191897 0.0134368 -0.00795717" quat="0.699452 0.632475 -0.316189 -0.103766" mass="0.00692095" diaginertia="2.84003e-07 7.5614e-07 9.20118e-07"/>
+        <joint name="hip_rr" range="-0.785398 0.785398" actuatorfrcrange="-0.0490333 0.0490333" armature="6e-05" damping="0.0056188" frictionloss="0.002"/>
+        <geom name="hip_horn_4" class="visual" quat="0 0.300706 0.953717 0" type="mesh" material="POM_GENERIC" mesh="hip_horn"/>
+        <geom name="thigh_4" class="visual" quat="0 0.300706 0.953717 0" type="mesh" material="PLA_GENERIC" mesh="thigh"/>
+        <geom name="knee_servo_4" class="visual" pos="-0.0245746 0.0172073 -0.002" quat="0 0.300706 0.953717 0" type="mesh" material="ABS_GENERIC" mesh="hip_servo_fl"/>
+        <geom name="knee_servo_collision_4" class="collision" size="0.00417 0.0120058 0.013675" pos="-0.0213545 0.0149525 -0.010406" quat="0.409988 -0.786574 -0.409464 0.213426" type="box"/>
+        <body name="shank_rr" pos="-0.0245746 0.0172073 -0.02525">
+          <inertial pos="-0.0127293 -0.00891317 -0.000925757" quat="0.953636 0.00390891 -0.0123975 0.30068" mass="0.0014206" diaginertia="1.05928e-08 2.05976e-07 2.10389e-07"/>
+          <joint name="knee_rr" range="-0.785398 0.785398" actuatorfrcrange="-0.0490333 0.0490333" armature="6e-05" damping="0.0056188" frictionloss="0.002"/>
+          <geom name="knee_horn_4" class="visual" quat="0 -0.300706 0.953717 0" type="mesh" material="POM_GENERIC" mesh="hip_horn"/>
+          <geom name="shank_4" class="visual" quat="0 -0.300706 0.953717 0" type="mesh" material="PLA_GENERIC" mesh="shank"/>
+          <geom name="foot_4" class="visual" pos="-0.0220352 -0.0154292 -0.00125" quat="0.67438 0.212631 -0.67438 0.212631" type="mesh" material="TPU_SHORE_95A" mesh="foot"/>
+          <geom name="foot_collision_4" class="collision" size="0.0045" pos="-0.0245746 -0.0172073 -0.00125" quat="0.67438 0.212631 -0.67438 0.212631" condim="4" friction="0.8"/>
+          <geom name="shank_collision_4" class="collision" size="0.0185 0.0045 0.00125" pos="-0.010649 -0.00745649 -0.00125" quat="0 -0.300706 0.953717 0" type="box"/>
+          <site name="foot_rr" pos="-0.0245746 -0.0172073 -0.00125" quat="0.67438 0.212631 -0.67438 0.212631"/>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+
+  <contact>
+    <exclude body1="chassis" body2="thigh_fl"/>
+    <exclude body1="chassis" body2="thigh_fr"/>
+    <exclude body1="chassis" body2="thigh_rl"/>
+    <exclude body1="chassis" body2="thigh_rr"/>
+    <exclude body1="thigh_fl" body2="shank_fl"/>
+    <exclude body1="thigh_fr" body2="shank_fr"/>
+    <exclude body1="thigh_rl" body2="shank_rl"/>
+    <exclude body1="thigh_rr" body2="shank_rr"/>
+  </contact>
+
+  <actuator>
+    <general name="hip_fl" joint="hip_fl" ctrlrange="-0.785398 0.785398" input="pos" biastype="affine" gainprm="0.700475" biasprm="0 -0.700475"/>
+    <general name="knee_fl" joint="knee_fl" ctrlrange="-0.785398 0.785398" input="pos" biastype="affine" gainprm="0.700475" biasprm="0 -0.700475"/>
+    <general name="hip_fr" joint="hip_fr" ctrlrange="-0.785398 0.785398" input="pos" biastype="affine" gainprm="0.700475" biasprm="0 -0.700475"/>
+    <general name="knee_fr" joint="knee_fr" ctrlrange="-0.785398 0.785398" input="pos" biastype="affine" gainprm="0.700475" biasprm="0 -0.700475"/>
+    <general name="hip_rl" joint="hip_rl" ctrlrange="-0.785398 0.785398" input="pos" biastype="affine" gainprm="0.700475" biasprm="0 -0.700475"/>
+    <general name="knee_rl" joint="knee_rl" ctrlrange="-0.785398 0.785398" input="pos" biastype="affine" gainprm="0.700475" biasprm="0 -0.700475"/>
+    <general name="hip_rr" joint="hip_rr" ctrlrange="-0.785398 0.785398" input="pos" biastype="affine" gainprm="0.700475" biasprm="0 -0.700475"/>
+    <general name="knee_rr" joint="knee_rr" ctrlrange="-0.785398 0.785398" input="pos" biastype="affine" gainprm="0.700475" biasprm="0 -0.700475"/>
+  </actuator>
+
+  <sensor>
+    <framequat objtype="body" objname="chassis" name="chassis_quat"/>
+    <frameangvel objtype="body" objname="chassis" name="chassis_gyro"/>
+  </sensor>
+
+  <keyframe>
+    <key name="crouch" qpos="-9.19993e-05 0 0.000492245 1 0 0 0 0.31643 -0.63286 0.31643 -0.63286 -0.31643 0.63286 -0.31643 0.63286"/>
+    <key name="home"/>
+    <key name="stand" qpos="-9.19993e-05 0 0.000492245 1 0 0 0 0.0862979 -0.172596 0.0862979 -0.172596 -0.0862979 0.172596 -0.0862979 0.172596"/>
+  </keyframe>
+</mujoco>
