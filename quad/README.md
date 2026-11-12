@@ -29,6 +29,46 @@ El piso tiene cuadros de 5 cm.
 | Batería / control | LiPo 1S 300 mAh en el chasis, placa tipo "super mini" bajo el caparazón |
 | Piezas impresas | 18 (8 distintas): bandeja, tapa, caparazón, visor, 4 muslos, 4 piernas (2 + 2 espejadas), 4 pies de TPU |
 
+## Lista de componentes
+
+Nada de esta lista se ha comprado ni montado todavía; las cantidades salen del modelo.
+
+### Para comprar
+
+| Cant. | Componente | Notas |
+|---|---|---|
+| 8 | Servo de ~4 g, recorrido de 90° o más | GH-S37D (3.7 g) o EMAX ES9051 (4.1 g). Los alojamientos están dimensionados para el ES9051; **mide el tuyo antes de imprimir**. Suelen traer cuernos y tornillos |
+| 8 | Cuerno de servo de un brazo, con al menos 2 agujeros | Normalmente vienen con el servo. El modelo supone un brazo de 18 × 4.6 mm con agujeros a 6 y 11 mm del eje |
+| 1 | Batería LiPo 1S de ~300 mAh, formato 602030 (30 × 20 × 6 mm) | El hueco de la bandeja mide 31 × 21 × 8.8 mm |
+| 1 | Placa de control de ~22.5 × 18 mm con **8 salidas PWM** | Por ejemplo una "super mini" con ESP32-S3, cuyo generador de PWM tiene 8 canales ([documentación de Espressif](https://docs.espressif.com/projects/esp-idf/en/v5.3.3/esp32s3/api-reference/peripherals/ledc.html)). Comprueba que tu placa los tenga: no todas las de ese tamaño llegan a 8 |
+| 1 | Cargador para LiPo 1S | Con el conector de tu batería |
+| 1 | Interruptor deslizante miniatura | Sin alojamiento en el modelo todavía |
+| 4 | Tornillo autorroscante M1.6 × 6 | Tapa a bandeja |
+| ~20 | Tornillos pequeños de servo (~1.2 mm) | 8 centrales de cuerno, 12 de brazo de cuerno (1 por muslo, 2 por pierna) y 8 de orejas de los servos de rodilla. Suelen venir con los servos, pero no siempre en esa cantidad |
+| | Cable fino, conector para la batería, cinta de doble cara, pegamento | La placa y la batería van con cinta; el visor, pegado |
+
+Opcional: un LED o un sensor de distancia detrás del visor.
+
+**Alimentación, por decidir.** Los vendedores del GH-S37D dan 3.6 a 4.8 V y una LiPo 1S baja de 4.2 a
+unos 3.0 V, así que con la batería baja el servo queda por debajo de su mínimo. Las opciones son
+aceptar menos autonomía o añadir un elevador de tensión pequeño, que no está en el modelo ni en el peso.
+La placa también necesita su propia alimentación regulada desde la batería.
+
+### Para imprimir
+
+| Cant. | Pieza | Material | Volumen por pieza | Notas |
+|---|---|---|---|---|
+| 1 | Bandeja | PLA | 12.3 cm³ | Sin soportes |
+| 1 | Tapa | PLA | 5.7 cm³ | Sin soportes |
+| 1 | Caparazón | PLA blanco | 10.1 cm³ | Borde hacia abajo, con soportes por dentro |
+| 1 | Visor | PETG translúcido ámbar | 0.3 cm³ | De pie sobre su canto inferior |
+| 4 | Muslo | PLA | 2.9 cm³ | Plano, sin soportes |
+| 2 + 2 | Pierna, versiones A y B (espejadas) | PLA | 0.8 cm³ | A: delantera izquierda y trasera derecha. B: las otras dos |
+| 4 | Pie | TPU 95A | 0.3 cm³ | Cara plana hacia abajo |
+
+En total unos 43 cm³ de PLA (53 g si se imprime macizo), más los soportes del caparazón. Las piezas
+de las patas conviene imprimirlas con relleno alto: el análisis de esfuerzos las supone macizas.
+
 ## Qué hace (en simulación)
 
 Con el servo más flojo de la clase (0.5 kg·cm y 0.12 s/60°, lo que anuncian los vendedores del GH-S37D
@@ -120,8 +160,8 @@ conviene no dejarlo caer de más de unos centímetros.
 - **El modelo del servo en simulación es estimado**, no medido: ganancia del lazo, inercia del motor
   y fricción de engranajes. No incluye holgura ni zona muerta, y las piezas son rígidas.
 - **Todo es en lazo abierto**: sin IMU ni sensores.
-- **Faltan detalles de fabricación**: ruta de cables, interruptor, tornillería. El visor va pegado en
-  su ranura. Hace falta una placa con 8 salidas PWM.
+- **Faltan detalles de fabricación**: ruta de cables, alojamiento del interruptor y alimentación
+  (ver la lista de componentes).
 - Los servos giran ±45° en el modelo (servo de 90°). Todos los ejes giran sobre +Y; en el robot real
   los servos del lado derecho van espejados y el firmware debe invertirlos.
 
