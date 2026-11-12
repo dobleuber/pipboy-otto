@@ -38,12 +38,13 @@ L1 = 30.0                # thigh: hip axis to knee axis
 L2 = 30.0                # shank: knee axis to foot centre
 STANCE = 35.0            # as built: thigh tilted this far from vertical, shank the same the other way
 FOOT_R = 4.5
-THIGH_T = 2.0            # thigh plate thickness
-SHANK_T = 2.5
+THIGH_T = 3.5            # thigh plate thickness: it carries the foot's side load in bending (2 mm yielded in FEA)
+SHANK_T = 3.5   # lower-leg plate thickness: side loads at the foot bend it flat-wise (2.5 mm was marginal in FEA)
 
 HIP_FACE_Y = HIP_Y0 + SERVO_H                 # horn top of a hip servo: the thigh plate sits here
 KNEE_FACE_Y = HIP_FACE_Y + THIGH_T + SERVO_H   # horn top of a knee servo: the shank plate sits here
-FOOT_Y = KNEE_FACE_Y + SHANK_T / 2
+PEG = 2.5                # the square peg the foot presses on: thinner than the plate, so the ball keeps its walls
+FOOT_Y = KNEE_FACE_Y + PEG / 2
 
 TRAY_X = 49.0            # half length of the chassis
 TRAY_Y = HIP_Y0 + SERVO_CASE_H   # half width: flush with the hip servo case tops

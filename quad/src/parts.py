@@ -182,8 +182,8 @@ def thigh():
     c0, c1 = p.L1 + p.SERVO_SHAFT_END - p.SERVO_L, p.L1 + p.SERVO_SHAFT_END     # knee servo case along X
     x0, x1 = -6.0, c1 + p.SERVO_TAB_L + 2.5
     # Outline: a round hip, a waist, then the knee servo's bed.
-    upper = bd.Spline([(2.5, 6.0), (7.0, 4.7), (11.0, 5.3), (15.5, 6.5)], tangents=[(1, -0.6), (1, 0.45)])
-    lower = bd.Spline([(15.5, -6.5), (11.0, -5.3), (7.0, -4.7), (2.5, -6.0)], tangents=[(-1, 0.45), (-1, -0.6)])
+    upper = bd.ThreePointArc((2.5, 6.0), (8.5, 5.5), (15.5, 6.5))        # plain arcs: faces a mesher reads
+    lower = bd.ThreePointArc((15.5, -6.5), (8.5, -5.5), (2.5, -6.0))
     neck = bd.make_face([upper, bd.Line((15.5, 6.5), (15.5, -6.5)), lower, bd.Line((2.5, -6.0), (2.5, 6.0))])
     outline = bd.Circle(6.5) + neck + bd.Pos((9.0 + x1) / 2, 0) * bd.SlotOverall(x1 - 9.0, 13.0)
     body = bd.extrude(outline, t)
@@ -193,7 +193,7 @@ def thigh():
     for s in (1, -1):                                                           # rails that locate the case
         body += box(c0, c1, s * (w + p.FIT), s * 6.5, t, t + 4.0)
     cuts = [zcyl(0, 0, -1, t + 1, 2.4)]                                         # horn screw
-    cuts += [zcyl(x, 0, -1, t + 1, 1.2) for x in (6.0, 11.0)]                   # horn arm screws
+    cuts.append(zcyl(6.0, 0, -1, t + 1, 1.2))        # one horn arm screw: a second, in the waist, is where it yielded
     for x in (c0 - p.SERVO_TAB_L / 2, c1 + p.SERVO_TAB_L / 2):
         cuts.append(zcyl(x, 0, tab_z - 6, tab_z + 1, 1.2))                      # tab screw pilots
     body -= cuts
@@ -230,7 +230,7 @@ def lower_leg(hand):
     face = bd.make_face([bd.Spline(up, tangents=[(1, 0), (1, 0)]), bd.Line(up[-1], down[0]),
                          bd.Spline(down, tangents=[(-1, 0), (-1, 0)]), bd.Line(down[-1], up[0])])
     body = bd.extrude(bd.Circle(5.6) + face, t)
-    body += box(xe - 1.0, p.L2 + 1.5, -t / 2, t / 2, 0, t)                        # square peg into the foot
+    body += box(xe - 1.0, p.L2 + 1.5, -p.PEG / 2, p.PEG / 2, 0, p.PEG)            # square peg into the foot, on the bed
     cuts = [zcyl(0, 0, -1, t + 1, 2.4)] + [zcyl(x, 0, -1, t + 1, 1.2) for x in (6.0, 11.0)]
     body -= cuts
     body.label = "shank"
@@ -255,10 +255,10 @@ def foot():
 
     The ball's centre is at (0, 0, FOOT_FLAT).
     """
-    t = p.SHANK_T
+    t = p.PEG
     body = bd.Pos(0, 0, FOOT_FLAT) * bd.Sphere(p.FOOT_R)
     body -= box(-6, 6, -6, 6, -6, 0)                                   # the flat
-    body -= box(-t / 2, t / 2, -t / 2, t / 2, -1, FOOT_FLAT + 1.5)     # socket for the 2.5 mm square peg
+    body -= box(-t / 2, t / 2, -t / 2, t / 2, -1, FOOT_FLAT + 1.5)     # socket for the square peg
     body.label = "foot"
     body.material = plastics.tpu()
     body.color = DARK

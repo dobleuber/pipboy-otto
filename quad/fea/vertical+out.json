@@ -1,0 +1,5 @@
+{
+  "fixtures": [{"faces": ["hip_horn/f:horn.body_make_cylinder1.1;M:horn.body"], "type": "fixed"}],
+  "loads": [{"faces": ["shank/f:lower_leg_faceted.body_fojjlg_make_box1.2"], "type": "force", "vector_N": [-8.19, 5.74, 5]}],
+  "mesh": {"size_mm": 1.0}
+}

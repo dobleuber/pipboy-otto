@@ -21,7 +21,7 @@ FOOT_FRICTION = [0.8, 0.005, 0.0001]   # TPU on a table top
 def quad_mujoco(kp=KP, stall=p.SERVO_STALL_NM, foot_friction=FOOT_FRICTION) -> mujoco.MjSpec:
     s = spec(quad())
 
-    # Collisions: ball feet, boxes for what can touch the floor in a fall, nothing for the rest.
+    # Collisions: ball feet, boxes for what touches the floor in a fall, nothing for the rest.
     for path in parts(s):
         leaf = path.split("/")[-1]
         if leaf == "foot":
@@ -32,8 +32,10 @@ def quad_mujoco(kp=KP, stall=p.SERVO_STALL_NM, foot_friction=FOOT_FRICTION) -> m
                 geom.pos = s.site(f"foot_{leg}").pos
                 geom.friction = foot_friction
                 geom.condim = 4
-        elif leaf in ("tray", "shell", "knee_servo", "shank"):
+        elif leaf in ("tray", "shell", "knee_servo"):
             fit(s, path, "box")
+        # The lower leg collides as nothing: a box around its bowed plate would reach below the ball foot,
+        # and the robot would stand on the box's corner instead of the foot.
         else:
             for geom in collisions(s, path):
                 s.delete(geom)

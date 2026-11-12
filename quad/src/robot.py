@@ -69,7 +69,7 @@ def quad():
         plate = placed((shank_a if sx * sy > 0 else shank_b)().shape, shank_plane, "shank")   # curls mirror left/right
         # The foot is modelled as printed (flat down, socket up): turn its +Z onto the shank's +X.
         ball = placed(foot().shape, shank_plane, "foot",
-                      bd.Pos(p.L2 - FOOT_FLAT, 0, p.SHANK_T / 2) * bd.Rot(0, 90, 0))
+                      bd.Pos(p.L2 - FOOT_FLAT, 0, p.PEG / 2) * bd.Rot(0, 90, 0))
         frame(ball, f"foot_{name}", bd.Pos(0, 0, FOOT_FLAT))            # the ball's centre, in the foot's own frame
         shank_link = bd.Compound(children=[knee_horn, plate, ball], label=f"shank_{name}")
 

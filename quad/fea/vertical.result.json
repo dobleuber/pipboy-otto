@@ -1,0 +1,144 @@
+{
+ "ok": true,
+ "findings": [
+  {
+   "severity": "warning",
+   "code": "low_margin",
+   "message": "'knee_servo' holds, but only 1.2\u00d7 the load: under the 2\u00d7 margin"
+  },
+  {
+   "severity": "warning",
+   "code": "large_displacement",
+   "message": "'knee_servo' moves 0.534 mm, about 1% of its size: check the fit if it mates with another part"
+  },
+  {
+   "severity": "warning",
+   "code": "large_displacement",
+   "message": "'knee_horn' moves 0.81 mm, about 4% of its size: check the fit if it mates with another part"
+  },
+  {
+   "severity": "warning",
+   "code": "large_displacement",
+   "message": "'shank' moves 1.39 mm, about 3% of its size: check the fit if it mates with another part"
+  },
+  {
+   "severity": "warning",
+   "code": "solver_note",
+   "message": "276489 degrees of freedom: expect a slow solve; a larger mesh.size_mm is usually enough"
+  },
+  {
+   "severity": "warning",
+   "code": "solver_note",
+   "message": "the part's 276,489 degrees of freedom at 1 mm leave no room under the 250,000 limit for a finer solve; its convergence is unchecked"
+  },
+  {
+   "severity": "warning",
+   "code": "solver_note",
+   "message": "no pictures were drawn (no X display for OpenGL: OCP's Linux build draws through GLX on an X server, and neither the request (DISPLAY) nor the engine has one: install Xvfb and Mesa's OpenGL (Debian, Ubuntu: sudo apt-get install xvfb libgl1 libgl1-mesa-dri; Fedora: sudo dnf install xorg-x11-server-Xvfb mesa-libGL mesa-dri-drivers), and the engine starts Xvfb itself (run cad stop, then try again); or set DISPLAY); result.glb and the numbers are written"
+  }
+ ],
+ "applied_force_N": [
+  -8.19,
+  5.74,
+  0.0
+ ],
+ "reaction_force_N": [
+  8.19,
+  -5.74,
+  -0.0
+ ],
+ "max_von_mises_MPa": 24.085,
+ "max_von_mises_at_mm": [
+  28.041,
+  -1.205,
+  23.5
+ ],
+ "max_displacement_mm": 1.391646,
+ "parts": [
+  {
+   "ref": "hip_horn",
+   "name": "hip_horn",
+   "material": "POM_GENERIC",
+   "yield_MPa": 60.0,
+   "peak_MPa": 20.8276,
+   "peak_gauss_MPa": 19.2712,
+   "peak_at_mm": [
+    5.844,
+    -0.475,
+    -1.356
+   ],
+   "safety_factor": 2.88,
+   "max_displacement_mm": 0.112725
+  },
+  {
+   "ref": "thigh",
+   "name": "thigh",
+   "material": "PLA_GENERIC",
+   "yield_MPa": 45.0,
+   "peak_MPa": 17.9709,
+   "peak_gauss_MPa": 20.0082,
+   "peak_at_mm": [
+    15.26,
+    6.496,
+    3.5
+   ],
+   "safety_factor": 2.504,
+   "max_displacement_mm": 0.480691
+  },
+  {
+   "ref": "knee_servo",
+   "name": "knee_servo",
+   "material": "ABS_GENERIC",
+   "yield_MPa": 30.0,
+   "peak_MPa": 24.085,
+   "peak_gauss_MPa": 21.8029,
+   "peak_at_mm": [
+    28.041,
+    -1.205,
+    23.5
+   ],
+   "safety_factor": 1.245,
+   "max_displacement_mm": 0.534126
+  },
+  {
+   "ref": "knee_horn",
+   "name": "knee_horn",
+   "material": "POM_GENERIC",
+   "yield_MPa": 60.0,
+   "peak_MPa": 18.8704,
+   "peak_gauss_MPa": 14.1405,
+   "peak_at_mm": [
+    32.112,
+    -0.911,
+    24.0
+   ],
+   "safety_factor": 3.179,
+   "max_displacement_mm": 0.810207
+  },
+  {
+   "ref": "shank",
+   "name": "shank",
+   "material": "PLA_GENERIC",
+   "yield_MPa": 45.0,
+   "peak_MPa": 14.1725,
+   "peak_gauss_MPa": 13.1775,
+   "peak_at_mm": [
+    38.597,
+    -19.586,
+    28.493
+   ],
+   "safety_factor": 3.175,
+   "max_displacement_mm": 1.391646
+  }
+ ],
+ "mesh": {
+  "elements": 58832,
+  "straightened": 13,
+  "nodes": 92163,
+  "dofs": 276489,
+  "size_mm": 1.0,
+  "order": 2,
+  "mesher": "netgen",
+  "solver": "calculix 2.23 (C3D10)"
+ }
+}

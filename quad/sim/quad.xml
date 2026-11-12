@@ -54,74 +54,70 @@
       <geom name="shell_collision" class="collision" size="0.0101383 0.036 0.0494992" pos="-8.18099e-05 1.36447e-13 0.0133931" quat="3.83928e-12 -0.704965 -6.14087e-12 -0.709242" type="box"/>
       <geom name="tray_collision" class="collision" size="0.049 0.0165 0.005185" pos="-2.24175e-05 1.04839e-13 -0.00523064" type="box"/>
       <body name="thigh_fl" pos="0.0379776 0.02425 -0.00441564" quat="0.5 -0.5 -0.5 -0.5">
-        <inertial pos="-0.0192758 -0.0134969 0.00801647" quat="0.699101 0.633512 0.314113 0.106084" mass="0.00686244" diaginertia="2.81463e-07 7.44869e-07 9.10908e-07"/>
+        <inertial pos="-0.018626 -0.0130421 0.00829927" quat="0.69928 0.632995 0.315146 0.104919" mass="0.00793604" diaginertia="3.53965e-07 9.91617e-07 1.20238e-06"/>
         <joint name="hip_fl" range="-0.785398 0.785398" actuatorfrcrange="-0.0490333 0.0490333" armature="6e-05" damping="0.0056188" frictionloss="0.002"/>
         <geom name="hip_horn" class="visual" quat="0.300706 0 0 -0.953717" type="mesh" material="POM_GENERIC" mesh="hip_horn"/>
         <geom name="thigh" class="visual" quat="0.300706 0 0 -0.953717" type="mesh" material="PLA_GENERIC" mesh="thigh"/>
-        <geom name="knee_servo" class="visual" pos="-0.0245746 -0.0172073 0.002" quat="0.300706 0 0 -0.953717" type="mesh" material="ABS_GENERIC" mesh="hip_servo_fl"/>
-        <geom name="knee_servo_collision" class="collision" size="0.00417 0.0120058 0.013675" pos="-0.0213545 -0.0149525 0.010406" quat="0.786574 0.409988 -0.213426 -0.409464" type="box"/>
-        <body name="shank_fl" pos="-0.0245746 -0.0172073 0.02525">
-          <inertial pos="-0.0124763 0.00825355 0.000897249" quat="0.955069 -0.0104582 0.0156699 -0.295783" mass="0.00130579" diaginertia="1.06285e-08 2.13494e-07 2.18061e-07"/>
+        <geom name="knee_servo" class="visual" pos="-0.0245746 -0.0172073 0.0035" quat="0.300706 0 0 -0.953717" type="mesh" material="ABS_GENERIC" mesh="hip_servo_fl"/>
+        <geom name="knee_servo_collision" class="collision" size="0.00417 0.0120058 0.013675" pos="-0.0213545 -0.0149525 0.011906" quat="0.786574 0.409988 -0.213426 -0.409464" type="box"/>
+        <body name="shank_fl" pos="-0.0245746 -0.0172073 0.02675">
+          <inertial pos="-0.0115569 0.00753227 0.00125677" quat="0.955643 -0.0278014 0.0123327 -0.292952" mass="0.00157511" diaginertia="1.37224e-08 2.45018e-07 2.50483e-07"/>
           <joint name="knee_fl" range="-0.785398 0.785398" actuatorfrcrange="-0.0490333 0.0490333" armature="6e-05" damping="0.0056188" frictionloss="0.002"/>
           <geom name="knee_horn" class="visual" quat="0.300706 0 0 0.953717" type="mesh" material="POM_GENERIC" mesh="hip_horn"/>
           <geom name="shank" class="visual" quat="0.300706 0 0 0.953717" type="mesh" material="PLA_GENERIC" mesh="shank"/>
           <geom name="foot" class="visual" pos="-0.0220352 0.0154292 0.00125" quat="0.212631 -0.67438 0.212631 0.67438" type="mesh" material="TPU_SHORE_95A" mesh="foot"/>
           <geom name="foot_collision" class="collision" size="0.0045" pos="-0.0245746 0.0172073 0.00125" quat="0.212631 -0.67438 0.212631 0.67438" condim="4" friction="0.8"/>
-          <geom name="shank_collision" class="collision" size="0.00125 0.0056 0.0185497" pos="-0.0111661 0.00655842 0.00125" quat="0.682325 -0.185562 -0.682325 -0.185562" type="box"/>
           <site name="foot_fl" pos="-0.0245746 0.0172073 0.00125" quat="0.212631 -0.67438 0.212631 0.67438"/>
         </body>
       </body>
       <body name="thigh_fr" pos="0.0379776 -0.02425 -0.00441564" quat="0.5 -0.5 -0.5 -0.5">
-        <inertial pos="-0.0192757 -0.0134971 -0.00801647" quat="0.633517 0.699111 0.106061 0.314089" mass="0.00686244" diaginertia="2.81463e-07 7.44869e-07 9.10908e-07"/>
+        <inertial pos="-0.018626 -0.0130421 -0.00829927" quat="0.632995 0.69928 0.104919 0.315146" mass="0.00793604" diaginertia="3.53965e-07 9.91617e-07 1.20238e-06"/>
         <joint name="hip_fr" range="-0.785398 0.785398" actuatorfrcrange="-0.0490333 0.0490333" armature="6e-05" damping="0.0056188" frictionloss="0.002"/>
         <geom name="hip_horn_2" class="visual" quat="0 -0.300706 0.953717 0" type="mesh" material="POM_GENERIC" mesh="hip_horn"/>
         <geom name="thigh_2" class="visual" quat="0 -0.300706 0.953717 0" type="mesh" material="PLA_GENERIC" mesh="thigh"/>
-        <geom name="knee_servo_2" class="visual" pos="-0.0245746 -0.0172073 -0.002" quat="0 -0.300706 0.953717 0" type="mesh" material="ABS_GENERIC" mesh="hip_servo_fl"/>
-        <geom name="knee_servo_collision_2" class="collision" size="0.00417 0.0120058 0.013675" pos="-0.0213545 -0.0149525 -0.010406" quat="0.213426 -0.409464 -0.786574 0.409988" type="box"/>
-        <body name="shank_fr" pos="-0.0245746 -0.0172073 -0.02525">
-          <inertial pos="-0.012478 0.00825092 -0.000897162" quat="0.955041 0.0107115 -0.0157515 -0.295862" mass="0.00130547" diaginertia="1.06234e-08 2.1346e-07 2.18023e-07"/>
+        <geom name="knee_servo_2" class="visual" pos="-0.0245746 -0.0172073 -0.0035" quat="0 -0.300706 0.953717 0" type="mesh" material="ABS_GENERIC" mesh="hip_servo_fl"/>
+        <geom name="knee_servo_collision_2" class="collision" size="0.00417 0.0120058 0.013675" pos="-0.0213545 -0.0149525 -0.011906" quat="0.213426 -0.409464 -0.786574 0.409988" type="box"/>
+        <body name="shank_fr" pos="-0.0245746 -0.0172073 -0.02675">
+          <inertial pos="-0.0115586 0.007529 -0.00125663" quat="0.955607 0.0281043 -0.0124284 -0.293037" mass="0.00157466" diaginertia="1.37147e-08 2.44968e-07 2.50427e-07"/>
           <joint name="knee_fr" range="-0.785398 0.785398" actuatorfrcrange="-0.0490333 0.0490333" armature="6e-05" damping="0.0056188" frictionloss="0.002"/>
           <geom name="knee_horn_2" class="visual" quat="0 0.300706 0.953717 0" type="mesh" material="POM_GENERIC" mesh="hip_horn"/>
           <geom name="shank_2" class="visual" quat="0 0.300706 0.953717 0" type="mesh" material="PLA_GENERIC" mesh="shank_2"/>
           <geom name="foot_2" class="visual" pos="-0.0220352 0.0154292 -0.00125" quat="0.67438 -0.212631 -0.67438 -0.212631" type="mesh" material="TPU_SHORE_95A" mesh="foot"/>
           <geom name="foot_collision_2" class="collision" size="0.0045" pos="-0.0245746 0.0172073 -0.00125" quat="0.67438 -0.212631 -0.67438 -0.212631" condim="4" friction="0.8"/>
-          <geom name="shank_collision_2" class="collision" size="0.00125 0.0056 0.0185498" pos="-0.0111653 0.00656003 -0.00125" quat="0.18561 -0.682311 0.18561 0.682311" type="box"/>
           <site name="foot_fr" pos="-0.0245746 0.0172073 -0.00125" quat="0.67438 -0.212631 -0.67438 -0.212631"/>
         </body>
       </body>
       <body name="thigh_rl" pos="-0.0380224 0.02425 -0.00441564" quat="0.5 -0.5 -0.5 -0.5">
-        <inertial pos="-0.0192757 0.0134971 0.00801647" quat="0.633517 0.699111 -0.106061 -0.314089" mass="0.00686244" diaginertia="2.81463e-07 7.44869e-07 9.10908e-07"/>
+        <inertial pos="-0.018626 0.0130421 0.00829927" quat="0.632995 0.69928 -0.104919 -0.315146" mass="0.00793604" diaginertia="3.53965e-07 9.91617e-07 1.20238e-06"/>
         <joint name="hip_rl" range="-0.785398 0.785398" actuatorfrcrange="-0.0490333 0.0490333" armature="6e-05" damping="0.0056188" frictionloss="0.002"/>
         <geom name="hip_horn_3" class="visual" quat="0.300706 0 0 0.953717" type="mesh" material="POM_GENERIC" mesh="hip_horn"/>
         <geom name="thigh_3" class="visual" quat="0.300706 0 0 0.953717" type="mesh" material="PLA_GENERIC" mesh="thigh"/>
-        <geom name="knee_servo_3" class="visual" pos="-0.0245746 0.0172073 0.002" quat="0.300706 0 0 0.953717" type="mesh" material="ABS_GENERIC" mesh="hip_servo_fl"/>
-        <geom name="knee_servo_collision_3" class="collision" size="0.00417 0.0120058 0.013675" pos="-0.0213545 0.0149525 0.010406" quat="0.409464 0.213426 -0.409988 -0.786574" type="box"/>
-        <body name="shank_rl" pos="-0.0245746 0.0172073 0.02525">
-          <inertial pos="-0.012478 -0.00825092 0.000897162" quat="0.955041 0.0107115 0.0157515 0.295862" mass="0.00130547" diaginertia="1.06234e-08 2.1346e-07 2.18023e-07"/>
+        <geom name="knee_servo_3" class="visual" pos="-0.0245746 0.0172073 0.0035" quat="0.300706 0 0 0.953717" type="mesh" material="ABS_GENERIC" mesh="hip_servo_fl"/>
+        <geom name="knee_servo_collision_3" class="collision" size="0.00417 0.0120058 0.013675" pos="-0.0213545 0.0149525 0.011906" quat="0.409464 0.213426 -0.409988 -0.786574" type="box"/>
+        <body name="shank_rl" pos="-0.0245746 0.0172073 0.02675">
+          <inertial pos="-0.0115586 -0.007529 0.00125663" quat="0.955607 0.0281043 0.0124284 0.293037" mass="0.00157466" diaginertia="1.37147e-08 2.44968e-07 2.50427e-07"/>
           <joint name="knee_rl" range="-0.785398 0.785398" actuatorfrcrange="-0.0490333 0.0490333" armature="6e-05" damping="0.0056188" frictionloss="0.002"/>
           <geom name="knee_horn_3" class="visual" quat="0.300706 0 0 -0.953717" type="mesh" material="POM_GENERIC" mesh="hip_horn"/>
           <geom name="shank_3" class="visual" quat="0.300706 0 0 -0.953717" type="mesh" material="PLA_GENERIC" mesh="shank_2"/>
           <geom name="foot_3" class="visual" pos="-0.0220352 -0.0154292 0.00125" quat="0.212631 0.67438 0.212631 -0.67438" type="mesh" material="TPU_SHORE_95A" mesh="foot"/>
           <geom name="foot_collision_3" class="collision" size="0.0045" pos="-0.0245746 -0.0172073 0.00125" quat="0.212631 0.67438 0.212631 -0.67438" condim="4" friction="0.8"/>
-          <geom name="shank_collision_3" class="collision" size="0.00125 0.0056 0.0185498" pos="-0.0111653 -0.00656003 0.00125" quat="0.682311 0.18561 -0.682311 0.18561" type="box"/>
           <site name="foot_rl" pos="-0.0245746 -0.0172073 0.00125" quat="0.212631 0.67438 0.212631 -0.67438"/>
         </body>
       </body>
       <body name="thigh_rr" pos="-0.0380224 -0.02425 -0.00441564" quat="0.5 -0.5 -0.5 -0.5">
-        <inertial pos="-0.0192758 0.0134969 -0.00801647" quat="0.699101 0.633512 -0.314113 -0.106084" mass="0.00686244" diaginertia="2.81463e-07 7.44869e-07 9.10908e-07"/>
+        <inertial pos="-0.018626 0.0130421 -0.00829927" quat="0.69928 0.632995 -0.315146 -0.104919" mass="0.00793604" diaginertia="3.53965e-07 9.91617e-07 1.20238e-06"/>
         <joint name="hip_rr" range="-0.785398 0.785398" actuatorfrcrange="-0.0490333 0.0490333" armature="6e-05" damping="0.0056188" frictionloss="0.002"/>
         <geom name="hip_horn_4" class="visual" quat="0 0.300706 0.953717 0" type="mesh" material="POM_GENERIC" mesh="hip_horn"/>
         <geom name="thigh_4" class="visual" quat="0 0.300706 0.953717 0" type="mesh" material="PLA_GENERIC" mesh="thigh"/>
-        <geom name="knee_servo_4" class="visual" pos="-0.0245746 0.0172073 -0.002" quat="0 0.300706 0.953717 0" type="mesh" material="ABS_GENERIC" mesh="hip_servo_fl"/>
-        <geom name="knee_servo_collision_4" class="collision" size="0.00417 0.0120058 0.013675" pos="-0.0213545 0.0149525 -0.010406" quat="0.409988 -0.786574 -0.409464 0.213426" type="box"/>
-        <body name="shank_rr" pos="-0.0245746 0.0172073 -0.02525">
-          <inertial pos="-0.0124763 -0.00825355 -0.000897249" quat="0.955069 -0.0104582 -0.0156699 0.295783" mass="0.00130579" diaginertia="1.06285e-08 2.13494e-07 2.18061e-07"/>
+        <geom name="knee_servo_4" class="visual" pos="-0.0245746 0.0172073 -0.0035" quat="0 0.300706 0.953717 0" type="mesh" material="ABS_GENERIC" mesh="hip_servo_fl"/>
+        <geom name="knee_servo_collision_4" class="collision" size="0.00417 0.0120058 0.013675" pos="-0.0213545 0.0149525 -0.011906" quat="0.409988 -0.786574 -0.409464 0.213426" type="box"/>
+        <body name="shank_rr" pos="-0.0245746 0.0172073 -0.02675">
+          <inertial pos="-0.0115569 -0.00753227 -0.00125677" quat="0.955643 -0.0278014 -0.0123327 0.292952" mass="0.00157511" diaginertia="1.37224e-08 2.45018e-07 2.50483e-07"/>
           <joint name="knee_rr" range="-0.785398 0.785398" actuatorfrcrange="-0.0490333 0.0490333" armature="6e-05" damping="0.0056188" frictionloss="0.002"/>
           <geom name="knee_horn_4" class="visual" quat="0 -0.300706 0.953717 0" type="mesh" material="POM_GENERIC" mesh="hip_horn"/>
           <geom name="shank_4" class="visual" quat="0 -0.300706 0.953717 0" type="mesh" material="PLA_GENERIC" mesh="shank"/>
           <geom name="foot_4" class="visual" pos="-0.0220352 -0.0154292 -0.00125" quat="0.67438 0.212631 -0.67438 0.212631" type="mesh" material="TPU_SHORE_95A" mesh="foot"/>
           <geom name="foot_collision_4" class="collision" size="0.0045" pos="-0.0245746 -0.0172073 -0.00125" quat="0.67438 0.212631 -0.67438 0.212631" condim="4" friction="0.8"/>
-          <geom name="shank_collision_4" class="collision" size="0.00125 0.0056 0.0185497" pos="-0.0111661 -0.00655842 -0.00125" quat="0.185562 0.682325 0.185562 -0.682325" type="box"/>
           <site name="foot_rr" pos="-0.0245746 -0.0172073 -0.00125" quat="0.67438 0.212631 -0.67438 0.212631"/>
         </body>
       </body>

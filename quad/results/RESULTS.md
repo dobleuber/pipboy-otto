@@ -4,85 +4,85 @@
 
 | test | result | speed mm/s | slip % | roll max ° | pitch max ° | load rms % | load peak % | command saturated % | yaw °/s |
 |---|---|---|---|---|---|---|---|---|---|
-| baseline (0.5 kg*cm, 2 Hz, step 20, lift 5 mm) | walks | 78 | 2 | 3.2 | 4.3 | 21 | 86 | 0.9 | 0.0 |
-| gait f=1.0 Hz step=12 mm | walks | 27 | -11 | 2.6 | 3.8 | 12 | 43 | 0.0 | -0.0 |
-| gait f=1.0 Hz step=20 mm | walks | 44 | -10 | 3.1 | 4.2 | 14 | 49 | 0.0 | 0.0 |
-| gait f=1.0 Hz step=28 mm | walks | 61 | -9 | 3.8 | 4.7 | 21 | 101 | 0.2 | -0.0 |
-| gait f=1.0 Hz step=36 mm | walks | 65 | 10 | 3.0 | 4.2 | 36 | 104 | 9.6 | 0.0 |
-| gait f=1.5 Hz step=12 mm | walks | 39 | -8 | 2.7 | 3.9 | 14 | 65 | 0.0 | -0.0 |
-| gait f=1.5 Hz step=20 mm | walks | 65 | -8 | 3.2 | 4.2 | 17 | 80 | 0.2 | 0.0 |
-| gait f=1.5 Hz step=28 mm | walks | 87 | -4 | 3.8 | 4.4 | 31 | 104 | 6.0 | -0.2 |
-| gait f=1.5 Hz step=36 mm | walks | 92 | 15 | 4.3 | 5.4 | 40 | 103 | 14.9 | -0.3 |
-| gait f=2.0 Hz step=12 mm | walks | 50 | -5 | 2.7 | 3.9 | 17 | 81 | 0.0 | -2.2 |
-| gait f=2.0 Hz step=20 mm | walks | 78 | 2 | 3.2 | 4.3 | 21 | 86 | 0.9 | 0.0 |
-| gait f=2.0 Hz step=28 mm | walks | 115 | -2 | 4.0 | 5.0 | 31 | 103 | 7.8 | -0.2 |
-| gait f=2.0 Hz step=36 mm | walks | 122 | 15 | 4.4 | 5.0 | 42 | 122 | 26.3 | 2.5 |
-| gait f=2.5 Hz step=12 mm | walks | 60 | 1 | 2.7 | 3.9 | 21 | 99 | 1.5 | -4.3 |
-| gait f=2.5 Hz step=20 mm | walks | 92 | 8 | 3.3 | 4.4 | 25 | 105 | 4.9 | -0.6 |
-| gait f=2.5 Hz step=28 mm | walks | 132 | 6 | 4.1 | 5.1 | 28 | 113 | 11.8 | 0.2 |
-| gait f=2.5 Hz step=36 mm | walks | 171 | 5 | 4.1 | 3.7 | 45 | 124 | 39.9 | 0.7 |
-| gait f=3.0 Hz step=12 mm | walks | 55 | 23 | 2.7 | 4.0 | 24 | 99 | 3.8 | 10.1 |
-| gait f=3.0 Hz step=20 mm | walks | 108 | 10 | 3.4 | 4.4 | 26 | 107 | 9.3 | -0.1 |
-| gait f=3.0 Hz step=28 mm | walks | 157 | 6 | 4.1 | 5.0 | 32 | 110 | 20.9 | 1.4 |
-| gait f=3.0 Hz step=36 mm | walks | 146 | 32 | 3.8 | 4.1 | 46 | 164 | 51.4 | 7.7 |
-| gait f=4.0 Hz step=12 mm | walks | 95 | 1 | 2.7 | 3.7 | 28 | 102 | 10.5 | 3.4 |
-| gait f=4.0 Hz step=20 mm | walks | 158 | 1 | 3.5 | 4.3 | 33 | 118 | 22.2 | 0.8 |
-| gait f=4.0 Hz step=28 mm | walks | 180 | 19 | 3.5 | 3.8 | 45 | 172 | 51.0 | -2.2 |
-| gait f=4.0 Hz step=36 mm | walks | 211 | 27 | 4.2 | 4.7 | 42 | 182 | 60.1 | 0.9 |
-| gait lift=3 mm | walks | 86 | -8 | 2.2 | 2.6 | 19 | 81 | 0.9 | 0.2 |
-| gait lift=8 mm | walks | 67 | 16 | 4.7 | 6.8 | 23 | 100 | 5.2 | -6.4 |
-| gait lift=12 mm | no advance | 23 | 71 | 6.9 | 10.2 | 26 | 100 | 12.7 | -22.7 |
-| gait height=40 mm | walks | 63 | 22 | 3.3 | 4.6 | 44 | 103 | 18.6 | -0.9 |
-| gait height=52 mm | walks | 82 | -2 | 3.0 | 4.1 | 21 | 104 | 2.2 | -2.4 |
-| friction 0.2 | walks | 78 | 3 | 3.2 | 4.3 | 21 | 87 | 0.9 | -0.2 |
-| friction 0.3 | walks | 78 | 2 | 3.2 | 4.3 | 21 | 86 | 0.9 | 0.2 |
-| friction 0.5 | walks | 78 | 3 | 3.2 | 4.3 | 21 | 87 | 0.9 | -0.1 |
-| friction 1.2 | walks | 77 | 3 | 3.2 | 4.3 | 21 | 88 | 1.0 | -0.7 |
-| payload +15 g | walks | 76 | 4 | 3.2 | 4.3 | 21 | 87 | 1.0 | -0.8 |
-| payload +30 g | walks | 76 | 4 | 3.2 | 4.2 | 22 | 87 | 1.1 | -1.2 |
-| payload +60 g | walks | 78 | 2 | 3.1 | 4.2 | 24 | 86 | 1.2 | -3.4 |
-| servo 0.3 kg*cm, 0.15 s/60deg | walks | 78 | 2 | 3.3 | 4.3 | 32 | 107 | 9.3 | -1.4 |
-| servo 0.8 kg*cm, 0.09 s/60deg | walks | 78 | 2 | 3.2 | 4.3 | 13 | 52 | 0.0 | 0.3 |
-| soft servo loop (kp / 2) | walks | 76 | 5 | 3.1 | 4.1 | 14 | 53 | 0.0 | -0.3 |
-| servo 0.2 kg*cm, 0.15 s/60deg | walks | 82 | -2 | 3.4 | 4.4 | 46 | 132 | 21.5 | -1.2 |
-| servo 0.15 kg*cm, 0.15 s/60deg | walks | 84 | -5 | 3.4 | 4.5 | 60 | 162 | 38.7 | -0.2 |
-| servo 0.1 kg*cm, 0.15 s/60deg | walks | 51 | 37 | 3.6 | 4.7 | 81 | 183 | 81.2 | 2.7 |
-| payload +120 g | walks | 81 | -1 | 3.1 | 4.1 | 29 | 96 | 2.4 | -3.6 |
-| payload +200 g | walks | 80 | 0 | 3.0 | 3.9 | 36 | 109 | 5.4 | -3.6 |
-| payload +300 g | walks | 76 | 5 | 3.5 | 4.6 | 50 | 110 | 15.0 | -2.9 |
-| slope +5 deg | walks | 66 | 17 | 3.2 | 4.3 | 23 | 88 | 1.5 | -0.2 |
-| slope +10 deg | walks | 40 | 50 | 3.2 | 4.4 | 24 | 90 | 1.7 | -6.8 |
-| slope +15 deg | no advance | 19 | 76 | 3.4 | 4.5 | 25 | 90 | 1.6 | -4.3 |
-| slope +20 deg | no advance | 3 | 96 | 3.6 | 4.8 | 26 | 89 | 1.5 | -6.5 |
-| slope -10 deg | walks | 83 | -4 | 3.0 | 6.4 | 21 | 101 | 1.1 | -0.8 |
-| slope -20 deg | fell at 1.9 s | 15 | 82 | 180.0 | 83.0 | 19 | 89 | 0.9 | 5.3 |
-| slope +10 deg, leaning | walks | 76 | 6 | 3.0 | 2.4 | 22 | 102 | 1.5 | -0.3 |
-| slope +15 deg, leaning | walks | 60 | 25 | 3.0 | 2.5 | 23 | 109 | 2.8 | -4.5 |
-| slope +20 deg, leaning | fell at 6.9 s | 9 | 89 | 45.8 | 69.1 | 26 | 120 | 5.1 | -6.8 |
-| crawl (1 Hz, 16 mm) | walks | 23 | -9 | 1.5 | 1.3 | 19 | 93 | 1.2 | 0.0 |
-| crawl, no sway | walks | 10 | 52 | 4.2 | 6.9 | 18 | 95 | 2.5 | 0.2 |
-| crawl 1.5 Hz, 24 mm | walks | 50 | -4 | 1.9 | 3.6 | 29 | 115 | 13.7 | -0.0 |
-| crawl, slope +10 deg, leaning | walks | 23 | -8 | 1.7 | 2.1 | 20 | 78 | 2.0 | -0.0 |
-| crawl, slope +15 deg, leaning | walks | 23 | -6 | 1.2 | 2.2 | 21 | 76 | 2.9 | -0.0 |
-| crawl, slope +20 deg, leaning | walks | 23 | -8 | 1.2 | 2.5 | 22 | 77 | 5.3 | -0.0 |
-| crawl, step up 6 mm (16 s) | climbs | 22 | -1 | 3.4 | 6.6 | 19 | 102 | 1.4 | 0.2 |
-| crawl, friction 0.3 | walks | 23 | -9 | 1.4 | 1.3 | 19 | 93 | 1.2 | 0.0 |
-| PLANTED: servo 0.03 kg*cm (must fail) | no advance | 0 | 100 | 0.2 | 0.3 | 100 | 103 | 99.1 | -0.0 |
-| wave hello | waves | 4 | 0 | 0.1 | 9.0 | 10 | 73 | 1.0 | -0.0 |
-| wave hello, friction 0.3 | waves | 4 | 0 | 0.1 | 8.9 | 10 | 73 | 1.0 | -0.0 |
-| wave hello, servo 0.3 kg*cm | waves | 4 | 0 | 0.1 | 9.0 | 15 | 87 | 2.2 | -0.0 |
-| dance | dances | -1 | 0 | 4.0 | 7.8 | 18 | 77 | 3.3 | -0.0 |
-| dance, payload +30 g | dances | -1 | 0 | 4.0 | 7.9 | 19 | 77 | 3.4 | 0.0 |
-| step up 2 mm, lift 8 mm | climbs | 63 | 22 | 5.0 | 8.9 | 23 | 104 | 5.3 | -6.5 |
-| step up 4 mm, lift 8 mm | climbs | 63 | 21 | 5.3 | 11.0 | 24 | 101 | 5.3 | -6.9 |
-| step up 6 mm, lift 8 mm | climbs | 60 | 25 | 5.4 | 12.8 | 24 | 101 | 5.5 | -7.9 |
-| step up 8 mm, lift 8 mm | stuck at the step | 13 | 84 | 5.5 | 15.0 | 30 | 98 | 7.9 | -2.5 |
-| step up 10 mm, lift 8 mm | stuck at the step | 13 | 84 | 6.7 | 16.9 | 30 | 100 | 7.8 | -2.1 |
-| step up 6 mm, lift 14 mm | stuck at the step | 29 | 64 | 8.5 | 17.9 | 27 | 104 | 17.3 | -23.5 |
-| step up 10 mm, lift 14 mm | climbs | 32 | 59 | 9.0 | 21.6 | 27 | 107 | 17.3 | -20.0 |
-| turn 0.5 | turns | -18 | 123 | 3.7 | 5.2 | 30 | 100 | 7.4 | 26.5 |
-| turn 1.0 | turns | -25 | 132 | 3.7 | 5.6 | 34 | 116 | 16.7 | 37.6 |
-| side push 0.4 N for 0.1 s | walks | 78 | 2 | 3.2 | 4.3 | 21 | 86 | 0.9 | 0.2 |
-| side push 1.0 N for 0.1 s | walks | 77 | 4 | 6.2 | 4.3 | 21 | 90 | 1.0 | -0.1 |
-| side push 2.0 N for 0.1 s | fell at 4.1 s | 25 | 69 | 179.5 | 4.3 | 20 | 93 | 1.2 | 0.0 |
-| side push 4.0 N for 0.1 s | fell at 4.1 s | -32 | 140 | 180.0 | 80.9 | 21 | 345 | 1.2 | -39.9 |
+| baseline (0.5 kg*cm, 2 Hz, step 20, lift 5 mm) | walks | 83 | -4 | 2.9 | 3.8 | 22 | 88 | 1.3 | 0.3 |
+| gait f=1.0 Hz step=12 mm | walks | 26 | -7 | 2.7 | 3.7 | 12 | 39 | 0.0 | 0.0 |
+| gait f=1.0 Hz step=20 mm | walks | 43 | -8 | 2.8 | 3.7 | 14 | 50 | 0.0 | 0.0 |
+| gait f=1.0 Hz step=28 mm | walks | 60 | -7 | 2.8 | 3.8 | 22 | 102 | 0.6 | 0.0 |
+| gait f=1.0 Hz step=36 mm | walks | 62 | 14 | 2.9 | 3.8 | 36 | 104 | 9.5 | 0.1 |
+| gait f=1.5 Hz step=12 mm | walks | 38 | -7 | 2.8 | 3.7 | 15 | 66 | 0.0 | 0.0 |
+| gait f=1.5 Hz step=20 mm | walks | 64 | -7 | 2.8 | 3.8 | 18 | 70 | 0.0 | 0.0 |
+| gait f=1.5 Hz step=28 mm | walks | 88 | -5 | 2.9 | 3.9 | 29 | 103 | 3.9 | 0.1 |
+| gait f=1.5 Hz step=36 mm | walks | 87 | 19 | 3.1 | 4.1 | 40 | 103 | 14.8 | -0.2 |
+| gait f=2.0 Hz step=12 mm | walks | 48 | -1 | 2.6 | 3.5 | 17 | 79 | 0.0 | -0.3 |
+| gait f=2.0 Hz step=20 mm | walks | 83 | -4 | 2.9 | 3.8 | 22 | 88 | 1.3 | 0.3 |
+| gait f=2.0 Hz step=28 mm | walks | 116 | -3 | 2.9 | 3.8 | 29 | 103 | 6.3 | -0.7 |
+| gait f=2.0 Hz step=36 mm | walks | 122 | 15 | 3.1 | 4.1 | 43 | 120 | 26.1 | -1.2 |
+| gait f=2.5 Hz step=12 mm | walks | 57 | 5 | 2.8 | 3.8 | 21 | 100 | 1.4 | -2.9 |
+| gait f=2.5 Hz step=20 mm | walks | 95 | 5 | 2.9 | 3.9 | 25 | 106 | 4.8 | 0.2 |
+| gait f=2.5 Hz step=28 mm | walks | 137 | 2 | 2.9 | 3.9 | 29 | 114 | 12.1 | 0.4 |
+| gait f=2.5 Hz step=36 mm | walks | 168 | 7 | 2.7 | 4.0 | 45 | 121 | 40.9 | 0.3 |
+| gait f=3.0 Hz step=12 mm | walks | 67 | 7 | 2.4 | 3.2 | 23 | 96 | 3.5 | 0.1 |
+| gait f=3.0 Hz step=20 mm | walks | 107 | 11 | 2.9 | 3.9 | 27 | 104 | 9.4 | -0.2 |
+| gait f=3.0 Hz step=28 mm | walks | 158 | 6 | 3.0 | 3.9 | 31 | 113 | 20.9 | 0.1 |
+| gait f=3.0 Hz step=36 mm | walks | 168 | 22 | 2.8 | 4.4 | 47 | 155 | 51.8 | -0.2 |
+| gait f=4.0 Hz step=12 mm | walks | 86 | 10 | 2.4 | 3.3 | 28 | 100 | 10.8 | -0.6 |
+| gait f=4.0 Hz step=20 mm | walks | 142 | 11 | 2.9 | 3.9 | 33 | 118 | 22.8 | 0.3 |
+| gait f=4.0 Hz step=28 mm | walks | 189 | 16 | 3.0 | 4.2 | 45 | 171 | 50.8 | -1.6 |
+| gait f=4.0 Hz step=36 mm | walks | 205 | 29 | 3.1 | 4.1 | 41 | 182 | 59.5 | -0.5 |
+| gait lift=3 mm | walks | 85 | -6 | 1.6 | 2.2 | 19 | 81 | 0.8 | -0.1 |
+| gait lift=8 mm | walks | 66 | 17 | 4.6 | 6.3 | 24 | 101 | 5.8 | -0.0 |
+| gait lift=12 mm | walks | 58 | 28 | 6.9 | 9.4 | 25 | 97 | 12.5 | -7.1 |
+| gait height=40 mm | walks | 68 | 14 | 3.0 | 3.9 | 43 | 106 | 17.0 | 0.5 |
+| gait height=52 mm | walks | 78 | 2 | 2.9 | 3.9 | 22 | 104 | 2.3 | 0.5 |
+| friction 0.2 | walks | 89 | -11 | 2.8 | 3.8 | 21 | 85 | 1.0 | -0.0 |
+| friction 0.3 | walks | 88 | -10 | 2.8 | 3.8 | 21 | 85 | 1.0 | 0.0 |
+| friction 0.5 | walks | 85 | -6 | 2.8 | 3.8 | 21 | 86 | 1.1 | 0.2 |
+| friction 1.2 | walks | 83 | -3 | 3.0 | 3.8 | 23 | 90 | 1.6 | 0.1 |
+| payload +15 g | walks | 83 | -4 | 2.9 | 3.8 | 23 | 89 | 1.4 | 0.2 |
+| payload +30 g | walks | 83 | -3 | 2.9 | 3.8 | 24 | 89 | 1.5 | 0.3 |
+| payload +60 g | walks | 83 | -4 | 3.0 | 3.8 | 26 | 91 | 1.5 | 0.3 |
+| servo 0.3 kg*cm, 0.15 s/60deg | walks | 83 | -4 | 2.9 | 3.7 | 34 | 113 | 10.3 | 0.2 |
+| servo 0.8 kg*cm, 0.09 s/60deg | walks | 83 | -4 | 2.9 | 3.8 | 13 | 65 | 0.0 | 0.3 |
+| soft servo loop (kp / 2) | walks | 82 | -3 | 3.0 | 3.7 | 16 | 60 | 0.0 | 0.1 |
+| servo 0.2 kg*cm, 0.15 s/60deg | walks | 84 | -5 | 2.9 | 3.7 | 49 | 148 | 24.4 | -0.5 |
+| servo 0.15 kg*cm, 0.15 s/60deg | walks | 88 | -10 | 2.9 | 3.8 | 63 | 157 | 43.5 | 0.9 |
+| servo 0.1 kg*cm, 0.15 s/60deg | walks | 65 | 19 | 4.2 | 5.2 | 79 | 180 | 78.6 | 1.0 |
+| payload +120 g | walks | 78 | 3 | 2.8 | 3.6 | 29 | 86 | 1.7 | -0.7 |
+| payload +200 g | walks | 75 | 7 | 2.8 | 3.5 | 36 | 92 | 2.4 | -1.0 |
+| payload +300 g | walks | 70 | 12 | 2.7 | 3.2 | 47 | 99 | 5.9 | 0.7 |
+| slope +5 deg | walks | 74 | 7 | 2.9 | 3.8 | 23 | 85 | 1.6 | 0.7 |
+| slope +10 deg | walks | 53 | 34 | 3.0 | 3.8 | 24 | 86 | 1.8 | 0.8 |
+| slope +15 deg | no advance | 18 | 78 | 3.0 | 3.9 | 24 | 86 | 1.7 | -8.9 |
+| slope +20 deg | no advance | -6 | 107 | 3.0 | 4.0 | 25 | 89 | 1.5 | 11.2 |
+| slope -10 deg | walks | 92 | -15 | 2.8 | 3.8 | 21 | 97 | 0.9 | -0.4 |
+| slope -20 deg | walks | 55 | 32 | 3.1 | 7.5 | 22 | 107 | 3.1 | 1.3 |
+| slope +10 deg, leaning | walks | 76 | 5 | 3.1 | 4.1 | 23 | 97 | 1.8 | 0.6 |
+| slope +15 deg, leaning | walks | 66 | 17 | 3.2 | 4.3 | 24 | 103 | 2.8 | -0.6 |
+| slope +20 deg, leaning | walks | 51 | 36 | 3.3 | 4.5 | 25 | 113 | 4.7 | -0.0 |
+| crawl (1 Hz, 16 mm) | walks | 24 | -11 | 1.1 | 1.6 | 19 | 97 | 1.3 | 0.0 |
+| crawl, no sway | walks | 18 | 18 | 4.4 | 6.4 | 17 | 93 | 2.0 | -0.0 |
+| crawl 1.5 Hz, 24 mm | walks | 51 | -6 | 1.4 | 2.1 | 28 | 109 | 13.4 | 0.1 |
+| crawl, slope +10 deg, leaning | walks | 24 | -12 | 1.2 | 1.9 | 20 | 86 | 1.9 | 0.0 |
+| crawl, slope +15 deg, leaning | walks | 24 | -12 | 1.1 | 1.9 | 21 | 83 | 2.8 | 0.0 |
+| crawl, slope +20 deg, leaning | walks | 24 | -11 | 0.6 | 1.3 | 22 | 76 | 5.2 | -0.0 |
+| crawl, step up 6 mm (16 s) | climbs | 23 | -7 | 3.1 | 6.5 | 19 | 101 | 1.4 | 0.0 |
+| crawl, friction 0.3 | walks | 24 | -14 | 0.6 | 0.9 | 19 | 95 | 1.3 | -0.0 |
+| PLANTED: servo 0.03 kg*cm (must fail) | no advance | 0 | 100 | 0.3 | 0.5 | 100 | 103 | 99.1 | 0.0 |
+| wave hello | waves | 3 | 0 | 0.1 | 6.9 | 10 | 73 | 1.0 | -0.0 |
+| wave hello, friction 0.3 | waves | 3 | 0 | 0.1 | 6.7 | 11 | 73 | 1.0 | -0.0 |
+| wave hello, servo 0.3 kg*cm | waves | 3 | 0 | 0.1 | 6.9 | 15 | 87 | 2.2 | -0.0 |
+| dance | dances | -1 | 0 | 4.4 | 7.6 | 18 | 76 | 3.3 | 0.1 |
+| dance, payload +30 g | dances | -1 | 0 | 4.4 | 7.7 | 19 | 76 | 3.3 | 0.0 |
+| step up 2 mm, lift 8 mm | climbs | 66 | 17 | 4.7 | 7.8 | 25 | 106 | 5.8 | -0.4 |
+| step up 4 mm, lift 8 mm | climbs | 64 | 20 | 4.8 | 9.3 | 25 | 105 | 5.9 | 1.1 |
+| step up 6 mm, lift 8 mm | stuck at the step | 16 | 80 | 4.9 | 10.9 | 29 | 102 | 7.8 | -1.1 |
+| step up 8 mm, lift 8 mm | stuck at the step | 15 | 81 | 5.0 | 12.8 | 29 | 101 | 7.9 | -1.1 |
+| step up 10 mm, lift 8 mm | stuck at the step | 15 | 81 | 5.2 | 14.6 | 29 | 101 | 7.8 | -1.1 |
+| step up 6 mm, lift 14 mm | climbs | 52 | 35 | 8.3 | 15.7 | 26 | 108 | 17.3 | -6.9 |
+| step up 10 mm, lift 14 mm | stuck at the step | 15 | 81 | 8.6 | 19.0 | 30 | 113 | 18.8 | -2.6 |
+| turn 0.5 | turns | -13 | 116 | 3.0 | 4.1 | 30 | 100 | 7.1 | 26.4 |
+| turn 1.0 | turns | -24 | 130 | 2.8 | 4.3 | 35 | 117 | 16.7 | 41.1 |
+| side push 0.4 N for 0.1 s | walks | 83 | -3 | 2.9 | 3.8 | 22 | 88 | 1.4 | 0.6 |
+| side push 1.0 N for 0.1 s | walks | 82 | -3 | 2.9 | 3.8 | 22 | 91 | 1.3 | 1.3 |
+| side push 2.0 N for 0.1 s | walks | 81 | -1 | 5.8 | 6.0 | 22 | 93 | 1.3 | 2.6 |
+| side push 4.0 N for 0.1 s | fell at 4.1 s | 3 | 97 | 179.9 | 89.1 | 22 | 243 | 1.7 | -41.2 |
