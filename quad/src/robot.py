@@ -1,4 +1,4 @@
-"""Mini quadruped critter: 8 x 4 g servos (hip and knee pitch per leg), 1S LiPo, printed PLA, under a pebble shell.
+"""Mini quadruped: 8 x 4 g servos (hip and knee pitch per leg), 1S LiPo, printed PLA, under a pebble shell.
 
 As built = every servo at its centre = the standing pose; every joint turns about world +Y.
 """
@@ -8,8 +8,8 @@ from cad.build123d import configuration_sequence, frame, free, limits, mass, mec
 
 import params as p
 from gait import crawl, dance, stand, trot, wave
-from parts import (EYE_LEN, FOOT_FLAT, LIP_H, SHELL_GAP, battery, deck, eye, eye_plane, foot, horn, mcu, servo,
-                   shank_a, shank_b, shell, thigh, tray)
+from parts import (FOOT_FLAT, LIP_H, SHELL_GAP, battery, deck, foot, horn, mcu, servo, shank_a, shank_b, shell,
+                   thigh, tray, visor)
 
 
 def placed(part, plane, label, local=None):
@@ -34,17 +34,13 @@ def quad():
     mcu_ = bd.Pos(0, 0, p.TRAY_Z1 + p.DECK_T + LIP_H) * mcu().shape     # resting on the deck's lip
     mcu_.label = "mcu"
     mass(mcu_, p.MCU_MASS)
-    # The shell over everything, its rim just above the deck, and an eye in each of its holes
-    # (the eye is modelled as printed, +Z out of its dome, which starts 1 mm proud of the shell).
+    # The shell over everything, its rim just above the deck, and the visor in its slit.
     shell_z = p.TRAY_Z1 + p.DECK_T + SHELL_GAP
     shell_ = bd.Pos(0, 0, shell_z) * shell().shape
     shell_.label = "shell"
-    eyes = []
-    for side, name in ((1, "eye_left"), (-1, "eye_right")):
-        e = bd.Pos(0, 0, shell_z) * eye_plane(side, back=EYE_LEN - 1.0).location * eye().shape
-        e.label = name
-        eyes.append(e)
-    chassis_parts = [tray_, deck_, battery_, mcu_, shell_, *eyes]
+    visor_ = bd.Pos(0, 0, shell_z) * visor().shape
+    visor_.label = "visor"
+    chassis_parts = [tray_, deck_, battery_, mcu_, shell_, visor_]
     for name, (sx, sy) in p.LEGS.items():
         plane = bd.Plane(origin=(sx * p.HIP_X, sy * p.HIP_Y0, 0), x_dir=(sx, 0, 0), z_dir=(0, sy, 0))
         s = placed(servo_, plane, f"hip_servo_{name}")

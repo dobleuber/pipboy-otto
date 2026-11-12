@@ -9,13 +9,13 @@ import math
 import build123d as bd
 from bd_materials import plastics
 from cad import model
-from cad.build123d import paint
 
 import params as p
 
-SHELL = "#ff8c42"     # tangerine: the shell and its horns
-SKIN = "#fff1d6"      # cream: chassis and legs
-DARK = "#262a30"      # servos and feet
+SHELL = "#ece8df"     # matte warm white: the shell
+FRAME = "#2f3338"     # graphite: chassis and legs
+DARK = "#17191c"      # servos and feet
+VISOR = "#ff9a2ecc"   # smoked amber, see-through: the sensor strip
 
 
 def box(x0, x1, y0, y1, z0, z1):
@@ -147,7 +147,7 @@ def tray():
     body -= cuts
     body.label = "tray"
     body.material = plastics.pla()
-    body.color = SKIN
+    body.color = FRAME
     return body
 
 
@@ -167,7 +167,7 @@ def deck():
     body -= cuts
     body.label = "deck"
     body.material = plastics.pla()
-    body.color = SKIN
+    body.color = FRAME
     return body
 
 
@@ -199,7 +199,7 @@ def thigh():
     body -= cuts
     body.label = "thigh"
     body.material = plastics.pla()
-    body.color = SKIN
+    body.color = FRAME
     return body
 
 
@@ -235,7 +235,7 @@ def lower_leg(hand):
     body -= cuts
     body.label = "shank"
     body.material = plastics.pla()
-    body.color = SKIN
+    body.color = FRAME
     return body
 
 
@@ -265,7 +265,7 @@ def foot():
     return body
 
 
-# ----------------------------------------------------------------------------- shell and face
+# ----------------------------------------------------------------------------- shell and visor
 
 # The shell: a river-pebble dome with a stadium plan, over the whole chassis. Its cross-section is two
 # tangent arcs: a tight shoulder from the rim, then a wide crown. Numbers are in the shell's own frame,
@@ -279,10 +279,9 @@ SHELL_GAP = 2.0       # rim above the deck's top
 SHELL_R2 = (SHELL_RIM - SHELL_R1 * (1 - math.cos(math.radians(SHELL_TURN)))) / math.cos(math.radians(SHELL_TURN))
 SHELL_H = SHELL_R2 - (SHELL_R2 - SHELL_R1) * math.sin(math.radians(SHELL_TURN))   # rim to the top of the crown
 
-EYE_R = 4.9           # a 9.8 mm eye
-EYE_LEN = 7.0         # the plug behind the eye's dome
-EYE_AZ = 27.0         # each eye this far to its side of straight ahead, around the front end's axis
-EYE_TURN = 36.0       # and this far up the shoulder: the hole stays on the shoulder, square to it
+VISOR_Z = (5.6, 8.8)  # the visor's slit, above the rim: a band on the shoulder
+VISOR_AZ = 42.0       # and this far to each side of straight ahead, around the front end's axis
+VISOR_T = 1.8         # the visor strip's thickness: flush outside, 0.8 mm proud inside
 
 
 def pebble(inset):
@@ -303,42 +302,27 @@ def pebble(inset):
     return middle + ends
 
 
-def eye_plane(side, back=0.0):
-    """An eye's frame in the shell's: origin on its axis `back` mm behind the surface, +Z out along the axis.
-
-    The axis is the surface's own normal there, so the hole meets the shell squarely.
-    """
-    az, turn = math.radians(side * EYE_AZ), math.radians(EYE_TURN)
-    r = SHELL_RIM - SHELL_R1 + SHELL_R1 * math.cos(turn)             # distance from the front end's axis
-    seat = (SHELL_HALF + r * math.cos(az), r * math.sin(az), SHELL_R1 * math.sin(turn))
-    d = (math.cos(turn) * math.cos(az), math.cos(turn) * math.sin(az), math.sin(turn))
-    origin = tuple(c - back * k for c, k in zip(seat, d))
-    return bd.Plane(origin=origin, x_dir=(-math.sin(az), math.cos(az), 0), z_dir=d)
+def visor_zone(z0, z1, half_angle):
+    """A wedge of space around the front end's axis: between two heights, `half_angle` to each side of ahead."""
+    n = 12
+    arc = [(SHELL_HALF + 60 * math.cos(math.radians(a)), 60 * math.sin(math.radians(a)))
+           for a in (-half_angle + 2 * half_angle * i / n for i in range(n + 1))]
+    return bd.Pos(0, 0, z0) * bd.extrude(bd.Polygon((SHELL_HALF, 0), *arc, align=None), z1 - z0)
 
 
 @model
 def shell():
-    """The creature's shell: a hollow pebble with eye holes, a smile, two little horns and a collar inside.
+    """The shell: a hollow pebble with a slit for the visor across its front and a collar inside.
 
     Origin at the centre of its rim. Prints rim down; the ceiling needs support inside, where it is not seen.
     """
     body = pebble(0) - pebble(SHELL_WALL)
-    # Two little horns on the crown, each a cone steeper than 45 deg with a rounded tip.
-    drop = (SHELL_R1 - SHELL_R2) * math.sin(math.radians(SHELL_TURN))        # the crown's centre below the rim
-    for side in (1, -1):
-        x, y = 20.0, side * 11.0
-        z = math.sqrt((SHELL_R2 - 0.3) ** 2 - y * y - (x - SHELL_HALF) ** 2) + drop
-        body += bd.Pos(x, y, z) * (bd.Pos(0, 0, 3.0) * bd.Cone(3.4, 1.0, 6.0) + bd.Pos(0, 0, 6.0) * bd.Sphere(1.0))
     body -= box(-80, 80, -80, 80, -6, 0)
     # The collar that presses over the deck's lip: from the rim's plane up to the ceiling.
     grip = LIP_R + 0.2
     collar = stadium(LIP_HALF, grip + 1.2, SHELL_H) - stadium(LIP_HALF, grip, SHELL_H)
     body += collar & pebble(SHELL_WALL / 2)
-    cuts = [eye_plane(side, back=8).location * zcyl(0, 0, 0, 14, 2 * EYE_R + 0.2) for side in (1, -1)]
-    # A smile: an arc slit through the front wall, low between the eyes.
-    band = bd.Circle(4.4) - bd.Circle(3.4) - bd.Pos(0, 4.0) * bd.Rectangle(12, 11)
-    cuts.append(bd.extrude(bd.Plane.YZ.offset(SHELL_HALF + SHELL_RIM - 8) * bd.Pos(0, 6.6) * band, 10))
-    body -= cuts
+    body -= visor_zone(*VISOR_Z, VISOR_AZ)
     body.label = "shell"
     body.material = plastics.pla()
     body.color = SHELL
@@ -346,22 +330,18 @@ def shell():
 
 
 @model
-def eye():
-    """A bulging eye: a domed plug glued into its hole. As printed: flat back down, pupil up.
+def visor():
+    """The visor: a see-through strip that fills the shell's slit, glued in. In the shell's frame.
 
-    The dome starts at z = EYE_LEN; the pupil is a shallow pocket to fill with black paint.
+    Prints as modelled, standing on its lower edge. A status LED or a distance sensor sits behind it.
     """
-    body = zcyl(0, 0, 0, EYE_LEN, 2 * EYE_R) + (bd.Pos(0, 0, EYE_LEN) * bd.Sphere(EYE_R) - box(-9, 9, -9, 9, -9, EYE_LEN))
-    top = EYE_LEN + EYE_R
-    body -= zcyl(0, 0, top - 1.3, top + 1, 5.0)
-    body.label = "eye"
-    body.material = plastics.pla()
-    body.color = "#f7f7f2"
-    pupil = body.faces().filter_by(lambda f: f.center().Z > top - 1.5 and f.geom_type != bd.GeomType.SPHERE)
-    paint(body, pupil, "#101214")
+    body = (pebble(0) - pebble(VISOR_T)) & visor_zone(VISOR_Z[0] + 0.1, VISOR_Z[1] - 0.1, VISOR_AZ - 0.3)
+    body.label = "visor"
+    body.material = plastics.petg()
+    body.color = VISOR
     return body
 
 
 if __name__ == "__main__":
-    for part in (servo, horn, battery, mcu, tray, deck, thigh, shank_a, shank_b, foot, shell, eye):
+    for part in (servo, horn, battery, mcu, tray, deck, thigh, shank_a, shank_b, foot, shell, visor):
         part()
