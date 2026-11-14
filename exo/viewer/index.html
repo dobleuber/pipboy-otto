@@ -1,0 +1,1029 @@
+<title>Exoesqueleto Otto</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: a lab notebook. The simulator is the instrument at the top; the design record follows in one reading column, tables allowed to run wider. */
+:root {
+  --bg: #f3f5f2; --surface: #fcfcfb; --ink: #101413; --ink-2: #47504c; --muted: #7d8580;
+  --line: #dde1db; --axis: #bfc6bf; --accent: #0d6b57; --accent-soft: #d9ebe5;
+  --s1: #2a78d6; --s2: #eb6834; --good: #0ca30c; --warn: #fab219; --crit: #d03b3b;
+  --body: #5d6763; --body-far: #b3bab5; --exo: #0d6b57; --exo-far: #8fbcae; --stance: #e9ede8;
+  --display: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  --text: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0d100f; --surface: #161a18; --ink: #eef1ec; --ink-2: #bcc4be; --muted: #858d88;
+  --line: #29302c; --axis: #3b433e; --accent: #57cfa8; --accent-soft: #163229;
+  --s1: #3987e5; --s2: #d95926; --good: #0ca30c; --warn: #fab219; --crit: #e05a5a;
+  --body: #aab3ad; --body-far: #4d5651; --exo: #57cfa8; --exo-far: #2c6a57; --stance: #1d2320;
+  color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0d100f; --surface: #161a18; --ink: #eef1ec; --ink-2: #bcc4be; --muted: #858d88;
+  --line: #29302c; --axis: #3b433e; --accent: #57cfa8; --accent-soft: #163229;
+  --s1: #3987e5; --s2: #d95926; --good: #0ca30c; --warn: #fab219; --crit: #e05a5a;
+  --body: #aab3ad; --body-far: #4d5651; --exo: #57cfa8; --exo-far: #2c6a57; --stance: #1d2320;
+  color-scheme: dark }
+
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--text); }
+.wrap { max-width: 1120px; margin: 0 auto; padding-block: 28px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; text-wrap: balance; margin: 0; letter-spacing: .01em; }
+h1 { font-size: clamp(34px, 6vw, 52px); line-height: 1.02; }
+h2 { font-size: 28px; line-height: 1.1; }
+h3 { font-size: 20px; }
+p { margin: 0; }
+a { color: var(--accent); }
+.eyebrow { font: 500 12px/1 var(--mono); letter-spacing: .09em; text-transform: uppercase; color: var(--accent); }
+.lede { font-size: 17px; color: var(--ink-2); max-width: 66ch; }
+header { display: grid; gap: 12px; padding-bottom: 24px; }
+section { display: grid; gap: 16px; padding-block: 28px; border-top: 1px solid var(--line); }
+.prose { display: grid; gap: 12px; max-width: 68ch; }
+.prose ul, .prose ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.note { font-size: 13px; color: var(--ink-2); max-width: 78ch; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+/* simulator */
+.controls { display: flex; flex-wrap: wrap; gap: 14px 22px; align-items: end; }
+.field { display: grid; gap: 6px; min-width: 0; }
+.field > span, .field > label { font: 500 11px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--axis); border-radius: 8px; overflow: hidden; background: var(--surface); }
+.seg button { font: 500 13px/1 var(--text); color: var(--ink-2); background: none; border: 0; padding: 9px 12px; cursor: pointer; border-right: 1px solid var(--line); }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); }
+.seg button:focus-visible, .btn:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--s1); outline-offset: 2px; }
+.slider { display: grid; grid-template-columns: minmax(110px, 170px) 58px; gap: 8px; align-items: center; }
+.slider input { width: 100%; accent-color: var(--accent); }
+.slider output { font: 500 13px/1 var(--mono); text-align: right; }
+.btn { font: 500 13px/1 var(--text); color: var(--ink); background: var(--surface); border: 1px solid var(--axis); border-radius: 8px; padding: 9px 14px; cursor: pointer; }
+
+.bench { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 860px) { .bench { grid-template-columns: minmax(0, 1fr); } }
+.stage { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.stage canvas { display: block; width: 100%; height: 440px; }
+.stagebar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; padding: 10px 12px; border-top: 1px solid var(--line); }
+.stagebar .seg button { padding: 7px 10px; }
+.readout { font: 500 12px/1.3 var(--mono); color: var(--ink-2); }
+.side { display: grid; gap: 14px; min-width: 0; }
+.tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.tile { background: var(--surface); padding: 12px 14px; display: grid; gap: 4px; align-content: start; }
+.tile b { font: 600 30px/1 var(--display); letter-spacing: .01em; }
+.tile span { font: 500 11px/1.2 var(--mono); letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+.tile small { font-size: 12px; color: var(--ink-2); }
+.pill { display: inline-flex; align-items: center; gap: 5px; font: 500 12px/1 var(--text); white-space: nowrap; }
+.pill i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.pill.ok i { background: var(--good); } .pill.lim i { background: var(--warn); border-radius: 2px; } .pill.bad i { background: var(--crit); border-radius: 0; transform: rotate(45deg); }
+
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 500 11px/1.2 var(--mono); letter-spacing: .07em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+tr.pick td { background: var(--accent-soft); }
+tfoot td { font-weight: 600; border-bottom: 0; }
+td small { display: block; color: var(--ink-2); font-size: 12px; }
+
+.charts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 860px) { .charts { grid-template-columns: minmax(0, 1fr); } }
+.chart { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 12px 8px; display: grid; gap: 6px; min-width: 0; position: relative; }
+.chart h3 { font-size: 18px; }
+.chart p { font-size: 12px; color: var(--muted); }
+.chart svg { display: block; width: 100%; height: 190px; touch-action: none; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 7px; }
+.legend i { width: 20px; height: 0; border-top: 2px solid; display: inline-block; }
+.tip { position: absolute; z-index: 5; pointer-events: none; background: var(--surface); border: 1px solid var(--axis); border-radius: 8px; padding: 8px 10px; font-size: 12px; display: grid; gap: 3px; min-width: 150px; box-shadow: 0 4px 14px rgb(0 0 0 / .12); }
+.tip div { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+.tip i { width: 12px; border-top: 2px solid; display: inline-block; margin-right: 6px; vertical-align: middle; }
+.tip b { font: 500 12px/1 var(--mono); }
+.tip .hd { font: 500 11px/1 var(--mono); color: var(--muted); letter-spacing: .06em; }
+details summary { cursor: pointer; font-size: 13px; color: var(--ink-2); }
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 32px; }
+@media (max-width: 760px) { .two { grid-template-columns: minmax(0, 1fr); } }
+.steps { display: grid; gap: 0; counter-reset: s; max-width: 78ch; }
+.steps > div { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 4px 12px; padding: 12px 0; border-bottom: 1px solid var(--line); counter-increment: s; }
+.steps > div::before { content: counter(s); font: 600 22px/1.1 var(--display); color: var(--accent); }
+.steps b { font-weight: 600; }
+.steps p { grid-column: 2; color: var(--ink-2); font-size: 14px; }
+</style>
+
+<div class="wrap">
+<header>
+  <span class="eyebrow">Diseño conceptual v0.1 · sin tope de presupuesto</span>
+  <h1>Exoesqueleto Otto</h1>
+  <p class="lede">Un exoesqueleto modular de piernas para caminar y correr, con seis motores y módulos de cadera, rodilla y tobillo que se montan según la actividad. Abajo puedes verlo moverse sobre datos reales de marcha y carrera, y comprobar qué le exige cada paso a cada motor.</p>
+</header>
+
+<section id="simulacion">
+  <h2>Simulación de marcha y carrera</h2>
+  <div class="controls">
+    <div class="field"><span>Movimiento</span><div class="seg" id="gait"></div></div>
+    <div class="field"><span>Configuración</span><div class="seg" id="config"></div></div>
+    <div class="field"><label for="assist">Asistencia</label><div class="slider"><input id="assist" type="range" min="0" max="60" step="5" value="30"><output id="assistOut"></output></div></div>
+    <div class="field"><label for="mass">Masa corporal</label><div class="slider"><input id="mass" type="range" min="50" max="110" step="1" value="75"><output id="massOut"></output></div></div>
+    <div class="field"><label for="payload">Carga en la espalda</label><div class="slider"><input id="payload" type="range" min="0" max="30" step="1" value="0"><output id="payloadOut"></output></div></div>
+  </div>
+
+  <div class="bench">
+    <div class="stage">
+      <canvas id="stage" aria-label="Animación lateral de una persona con el exoesqueleto"></canvas>
+      <div class="stagebar">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <button class="btn" id="play" type="button">Pausar</button>
+          <div class="seg" id="rate"></div>
+        </div>
+        <div class="readout" id="readout"></div>
+      </div>
+    </div>
+    <div class="side">
+      <div class="tiles" id="tiles"></div>
+      <div class="scroll"><table id="status"></table></div>
+      <p class="note">Par, velocidad y térmica son el porcentaje usado del límite del motor. Por encima de 100 % en térmica el motor se sobrecalienta si mantienes ese ritmo.</p>
+    </div>
+  </div>
+
+  <div class="legend" aria-label="Leyenda">
+    <span><i style="border-color:var(--muted);border-top-style:dashed"></i>Persona sin exoesqueleto</span>
+    <span><i style="border-color:var(--s1)"></i>Persona con exoesqueleto</span>
+    <span><i style="border-color:var(--s2)"></i>Par del exoesqueleto</span>
+    <span><i style="border-top:8px solid var(--stance)"></i>Pie derecho apoyado</span>
+  </div>
+  <div class="charts" id="charts"></div>
+  <details><summary>Ver los datos de las gráficas en tabla</summary><div class="scroll" style="margin-top:10px"><table id="dataTable"></table></div></details>
+  <p class="note">Qué es esto: dinámica inversa sobre movimiento humano medido (24 personas caminando y hasta 39 corriendo en caminadora). El exoesqueleto se añade como masa y como fuentes de par, y cada motor se compara con su límite de par, velocidad y temperatura. Qué no es: no predice cómo se adaptaría tu cuerpo. Se asume que te mueves igual que sin el equipo, y el balance metabólico es una estimación de primer orden.</p>
+</section>
+
+<section>
+  <h2>Qué se puede lograr</h2>
+  <div class="prose">
+    <p>Con dinero ilimitado, lo que limita un exoesqueleto ya no es el precio de las piezas sino la física: cada kilo en la pierna cuesta energía, las baterías pesan y un motor fuerte es lento o pesado. Por eso el diseño es modular: te pones solo lo que la actividad paga.</p>
+    <p>La tabla resume el diseño para una persona de 75 kg con 30 % de asistencia. El porcentaje grande es el cambio estimado en tu gasto de energía frente a no llevar nada; negativo es ahorro.</p>
+  </div>
+  <div class="scroll"><table id="matrix"></table></div>
+  <div class="two">
+    <div class="prose">
+      <h3>Lo que sí</h3>
+      <ul>
+        <li>Caminar con un ahorro estimado de 11–12 % de energía. Con 20 kg en la espalda el ahorro estimado es parecido, 13 %.</li>
+        <li>Trotar y correr hasta 3,5 m/s (unos 4:45 min/km) con cadera y tobillo asistidos y todos los motores dentro de su límite térmico.</li>
+        <li>Subir escaleras, levantarte y bajar pendientes con el módulo de rodilla, que aporta hasta 120 N·m por pierna.</li>
+        <li>Ajustar la asistencia a tu cuerpo con sensores, que es donde los laboratorios obtienen sus mejores resultados.</li>
+      </ul>
+    </div>
+    <div class="prose">
+      <h3>Lo que no</h3>
+      <ul>
+        <li>Correr con el equipo completo. A 3,5 m/s los motores de cadera y rodilla ya están en su límite térmico, en buena parte por mover los 16 kg del propio equipo, y la batería dura unos 45 minutos.</li>
+        <li>Hacerte más rápido en velocidad punta. La evidencia publicada es de ahorro de energía, no de récords.</li>
+        <li>Cargar decenas de kilos como una armadura. Eso exige una estructura que lleve el peso hasta el suelo, pesa 60 kg o más y no puede correr.</li>
+        <li>Mantenerte en pie por ti. No tiene equilibrio propio: si te caes, cae contigo.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="prose">
+    <h3>Cómo se compara con lo publicado</h3>
+    <p class="note">Los valores de marcha del modelo caen dentro de lo medido en laboratorio. Los de carrera están por encima de lo que nadie ha demostrado todavía con un equipo autónomo, así que léelos como techo y no como promesa.</p>
+  </div>
+  <div class="scroll"><table>
+    <thead><tr><th>Estudio</th><th>Equipo</th><th>Condición</th><th class="n">Cambio de energía</th></tr></thead>
+    <tbody>
+      <tr><td>Slade et al., Nature 2022</td><td>Tobillo, autónomo</td><td>Caminar en la calle / caminadora 1,5 m/s</td><td class="n">−17 % / −23 %</td></tr>
+      <tr><td>Franks et al., 2021</td><td>Cadera + rodilla + tobillo, motores fuera del cuerpo</td><td>Caminar en caminadora</td><td class="n">−50 %</td></tr>
+      <tr><td>Mooney et al., JNER 2014</td><td>Tobillo, autónomo, 4,0 kg</td><td>Caminar 1,5 m/s con 23 kg de carga</td><td class="n">−8 %</td></tr>
+      <tr><td>Kim et al., Science 2019</td><td>Traje blando de cadera, 5 kg</td><td>Caminar 1,5 m/s / correr 2,5 m/s</td><td class="n">−9,3 % / −4,0 %</td></tr>
+      <tr><td>Witte et al., 2020</td><td>Tobillo, motores fuera del cuerpo</td><td>Correr, frente a zapatillas normales</td><td class="n">−14,6 %</td></tr>
+    </tbody></table></div>
+</section>
+
+<section>
+  <h2>Arquitectura</h2>
+  <div class="scroll"><table>
+    <thead><tr><th>Articulación</th><th>Tipo</th><th>Accionamiento</th><th class="n">Par pico</th><th class="n">Recorrido</th></tr></thead>
+    <tbody>
+      <tr><td>Cadera, flexión y extensión</td><td>Activa</td><td>RobStride 04 directo sobre el eje</td><td class="n">120 N·m</td><td class="n">−30° a +120°</td></tr>
+      <tr><td>Cadera, abducción</td><td>Pasiva</td><td>Bisagra de titanio con resorte de retorno</td><td class="n">—</td><td class="n">±20°</td></tr>
+      <tr><td>Cadera, rotación</td><td>Pasiva</td><td>Deslizador en la abrazadera del muslo</td><td class="n">—</td><td class="n">±15°</td></tr>
+      <tr><td>Rodilla, flexión y extensión</td><td>Activa, desmontable</td><td>RobStride 04 directo sobre el eje</td><td class="n">120 N·m</td><td class="n">0° a 130°</td></tr>
+      <tr><td>Tobillo, flexión plantar</td><td>Activa, solo empuja</td><td>CubeMars AK10-9 en la tibia, cuerda a una palanca de talón (2,5 : 1)</td><td class="n">132 N·m</td><td class="n">libre</td></tr>
+      <tr><td>Tobillo, inversión</td><td>Libre</td><td>Plantilla de carbono flexible</td><td class="n">—</td><td class="n">libre</td></tr>
+    </tbody></table></div>
+  <div class="two">
+    <div class="prose">
+      <h3>Motores</h3>
+      <p>Los tres ejes usan motores sin escobillas con reductor planetario 9 : 1 y control de par por CAN. Con esa reducción baja el motor cede si lo empujas, así que apagado no te bloquea la pierna.</p>
+      <p>El tobillo tira de una cuerda en vez de ir sobre el eje. Solo puede empujar el talón hacia arriba, nunca forzar el pie en la otra dirección, y el motor queda alto en la tibia, donde su peso cuesta menos de la mitad que en el pie.</p>
+      <h3>Estructura e interfaz</h3>
+      <p>Eslabones de tubo de carbono, uniones de titanio impreso y aluminio 7075 mecanizado. Las abrazaderas se moldean sobre un escaneo 3D de tus piernas: el ajuste al cuerpo decide más que el motor si la fuerza llega al hueso o se pierde en la piel.</p>
+    </div>
+    <div class="prose">
+      <h3>Electrónica y control</h3>
+      <ul>
+        <li>Lazo de corriente dentro de cada motor; lazo de par a 1 kHz en un microcontrolador de tiempo real que compensa la fricción y la inercia del propio motor.</li>
+        <li>Estimador de fase del paso con sensores inerciales en muslo, tibia y pie y plantillas de presión; distingue marcha de carrera y elige el perfil de par.</li>
+        <li>Bus de 48 V con packs intercambiables de 240 Wh.</li>
+        <li>Tu Pip-Boy Otto como pantalla de muñeca: modo, batería y par en vivo.</li>
+      </ul>
+      <h3>Seguridad</h3>
+      <ul>
+        <li>Topes mecánicos dentro de tu rango articular en cada eje activo.</li>
+        <li>Paro de emergencia que corta el bus, al alcance de la mano y de un acompañante.</li>
+        <li>Límites de par, velocidad y ángulo en firmware, con vigilancia de comunicaciones.</li>
+        <li>Primeras pruebas siempre en caminadora, con arnés anticaídas.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Por qué estos motores</h2>
+  <p class="prose">Cada candidato se probó en las cuatro velocidades con 30 % de asistencia. Se muestra el peor caso. Un motor pasa si su carga térmica no supera 100 %, no rebasa su velocidad máxima y entrega al menos 97 % del par pedido. Las filas resaltadas son las elegidas.</p>
+  <div class="scroll"><table id="sweep"></table></div>
+  <p class="note">La cadera y la rodilla necesitan el motor grande por la carrera, no por la marcha: al caminar trabajan a un tercio de su capacidad o menos. A 4,5 m/s el RobStride 04 queda justo por encima de su límite en la cadera (101 %) y en la rodilla (105 %); a esa velocidad el diseño reduce la asistencia o limita el tiempo.</p>
+</section>
+
+<section>
+  <h2>Masa</h2>
+  <div class="scroll"><table id="massTable"></table></div>
+  <p class="note">Las masas de los motores son las del fabricante. Las de estructura, interfaz y electrónica son objetivos de diseño, no medidas.</p>
+</section>
+
+<section>
+  <h2>Presupuesto</h2>
+  <div class="scroll"><table>
+    <thead><tr><th>Partida</th><th>Incluye</th><th class="n">USD</th></tr></thead>
+    <tbody>
+      <tr><td>Motores</td><td>4 RobStride 04, 2 CubeMars AK10-9 V3 y un repuesto de cada modelo</td><td class="n">3 700 – 6 600</td></tr>
+      <tr><td>Estructura</td><td>Mecanizado de aluminio 7075, uniones de titanio impreso, tubos y placas de carbono, dos iteraciones</td><td class="n">6 000 – 15 000</td></tr>
+      <tr><td>Interfaz con el cuerpo</td><td>Abrazaderas moldeadas sobre escaneo 3D, cierres, plantillas de carbono</td><td class="n">1 500 – 4 000</td></tr>
+      <tr><td>Energía</td><td>4 packs de 240 Wh con gestión de celdas, cargador</td><td class="n">800 – 1 500</td></tr>
+      <tr><td>Electrónica y sensores</td><td>Computador, microcontrolador, CAN, sensores inerciales, plantillas de presión, celdas de carga</td><td class="n">3 000 – 12 000</td></tr>
+      <tr><td>Seguridad y banco de pruebas</td><td>Pórtico con arnés anticaídas, caminadora, banco para caracterizar motores</td><td class="n">3 500 – 8 000</td></tr>
+    </tbody>
+    <tfoot><tr><td>Exoesqueleto completo</td><td></td><td class="n">18 500 – 47 000</td></tr></tfoot>
+  </table></div>
+  <div class="scroll"><table>
+    <tbody>
+      <tr><td>Laboratorio para optimizar la asistencia (opcional)</td><td>Medidor portátil de consumo de oxígeno, electromiografía, captura de movimiento</td><td class="n">50 000 – 110 000</td></tr>
+    </tbody></table></div>
+  <p class="note">Solo los precios de los motores vienen de tiendas (RobStride 04: 320–550 USD; AK10-9 V3: 700–1 270 USD). El resto son estimaciones propias de orden de magnitud y no incluyen envío ni aranceles. El laboratorio es lo que convierte un exoesqueleto que funciona en uno que de verdad ahorra energía, y es la partida más cara.</p>
+</section>
+
+<section>
+  <h2>Orden de construcción</h2>
+  <div class="steps">
+    <div><b>Banco de un motor</b><p>Dos a cuatro semanas. Medir fricción, constante térmica y respuesta de par de un RobStride 04 y un AK10-9. Sustituye los valores supuestos de la simulación por medidos.</p></div>
+    <div><b>Módulo de tobillo</b><p>Dos a tres meses. Es el que más ahorra por gramo al caminar y el más seguro para empezar, porque la cuerda solo puede tirar.</p></div>
+    <div><b>Módulo de cadera</b><p>Dos a tres meses. Marco pélvico, bisagras pasivas y control en ambos sentidos.</p></div>
+    <div><b>Carrera con cadera y tobillo</b><p>Uno a dos meses en caminadora con arnés. Detección de marcha y carrera, y perfiles de par para cada una.</p></div>
+    <div><b>Módulo de rodilla</b><p>Dos meses. Escaleras, sentadillas y carga.</p></div>
+    <div><b>Ajuste a tu cuerpo</b><p>Continuo. Optimizar el momento y la forma del par midiendo tu consumo de energía.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Supuestos y validación</h2>
+  <div class="two">
+    <div class="prose">
+      <h3>Qué se comprobó</h3>
+      <ul id="checks"></ul>
+    </div>
+    <div class="prose">
+      <h3>Qué está supuesto</h3>
+      <ul>
+        <li>Constante de motor, fricción e inercia del rotor de los RobStride. El fabricante no las publica; el banco del primer paso las mide.</li>
+        <li>Te mueves igual con y sin el equipo, y cada N·m del exoesqueleto sustituye un N·m de tus músculos.</li>
+        <li>El peso añadido aumenta los momentos articulares en proporción durante el apoyo.</li>
+        <li>Balance metabólico: 1 W de potencia positiva del equipo ahorra 2,4 W de energía corporal, y cada kilo cuesta según dónde vaya (Mooney 2014). Medido para caminar; en carrera el costo por kilo se escala con el gasto y el resultado es una extrapolación.</li>
+        <li>Solo plano sagital. La abducción y la rotación no se simulan.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="prose">
+    <h3>Fuentes</h3>
+    <ul class="note">
+      <li>Datos de marcha: Fukuchi, Fukuchi y Duarte, PeerJ 2018, <a href="https://doi.org/10.7717/peerj.4640">doi:10.7717/peerj.4640</a> (CC BY 4.0).</li>
+      <li>Datos de carrera: Fukuchi, Fukuchi y Duarte, PeerJ 2017, <a href="https://doi.org/10.7717/peerj.3298">doi:10.7717/peerj.3298</a> (CC BY 4.0).</li>
+      <li>Modelo metabólico: Mooney, Rouse y Herr, J NeuroEng Rehabil 2014, <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4036406/">PMC4036406</a>.</li>
+      <li>Kim et al., Science 2019, <a href="https://doi.org/10.1126/science.aav7536">doi:10.1126/science.aav7536</a>. Slade et al., Nature 2022, <a href="https://news.stanford.edu/stories/2022/10/exoskeleton-makes-walking-faster-less-tiring">nota de Stanford</a>. Franks et al., <a href="https://www.biorxiv.org/content/10.1101/2021.02.19.431882v1.full.pdf">bioRxiv 2021</a>.</li>
+      <li>Motores: <a href="https://openelab.io/blogs/learn/what-is-robstride04-120nm-qdd-high-torque-robot-joints">RobStride 04</a>, <a href="https://www.robotshop.com/products/cubemars-ak10-9-v30-kv60-ak-series-robotic-actuator">CubeMars AK10-9 V3</a>, <a href="https://openelab.io/blogs/learn/what-is-robstride03-qdd-60n-m-actuator">RobStride 03</a>.</li>
+    </ul>
+  </div>
+</section>
+</div>
+
+<script>
+/*
+ * exosim.js — first-order design simulator for a modular lower-limb exoskeleton.
+ *
+ * One implementation shared by Node (tests, CLI) and the browser viewer.
+ *
+ * What it is: inverse-dynamics sizing on measured human gait. Joint angles, net
+ *   joint moments and ground reaction forces come from public datasets (see
+ *   ../data/gait_norm.json). The exoskeleton is added as mass + torque sources
+ *   and every actuator is checked against its torque / speed / thermal envelope.
+ * What it is NOT: a predictive simulation. The wearer is assumed to keep the
+ *   same kinematics; human adaptation is not modelled.
+ *
+ * Sagittal plane. x forward, y up. Conventions:
+ *   angles  hip +flexion, knee +flexion, ankle +dorsiflexion
+ *   moments hip +extensor, knee +extensor, ankle +plantarflexor (internal)
+ */
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.ExoSim = factory();
+})(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+
+  const G = 9.81;
+  const N = 100; // samples per stride
+  const RPM = Math.PI / 30;
+  const DEG = Math.PI / 180;
+
+  // ---------------------------------------------------------------- actuators
+  // "spec" fields are vendor-listed; "assumed" fields are engineering estimates
+  // that must be replaced by bench measurements (see README).
+  const ACTUATORS = {
+    RS04: {
+      name: 'RobStride 04', gear: 9,
+      tauPeak: 120, tauRated: 40, wNoLoad: 200 * RPM, wRated: 167 * RPM, mass: 1.42, price: 450, // spec
+      rotorInertia: 1.4e-4, km: 4.5, coulomb: 0.5, viscous: 0.02, // assumed
+    },
+    RS03: {
+      name: 'RobStride 03', gear: 9,
+      tauPeak: 60, tauRated: 20, wNoLoad: 195 * RPM, wRated: 180 * RPM, mass: 0.88, price: 250, // spec
+      rotorInertia: 0.8e-4, km: 3.0, coulomb: 0.35, viscous: 0.015, // assumed
+    },
+    AK109: {
+      name: 'CubeMars AK10-9 V3', gear: 9,
+      tauPeak: 53, tauRated: 18, wNoLoad: 320 * RPM, wRated: 235 * RPM, mass: 0.94, price: 900, // spec
+      rotorInertia: 1.0e-4, // spec (1002 g·cm²)
+      km: 3.2, coulomb: 0.4, viscous: 0.012, // assumed
+    },
+  };
+
+  // Torque available at speed w when motoring. A straight line through the
+  // no-load point and the rated point (voltage limit), capped by the current
+  // limit (peak torque). Braking is not voltage-limited.
+  function torqueLimit(act, w, motoring) {
+    if (!motoring) return act.tauPeak;
+    const slope = act.tauRated / (act.wNoLoad - act.wRated);
+    return Math.max(0, Math.min(act.tauPeak, slope * (act.wNoLoad - Math.abs(w))));
+  }
+
+  // ---------------------------------------------------------------- design
+  // loc: where the mass rides. d: distance from the proximal joint as a
+  // fraction of the segment length (thigh: from hip, shank: from knee).
+  const DESIGN = {
+    busVoltage: 48.1, // 13S Li-ion nominal
+    // hot-swappable 13S1P packs of 21700 cells (5 Ah): 240 Wh and ~1.15 kg each
+    batteryPack: { wh: 240, usable: 0.85, mass: 1.15, label: '13S1P 21700 (5 Ah, 240 Wh)' },
+    housekeepingW: 15, // computer, sensors, comms
+    idleW: 3, // per actuator drive
+    gearEff: 0.9, inverterEff: 0.95, regenEff: 0.7,
+    joints: {
+      hip: { actuator: 'RS04', ratio: 1, bidirectional: true },
+      knee: { actuator: 'RS04', ratio: 1, bidirectional: true },
+      // actuator on the proximal shank pulls a rope on a heel lever: lever / drum radius
+      ankle: { actuator: 'AK109', ratio: 2.5, bidirectional: false },
+    },
+    // actuator masses are added automatically from the joint table
+    structure: [
+      { module: 'core', name: 'Cinturón lumbar + arnés', mass: 0.70, loc: 'waist', qty: 1 },
+      { module: 'core', name: 'Electrónica, cableado, paro de emergencia', mass: 0.90, loc: 'waist', qty: 1 },
+      { module: 'hip', name: 'Marco pélvico (CF + Ti), bisagras de abducción', mass: 1.10, loc: 'waist', qty: 1 },
+      { module: 'hip', name: 'Eslabón de muslo + abrazadera', mass: 0.45, loc: 'thigh', d: 0.5, qty: 2 },
+      { module: 'knee', name: 'Extensión de muslo hasta rodilla', mass: 0.25, loc: 'thigh', d: 0.8, qty: 2 },
+      { module: 'knee', name: 'Eslabón de pierna + abrazadera', mass: 0.40, loc: 'shank', d: 0.4, qty: 2 },
+      { module: 'ankle', name: 'Bastidor tibial + tambor y cuerda', mass: 0.35, loc: 'shank', d: 0.35, qty: 2 },
+      { module: 'ankle', name: 'Plantilla de carbono + palanca de talón', mass: 0.30, loc: 'foot', qty: 2 },
+    ],
+    // where each joint's actuator rides
+    actuatorMount: {
+      hip: { loc: 'waist' },
+      knee: { loc: 'thigh', d: 1.0 },
+      ankle: { loc: 'shank', d: 0.25 },
+    },
+    configs: {
+      full: { label: 'Completo (cadera + rodilla + tobillo)', modules: ['core', 'hip', 'knee', 'ankle'], packs: 2 },
+      run: { label: 'Carrera (cadera + tobillo)', modules: ['core', 'hip', 'ankle'], packs: 1 },
+      hip: { label: 'Solo cadera', modules: ['core', 'hip'], packs: 1 },
+      ankle: { label: 'Solo tobillo', modules: ['core', 'ankle'], packs: 1 },
+    },
+  };
+
+  // Metabolic bookkeeping (Mooney, Rouse & Herr 2014 "augmentation factor",
+  // generalised): 1 W of net-positive exo joint power is worth 1/0.41 W of
+  // metabolic power; carried mass costs k_loc * (net metabolic W/kg) per kg.
+  const METAB = {
+    eta: 0.41,
+    // W per kg of added mass while walking at ~1.25-1.5 m/s
+    betaWalk: { waist: 3.3, thigh: 5.6, shank: 5.6, foot: 14.8 },
+    netWalk: 3.0, // W/kg net metabolic rate, walking 1.25 m/s (typical)
+    runCot: 3.8, // J/kg/m net cost of transport, running (typical)
+  };
+
+  // ---------------------------------------------------------------- numerics
+  const COS = [], SIN = [];
+  for (let k = 0; k < N; k++) { COS.push(Math.cos(2 * Math.PI * k / N)); SIN.push(Math.sin(2 * Math.PI * k / N)); }
+
+  // d/dt of a periodic signal sampled N times over period T (spectral, band-limited)
+  function deriv(y, T, maxHarm) {
+    const H = maxHarm || 16, out = new Array(N).fill(0);
+    for (let h = 1; h <= H; h++) {
+      let a = 0, b = 0;
+      for (let i = 0; i < N; i++) { const k = (h * i) % N; a += y[i] * COS[k]; b += y[i] * SIN[k]; }
+      a *= 2 / N; b *= 2 / N;
+      const w = 2 * Math.PI * h / T;
+      for (let i = 0; i < N; i++) { const k = (h * i) % N; out[i] += w * (-a * SIN[k] + b * COS[k]); }
+    }
+    return out;
+  }
+  const shift = (y, s) => y.map((_, i) => y[(i + s) % N]);
+  const mean = (y) => y.reduce((a, b) => a + b, 0) / y.length;
+  const rms = (y) => Math.sqrt(mean(y.map((v) => v * v)));
+  const maxAbs = (y) => y.reduce((a, b) => Math.max(a, Math.abs(b)), 0);
+  const smooth01 = (x) => { const t = Math.max(0, Math.min(1, x)); return t * t * (3 - 2 * t); };
+
+  // ---------------------------------------------------------------- body
+  function anthropometry(height) {
+    return {
+      thigh: 0.245 * height, shank: 0.246 * height,
+      ankleH: 0.039 * height + 0.02, // + shoe sole
+      heelBack: 0.030 * height, ballFwd: 0.085 * height, toeLen: 0.033 * height,
+      trunk: 0.30 * height, hipWidth: 0.10 * height,
+    };
+  }
+
+  // Segment angles and joint positions of one leg relative to the hip.
+  function legFK(seg, hip, knee, ankle, tilt) {
+    const tt = hip - tilt, ts = tt - knee, tf = ts + ankle;
+    const kx = seg.thigh * Math.sin(tt), ky = -seg.thigh * Math.cos(tt);
+    const ax = kx + seg.shank * Math.sin(ts), ay = ky - seg.shank * Math.cos(ts);
+    const ux = Math.cos(tf), uy = Math.sin(tf), dx = Math.sin(tf), dy = -Math.cos(tf);
+    return {
+      tt, ts, tf, knee: [kx, ky], ankle: [ax, ay],
+      heel: [ax - seg.heelBack * ux + seg.ankleH * dx, ay - seg.heelBack * uy + seg.ankleH * dy],
+      ball: [ax + seg.ballFwd * ux + seg.ankleH * dx, ay + seg.ballFwd * uy + seg.ankleH * dy],
+    };
+  }
+
+  // Whole-body sagittal kinematics on a treadmill: pelvis height from foot
+  // contact (stance) and ballistic flight (running), fore-aft from the
+  // no-slip condition of the stance foot. Returns per-sample frames.
+  //
+  // The running dataset has no pelvis angle. A constant anterior tilt is
+  // calibrated so that the pelvis leaves the ground and lands at the same
+  // height, which is what a ballistic flight phase requires.
+  function kinematics(gait, height, tiltOffset) {
+    const c = gait.curves, off = (tiltOffset || 0) * DEG;
+    if (c.pelvis_tilt) return solveKinematics(gait, height, c.pelvis_tilt.mean.map((v) => v * DEG + off));
+    let best = null;
+    for (let t = 0; t <= 30; t += 0.5) {
+      const k = solveKinematics(gait, height, new Array(N).fill(t * DEG));
+      if (!best || Math.abs(k.flightDrop) < Math.abs(best.flightDrop)) best = k;
+    }
+    return off ? solveKinematics(gait, height, best.tilt.map((v) => v + off)) : best;
+  }
+
+  function solveKinematics(gait, height, tilt) {
+    const c = gait.curves, T = gait.stride_time, seg = anthropometry(height);
+    const hip = c.hip_ang.mean.map((v) => v * DEG), knee = c.knee_ang.mean.map((v) => v * DEG),
+      ankle = c.ankle_ang.mean.map((v) => v * DEG), fv = c.grf_v.mean;
+    const R = [], L = [];
+    for (let i = 0; i < N; i++) R.push(legFK(seg, hip[i], knee[i], ankle[i], tilt[i]));
+    for (let i = 0; i < N; i++) L.push(R[(i + N / 2) % N]);
+    const fvL = shift(fv, N / 2);
+    // a foot counts as planted once it carries ~10 % of body weight
+    const wR = fv.map((v) => smooth01((v - 0.5) / 1.5)), wL = fvL.map((v) => smooth01((v - 0.5) / 1.5));
+
+    // contact point of a foot: soft-min between heel and ball
+    const contact = (f) => {
+      const e = 0.006, lo = Math.min(f.heel[1], f.ball[1]), a = Math.exp(-(f.heel[1] - lo) / e), b = Math.exp(-(f.ball[1] - lo) / e);
+      return { wh: a / (a + b), wb: b / (a + b), low: lo };
+    };
+    const cR = R.map(contact), cL = L.map(contact);
+    const series = (legs, key, ax) => legs.map((f) => f[key][ax]);
+    const vel = (legs, cs) => {
+      const vh = deriv(series(legs, 'heel', 0), T), vb = deriv(series(legs, 'ball', 0), T);
+      return vh.map((v, i) => cs[i].wh * v + cs[i].wb * vb[i]);
+    };
+    const vcR = vel(R, cR), vcL = vel(L, cL);
+
+    const py = new Array(N).fill(null), vrel = new Array(N).fill(null);
+    for (let i = 0; i < N; i++) {
+      const w = wR[i] + wL[i];
+      if (w > 0.05) {
+        py[i] = (wR[i] * -cR[i].low + wL[i] * -cL[i].low) / w;
+        vrel[i] = (wR[i] * vcR[i] + wL[i] * vcL[i]) / w; // contact-point velocity relative to pelvis
+      }
+    }
+    // flight phases: ballistic height, constant fore-aft velocity
+    const dt = T / N;
+    let flight = 0, flightDrop = 0;
+    for (let i = 0; i < N; i++) {
+      if (py[i] !== null || py[(i + N - 1) % N] === null) continue;
+      let n = 0; while (py[(i + n) % N] === null) n++;
+      const a = (i + N - 1) % N, b = (i + n) % N, Tf = (n + 1) * dt;
+      flightDrop = py[a] - py[b];
+      for (let k = 1; k <= n; k++) {
+        const t = k * dt, j = (i + k - 1) % N;
+        py[j] = py[a] + (py[b] - py[a]) * t / Tf + 0.5 * G * t * (Tf - t);
+        vrel[j] = vrel[a] + (vrel[b] - vrel[a]) * t / Tf;
+        flight++;
+      }
+    }
+    const belt = -mean(vrel); // kinematically consistent treadmill speed
+    const px = new Array(N).fill(0);
+    for (let i = 1; i < N; i++) px[i] = px[i - 1] + (-belt - 0.5 * (vrel[i] + vrel[i - 1])) * dt;
+    const mx = mean(px);
+    const frames = [];
+    for (let i = 0; i < N; i++) frames.push({ px: px[i] - mx, py: py[i], R: R[i], L: L[i], wR: wR[i], wL: wL[i] });
+    return { frames, belt, seg, tilt, T, flightDrop, flightFraction: flight / N, stanceFraction: fv.filter((v) => v > 0.5).length / N };
+  }
+
+  // ---------------------------------------------------------------- masses
+  function massModel(design, configKey) {
+    const cfg = design.configs[configKey], mods = cfg.modules;
+    const items = [{ module: 'core', name: 'Batería ' + design.batteryPack.label, mass: design.batteryPack.mass, loc: 'waist', qty: cfg.packs }];
+    for (const s of design.structure) if (mods.includes(s.module)) items.push(Object.assign({}, s));
+    for (const j of ['hip', 'knee', 'ankle']) {
+      if (!mods.includes(j)) continue;
+      const a = ACTUATORS[design.joints[j].actuator], m = design.actuatorMount[j];
+      items.push({ module: j, name: 'Actuador ' + a.name, mass: a.mass, loc: m.loc, d: m.d, qty: 2, actuator: true });
+    }
+    const byLoc = { waist: 0, thigh: 0, shank: 0, foot: 0 };
+    let total = 0;
+    for (const it of items) { byLoc[it.loc] += it.mass * it.qty; total += it.mass * it.qty; }
+    const perLeg = (loc) => items.filter((it) => it.loc === loc).map((it) => ({ m: it.mass, d: it.d === undefined ? 0 : it.d }));
+    return { items, byLoc, total, thigh: perLeg('thigh'), shank: perLeg('shank'), foot: perLeg('foot'), modules: mods, batteryWh: cfg.packs * design.batteryPack.wh };
+  }
+
+  // ---------------------------------------------------------------- simulate
+  function simulate(norm, gaitKey, opts) {
+    const o = Object.assign({ bodyMass: 75, height: 1.75, payload: 0, config: 'full', assist: 0.3, selfCarry: 1, tiltOffset: 0, design: DESIGN }, opts || {});
+    const design = o.design, gait = norm.gaits[gaitKey], c = gait.curves, T = gait.stride_time;
+    const assist = typeof o.assist === 'number' ? { hip: o.assist, knee: o.assist, ankle: o.assist } : o.assist;
+    const kin = kinematics(gait, o.height, o.tiltOffset);
+    const mm = massModel(design, o.config);
+    const mb = o.bodyMass, mExo = mm.total, mAdd = mExo + o.payload;
+
+    const q = { hip: c.hip_ang.mean.map((v) => v * DEG), knee: c.knee_ang.mean.map((v) => v * DEG), ankle: c.ankle_ang.mean.map((v) => v * DEG) };
+    // joint velocity in the direction of positive (extensor / plantarflexor) moment
+    const w = { hip: deriv(q.hip, T).map((v) => -v), knee: deriv(q.knee, T).map((v) => -v), ankle: deriv(q.ankle, T).map((v) => -v) };
+    const acc = { hip: deriv(w.hip, T), knee: deriv(w.knee, T), ankle: deriv(w.ankle, T) };
+    const bio = { hip: c.hip_mom.mean, knee: c.knee_mom.mean, ankle: c.ankle_mom.mean }; // Nm/kg
+    const fv = c.grf_v.mean, fa = c.grf_ap.mean;
+    const stance = fv.map((v) => smooth01(v / 2));
+    // specific force at the pelvis (a - g): both legs' GRF per kg of body
+    const fx = fa.map((v, i) => v + fa[(i + N / 2) % N]), fy = fv.map((v, i) => v + fv[(i + N / 2) % N]);
+
+    // --- swing-phase moments needed to carry the exo's own leg masses
+    const pts = [];
+    for (const p of mm.thigh) pts.push({ m: p.m, seg: 'thigh', pos: (f) => [f.knee[0] * p.d, f.knee[1] * p.d] });
+    for (const p of mm.shank) pts.push({ m: p.m, seg: 'shank', pos: (f) => [f.knee[0] + (f.ankle[0] - f.knee[0]) * p.d, f.knee[1] + (f.ankle[1] - f.knee[1]) * p.d] });
+    for (const p of mm.foot) pts.push({ m: p.m, seg: 'foot', pos: (f) => [0.5 * (f.ankle[0] + f.ball[0]), 0.5 * (f.ankle[1] + f.heel[1])] });
+    const swing = { hip: new Array(N).fill(0), knee: new Array(N).fill(0), ankle: new Array(N).fill(0) };
+    for (const p of pts) {
+      const X = kin.frames.map((f) => p.pos(f.R)[0]), Y = kin.frames.map((f) => p.pos(f.R)[1]);
+      const ax = deriv(deriv(X, T, 12), T, 12), ay = deriv(deriv(Y, T, 12), T, 12);
+      for (let i = 0; i < N; i++) {
+        const f = kin.frames[i].R, Fx = p.m * (ax[i] + fx[i]), Fy = p.m * (ay[i] + fy[i]);
+        const z = (ox, oy) => (X[i] - ox) * Fy - (Y[i] - oy) * Fx; // +z = flexion torque at hip
+        swing.hip[i] += -z(0, 0);
+        if (p.seg !== 'thigh') swing.knee[i] += z(f.knee[0], f.knee[1]);
+        if (p.seg === 'foot') swing.ankle[i] += -z(f.ankle[0], f.ankle[1]);
+      }
+    }
+
+    const joints = {}, active = ['hip', 'knee', 'ankle'].filter((j) => mm.modules.includes(j));
+    let pBat = design.housekeepingW, posExo = 0, negExo = 0, posSelf = 0;
+    for (const j of ['hip', 'knee', 'ankle']) {
+      const base = bio[j].map((m, i) => m * (mb + stance[i] * o.payload)); // no exo, same payload
+      const req = bio[j].map((m, i) => m * (mb + stance[i] * mAdd) + (1 - stance[i]) * swing[j][i]);
+      const J = { angle: q[j].map((v) => v / DEG), omega: w[j], base, req, exo: new Array(N).fill(0), human: req.slice(), active: active.includes(j) };
+      if (J.active) {
+        const jd = design.joints[j], act = ACTUATORS[jd.actuator], r = jd.ratio;
+        const Jref = act.rotorInertia * act.gear * act.gear;
+        const pe = new Array(N), ta = new Array(N);
+        let sat = 0, over = 0, wanted = 0, given = 0;
+        for (let i = 0; i < N; i++) {
+          // carry the device's own weight and inertia, then take a share of the wearer's moment
+          let cmd = o.selfCarry * (req[i] - base[i]) + assist[j] * base[i];
+          if (!jd.bidirectional && cmd < 0) cmd = 0;
+          const wa = w[j][i] * r; // actuator output speed
+          // torque the actuator spends on itself (rotor inertia + friction), compensated by the controller
+          const self = Jref * acc[j][i] * r + act.coulomb * Math.tanh(wa / 0.3) + act.viscous * wa;
+          let tAct = cmd / r + self;
+          const lim = torqueLimit(act, wa, tAct * wa > 0);
+          if (Math.abs(wa) > act.wNoLoad) over++;
+          if (Math.abs(tAct) > lim) { tAct = Math.sign(tAct) * lim; sat++; }
+          let del = (tAct - self) * r;
+          if (Math.sign(del) !== Math.sign(cmd) || cmd === 0) del = 0; // never push against the wearer
+          if (!jd.bidirectional && del < 0) del = 0;
+          J.exo[i] = del; J.human[i] = req[i] - del; ta[i] = tAct;
+          wanted += Math.abs(cmd); given += Math.abs(del);
+          const pm = tAct * wa; // mechanical power at the actuator output
+          const pIn = pm >= 0 ? pm / design.gearEff : pm * design.gearEff;
+          const tm = pm >= 0 ? tAct / design.gearEff : tAct * design.gearEff;
+          const p = pIn + (tm / act.km) * (tm / act.km);
+          pe[i] = (p >= 0 ? p / design.inverterEff : p * design.regenEff) + design.idleW;
+          const pj = del * w[j][i];
+          if (pj > 0) posExo += pj / N; else negExo += -pj / N;
+          // share of that power spent moving the device itself rather than helping the wearer
+          const selfShare = cmd !== 0 ? Math.max(0, Math.min(1, o.selfCarry * (req[i] - base[i]) / cmd)) : 0;
+          if (pj > 0) posSelf += selfShare * pj / N;
+        }
+        J.actuator = act.name; J.ratio = r;
+        J.actTorque = ta; J.elec = pe;
+        J.peakTorque = maxAbs(J.exo); J.rmsAct = rms(ta); J.peakAct = maxAbs(ta);
+        J.peakSpeed = maxAbs(w[j]) * r; // rad/s at actuator output
+        J.thermal = J.rmsAct / act.tauRated; J.torqueUse = J.peakAct / act.tauPeak; J.speedUse = J.peakSpeed / act.wNoLoad;
+        J.saturated = sat / N; J.overspeed = over / N; J.delivered = wanted > 0 ? given / wanted : 1;
+        J.elecAvg = mean(pe); pBat += 2 * J.elecAvg;
+      }
+      J.power = J.exo.map((t, i) => t * w[j][i]);
+      J.peakOmega = maxAbs(w[j]);
+      joints[j] = J;
+    }
+    posExo *= 2; negExo *= 2; posSelf *= 2; // both legs
+
+    // --- metabolic first-order estimate
+    const netRate = gaitKey === 'walk' ? METAB.netWalk : METAB.runCot * gait.speed; // W/kg
+    const scale = netRate / METAB.netWalk;
+    let massPenalty = 0;
+    for (const loc of Object.keys(mm.byLoc)) massPenalty += METAB.betaWalk[loc] * scale * mm.byLoc[loc];
+    const pDis = negExo > posExo ? posExo - negExo : 0;
+    // Power that only moves the device can at best cancel the cost of carrying it.
+    const selfGain = Math.min(massPenalty, posSelf / METAB.eta);
+    const gain = selfGain + Math.max(0, posExo - posSelf + pDis) / METAB.eta;
+    const baseline = netRate * (mb + o.payload);
+    const usableWh = mm.batteryWh * design.batteryPack.usable;
+
+    // --- joint-level relief (mechanical, no physiology assumed)
+    const relief = {};
+    for (const j of ['hip', 'knee', 'ankle']) {
+      const b = rms(joints[j].base), h = rms(joints[j].human);
+      relief[j] = 1 - h / b;
+    }
+
+    return {
+      gait: gaitKey, speed: gait.speed, strideTime: T, config: o.config, kin, mass: mm, joints,
+      opts: { bodyMass: mb, height: o.height, payload: o.payload, assist },
+      power: { battery: pBat, exoPositive: posExo, exoNegative: negExo, exoSelf: posSelf },
+      endurance: { hours: usableWh / pBat, km: usableWh / pBat * gait.speed * 3.6, usableWh },
+      metabolic: {
+        baselineW: baseline, massPenaltyW: massPenalty, assistGainW: gain,
+        netChangeW: massPenalty - gain, netChangePct: (massPenalty - gain) / baseline,
+        offPct: massPenalty / baseline,
+      },
+      relief,
+    };
+  }
+
+  return { ACTUATORS, DESIGN, METAB, N, G, simulate, kinematics, massModel, torqueLimit, deriv, anthropometry, legFK };
+});
+
+</script>
+<script>
+const NORM = {"source":{"walk":"Fukuchi CA, Fukuchi RK, Duarte M (2018) PeerJ 6:e4640, doi:10.7717/peerj.4640 — figshare 5722711 (CC BY 4.0). Treadmill, comfortable speed (T05), young adults.","run":"Fukuchi RK, Fukuchi CA, Duarte M (2017) PeerJ 5:e3298, doi:10.7717/peerj.3298 — figshare 4543435 (CC BY 4.0). Treadmill 2.5 / 3.5 / 4.5 m/s."},"conventions":"angles  [deg]   hip +flexion, knee +flexion, ankle +dorsiflexion\n  moments [Nm/kg] internal; hip +EXTENSOR, knee +EXTENSOR, ankle +PLANTARFLEXOR\n  grf     [N/kg]  ap +forward (propulsion), v +up","gaits":{"walk":{"label":"walk","n_subjects":24,"speed":1.245,"stride_time":1.0385,"stride_time_sd":0.0766,"mass":68.4,"height":1.711,"leg_length":0.879,"curves":{"hip_ang":{"mean":[29.8535,29.7076,29.5453,29.371,29.1966,29.0331,28.881,28.7244,28.5293,28.2498,27.838,27.2568,26.4911,25.5532,24.4809,23.3288,22.1554,21.0094,19.9197,18.8915,17.909,16.9439,15.9665,14.9552,13.902,12.8138,11.708,10.6056,9.5252,8.4783,7.4685,6.4939,5.5502,4.6352,3.7494,2.8961,2.0782,1.2957,0.5433,-0.1888,-0.9123,-1.6364,-2.3646,-3.0918,-3.8054,-4.489,-5.1268,-5.7083,-6.2303,-6.6953,-7.108,-7.4686,-7.7682,-7.9859,-8.0898,-8.0421,-7.8064,-7.3548,-6.6737,-5.7651,-4.6448,-3.3371,-1.869,-0.2655,1.4528,3.2688,5.166,7.1249,9.1209,11.1237,13.0999,15.0171,16.8485,18.5757,20.1901,21.691,23.083,24.372,25.5632,26.6595,27.6623,28.5725,29.3915,30.1209,30.7609,31.3088,31.7568,32.093,32.3041,32.3801,32.32,32.1362,31.8553,31.5153,31.1589,30.8247,30.5392,30.3118,30.1351,29.99]},"knee_ang":{"mean":[0.7717,1.7238,2.9059,4.2148,5.593,7.0188,8.486,9.9807,11.4641,12.8672,14.1008,15.0748,15.7224,16.0191,15.9898,15.7028,15.2511,14.7279,14.2045,13.7165,13.262,12.8122,12.3285,11.7801,11.1568,10.4718,9.7565,9.0485,8.3788,7.7635,7.2014,6.6791,6.1798,5.693,5.2194,4.7714,4.368,4.0271,3.7589,3.5633,3.4324,3.3567,3.3332,3.3707,3.4903,3.7215,4.0934,4.6267,5.3281,6.1911,7.202,8.3506,9.6396,11.0911,12.7457,14.6543,16.8652,19.4097,22.2908,25.4788,28.9139,32.5149,36.1908,39.8517,43.4161,46.8127,49.9802,52.8637,55.414,57.5884,59.3543,60.6943,61.6083,62.1129,62.2361,62.0087,61.455,60.5871,59.404,57.896,56.0536,53.8759,51.3767,48.5835,45.5312,42.2531,38.7722,35.0992,31.2386,27.2027,23.0299,18.7998,14.6398,10.7174,7.219,4.3189,2.1463,0.7603,0.1398,0.191]},"ankle_ang":{"mean":[1.566,1.0248,0.1396,-0.9791,-2.1457,-3.144,-3.7807,-3.9324,-3.5722,-2.7706,-1.6703,-0.4449,0.7459,1.7911,2.6455,3.3245,3.8837,4.3895,4.8934,5.4162,5.9474,6.4554,6.9053,7.2748,7.563,7.7902,7.9886,8.1899,8.4139,8.663,8.9248,9.1794,9.4099,9.6103,9.7875,9.9588,10.1434,10.3543,10.5925,10.8458,11.0933,11.3122,11.4853,11.6047,11.6724,11.695,11.6777,11.6176,11.5001,11.2985,10.977,10.4945,9.8086,8.8787,7.6683,6.1486,4.3051,2.1464,-0.2844,-2.9011,-5.5718,-8.1262,-10.3748,-12.1372,-13.2739,-13.7132,-13.4665,-12.6254,-11.342,-9.796,-8.158,-6.5586,-5.0715,-3.714,-2.4635,-1.2815,-0.1385,0.9701,2.0215,2.9746,3.7871,4.4319,4.906,5.2284,5.4286,5.53,5.5369,5.4317,5.183,4.7649,4.1786,3.4668,2.7147,2.0341,1.5325,1.2792,1.2766,1.4507,1.6642,1.7517]},"pelvis_tilt":{"mean":[10.9313,10.8661,10.7991,10.7304,10.6575,10.5764,10.4823,10.3712,10.241,10.0925,9.9302,9.7615,9.5963,9.4453,9.3184,9.2235,9.1654,9.1449,9.1591,9.2019,9.2649,9.3387,9.4139,9.4826,9.5395,9.5818,9.6103,9.6286,9.6423,9.6584,9.6839,9.7247,9.7847,9.8653,9.9656,10.0824,10.211,10.346,10.4818,10.613,10.7351,10.844,10.9363,11.009,11.0601,11.0883,11.0937,11.0778,11.0437,10.9953,10.9372,10.8731,10.8056,10.7352,10.6602,10.5773,10.4822,10.3712,10.2424,10.0965,9.9375,9.7727,9.6113,9.4637,9.3395,9.2465,9.1892,9.1685,9.1815,9.2221,9.2822,9.3526,9.4242,9.4897,9.5439,9.5846,9.6125,9.631,9.6457,9.6629,9.6893,9.7303,9.7898,9.8694,9.9684,10.0842,10.2127,10.3489,10.4871,10.6219,10.7481,10.8608,10.9559,11.0297,11.0797,11.1048,11.1057,11.0844,11.045,10.9923]},"hip_mom":{"mean":[0.6039,0.6035,0.5919,0.5703,0.5452,0.5275,0.5273,0.5487,0.586,0.625,0.6483,0.6431,0.6066,0.5466,0.477,0.4117,0.359,0.3195,0.2887,0.2608,0.2326,0.2038,0.1764,0.1516,0.1289,0.1067,0.0838,0.0605,0.0389,0.021,0.0068,-0.0054,-0.0189,-0.0357,-0.0557,-0.0769,-0.0968,-0.1149,-0.1332,-0.1552,-0.1836,-0.2192,-0.2596,-0.3017,-0.3428,-0.382,-0.4191,-0.453,-0.4803,-0.4959,-0.4961,-0.4812,-0.4572,-0.4336,-0.4188,-0.4156,-0.4185,-0.4166,-0.3992,-0.3619,-0.3099,-0.2564,-0.2168,-0.2008,-0.2083,-0.229,-0.2474,-0.25,-0.2304,-0.1918,-0.1441,-0.099,-0.065,-0.0446,-0.0351,-0.0309,-0.0273,-0.0221,-0.016,-0.0106,-0.0072,-0.0049,-0.0019,0.0035,0.0118,0.0215,0.0309,0.0397,0.051,0.0706,0.1052,0.1587,0.2296,0.3108,0.3917,0.4621,0.5164,0.5542,0.5792,0.5953]},"knee_mom":{"mean":[-0.333,-0.2998,-0.2617,-0.2203,-0.173,-0.1149,-0.0421,0.045,0.1396,0.2307,0.3069,0.3606,0.3901,0.399,0.3938,0.3798,0.3602,0.3355,0.3053,0.2701,0.2316,0.1926,0.1551,0.1201,0.0875,0.0562,0.0259,-0.0034,-0.0312,-0.0573,-0.082,-0.1056,-0.1288,-0.1513,-0.1729,-0.1931,-0.2121,-0.2301,-0.2476,-0.2642,-0.279,-0.2905,-0.2976,-0.2993,-0.2952,-0.2849,-0.2683,-0.2454,-0.2171,-0.1853,-0.1526,-0.1212,-0.0919,-0.0638,-0.0351,-0.0054,0.0232,0.0462,0.0584,0.0572,0.0447,0.028,0.016,0.0158,0.0288,0.0503,0.0719,0.0856,0.0874,0.0788,0.0646,0.0505,0.0399,0.0328,0.0275,0.0219,0.0153,0.0087,0.003,-0.0013,-0.0051,-0.0098,-0.0162,-0.0236,-0.031,-0.0375,-0.0436,-0.0514,-0.0635,-0.0818,-0.1071,-0.1387,-0.1754,-0.2158,-0.2579,-0.2988,-0.3337,-0.3574,-0.3655,-0.3566]},"ankle_mom":{"mean":[0.0032,-0.0075,-0.0203,-0.0329,-0.0432,-0.0488,-0.0482,-0.0401,-0.0239,0.0003,0.0312,0.0668,0.1049,0.1431,0.18,0.2153,0.2492,0.2822,0.3149,0.3472,0.3789,0.4097,0.4394,0.4682,0.4965,0.5247,0.5529,0.5816,0.6109,0.6412,0.6728,0.7062,0.7415,0.7789,0.8184,0.8602,0.9044,0.951,0.9997,1.0498,1.1003,1.1503,1.1986,1.2442,1.286,1.3222,1.351,1.3704,1.3785,1.3737,1.3543,1.3177,1.2605,1.1788,1.0697,0.9333,0.7748,0.6042,0.4354,0.283,0.1584,0.0675,0.0098,-0.0204,-0.0318,-0.0324,-0.0287,-0.024,-0.0198,-0.0163,-0.0134,-0.0113,-0.01,-0.0096,-0.0097,-0.0102,-0.0106,-0.011,-0.0113,-0.0119,-0.0126,-0.0135,-0.0144,-0.0155,-0.0168,-0.0182,-0.0197,-0.0209,-0.0217,-0.0219,-0.0213,-0.0198,-0.0172,-0.0133,-0.008,-0.0015,0.005,0.0102,0.0123,0.0101]},"grf_v":{"mean":[0.6567,1.7137,3.0286,4.268,5.2134,5.8771,6.4203,6.9844,7.5991,8.2169,8.7904,9.2985,9.7213,10.0234,10.1779,10.1933,10.105,9.9422,9.7131,9.4238,9.0989,8.7746,8.4739,8.1998,7.9516,7.7403,7.5814,7.4766,7.4124,7.378,7.3766,7.4168,7.4963,7.6021,7.7256,7.8716,8.0476,8.2494,8.4639,8.6835,8.9116,9.1519,9.3955,9.6243,9.8254,9.9941,10.1239,10.1965,10.1892,10.0878,9.8861,9.5712,9.1135,8.4802,7.658,6.6658,5.5483,4.3669,3.2,2.1402,1.2758,0.6577,0.2804,0.0917,0.0221,0.011,0.0164,0.0167,0.0091,0.0028,0.0051,0.0117,0.0123,0.0045,0,0.0011,0.0091,0.0097,0.0007,0,0,0.0094,0.0087,0,0,0,0.0116,0.0083,0,0,0.0021,0.0184,0.0075,0,0,0.0171,0.0374,0,0,0.0748]},"grf_ap":{"mean":[0.0437,0.0432,-0.0461,-0.245,-0.5184,-0.8005,-1.0417,-1.232,-1.3847,-1.5046,-1.5779,-1.5892,-1.5417,-1.4564,-1.3549,-1.2479,-1.1374,-1.0273,-0.9243,-0.8325,-0.7492,-0.6708,-0.5977,-0.5334,-0.4788,-0.4298,-0.3818,-0.3344,-0.2901,-0.2489,-0.2072,-0.1617,-0.1134,-0.0645,-0.0152,0.0378,0.0969,0.1615,0.2304,0.3053,0.3898,0.4853,0.5892,0.6978,0.8099,0.9269,1.0484,1.1721,1.2959,1.4202,1.5448,1.6636,1.7633,1.8266,1.8362,1.7746,1.6262,1.3868,1.0759,0.7402,0.4381,0.2143,0.0811,0.0209,0.0028,0.0008,0.001,-0.0001,-0.0014,-0.0014,-0.0001,0.0009,0.0003,-0.0011,-0.0014,-0.0001,0.0011,0.0005,-0.0012,-0.0016,0.0001,0.0015,0.0006,-0.0016,-0.0017,0.0006,0.0021,0.0004,-0.0023,-0.0018,0.0016,0.0031,-0.0003,-0.0039,-0.0016,0.0042,0.0041,-0.0045,-0.0077,0.0114]}}},"run25":{"label":"run25","n_subjects":31,"speed":2.5,"stride_time":0.7512,"stride_time_sd":0.0399,"mass":69.89,"height":1.759,"curves":{"hip_ang":{"mean":[32.9427,32.56,32.2283,31.9615,31.7728,31.6684,31.6423,31.6736,31.7276,31.7601,31.7241,31.5764,31.284,30.8275,30.2011,29.4109,28.4705,27.3964,26.2045,24.9083,23.5181,22.0424,20.49,18.8713,17.1994,15.4903,13.7625,12.0354,10.3286,8.661,7.0506,5.5147,4.0691,2.7288,1.5068,0.414,-0.5417,-1.3552,-2.0242,-2.5487,-2.9296,-3.1686,-3.2676,-3.2295,-3.0587,-2.7624,-2.3514,-1.8403,-1.2463,-0.5883,0.1166,0.8548,1.619,2.4093,3.2341,4.1087,5.0544,6.0954,7.256,8.5578,10.016,11.6377,13.4194,15.3466,17.3944,19.5294,21.7123,23.9025,26.0614,28.1558,30.16,32.0558,33.8316,35.4802,36.9961,38.3733,39.6045,40.6807,41.5931,42.3337,42.8975,43.2829,43.4916,43.5276,43.397,43.107,42.6665,42.088,41.3886,40.5918,39.7274,38.83,37.9358,37.0775,36.2804,35.5588,34.9157,34.3441,33.8318,33.367]},"knee_ang":{"mean":[10.7,11.8571,13.4815,15.536,17.9734,20.7284,23.7113,26.8087,29.8902,32.8213,35.4795,37.7694,39.6327,41.0512,42.0412,42.6428,42.9054,42.8755,42.5879,42.0634,41.3118,40.3386,39.1518,37.7672,36.2104,34.5144,32.7161,30.8515,28.9535,27.0508,25.171,23.3431,21.6012,19.9854,18.541,17.3151,16.3528,15.6931,15.3672,15.3985,15.8034,16.594,17.7784,19.3606,21.3375,23.6964,26.4113,29.4428,32.7394,36.2421,39.8905,43.629,47.4108,51.2003,54.971,58.7022,62.3748,65.9671,69.4532,72.8033,75.9857,78.9689,81.7241,84.225,86.4474,88.3674,89.9599,91.1992,92.0605,92.5229,92.5735,92.2093,91.4386,90.2784,88.7511,86.8795,84.6832,82.1763,79.3684,76.2667,72.8804,69.2235,65.3172,61.1899,56.876,52.4146,47.8492,43.2286,38.6096,34.0599,29.6599,25.5009,21.6803,18.2932,15.4221,13.1286,11.4473,10.3855,9.9281,10.0449]},"ankle_ang":{"mean":[2.6676,2.1633,1.7388,1.5276,1.6525,2.1975,3.1889,4.5896,6.307,8.2152,10.1811,12.0905,13.8654,15.4693,16.9007,18.1782,19.3225,20.3416,21.223,21.935,22.434,22.676,22.6265,22.2658,21.5894,20.6033,19.3178,17.7427,15.8861,13.7575,11.3743,8.768,5.9885,3.1032,0.1921,-2.6616,-5.3815,-7.9059,-10.1921,-12.2155,-13.9658,-15.4412,-16.643,-17.5741,-18.2391,-18.6481,-18.8195,-18.7829,-18.5774,-18.2484,-17.8407,-17.3923,-16.9285,-16.4602,-15.9841,-15.4869,-14.9498,-14.3541,-13.6843,-12.9313,-12.0922,-11.1715,-10.1797,-9.1339,-8.0566,-6.9744,-5.9155,-4.906,-3.9663,-3.1075,-2.3311,-1.6297,-0.9918,-0.4062,0.1327,0.623,1.0562,1.4217,1.7123,1.9301,2.0887,2.2117,2.3268,2.4578,2.6177,2.8039,3.0001,3.1825,3.3291,3.4285,3.4849,3.5166,3.5478,3.5972,3.6666,3.7346,3.7594,3.6903,3.4861,3.1347]},"hip_mom":{"mean":[0.9376,0.9344,0.9321,0.9167,0.8784,0.8196,0.7548,0.7032,0.6781,0.6796,0.6936,0.6989,0.6779,0.6244,0.5453,0.4554,0.3692,0.2955,0.235,0.1843,0.1397,0.1001,0.0674,0.0429,0.0263,0.014,0.002,-0.0127,-0.0307,-0.0508,-0.0724,-0.0963,-0.1246,-0.1595,-0.2015,-0.2493,-0.3006,-0.3541,-0.4098,-0.4679,-0.5273,-0.5844,-0.6337,-0.6704,-0.6932,-0.7049,-0.7115,-0.718,-0.7259,-0.7322,-0.7309,-0.717,-0.6896,-0.6523,-0.6119,-0.5754,-0.547,-0.5274,-0.5141,-0.5027,-0.4879,-0.4649,-0.4297,-0.3808,-0.3201,-0.2536,-0.1895,-0.1357,-0.0961,-0.0694,-0.0496,-0.0299,-0.0061,0.0214,0.0488,0.0719,0.0893,0.1038,0.1206,0.1441,0.1757,0.2132,0.2529,0.2922,0.3308,0.3699,0.4111,0.4548,0.5011,0.551,0.6075,0.6738,0.7508,0.8331,0.9094,0.9662,0.994,0.993,0.9737,0.9512]},"knee_mom":{"mean":[-0.4866,-0.4213,-0.3248,-0.185,0.0082,0.2582,0.5587,0.8938,1.242,1.5813,1.8933,2.1656,2.3908,2.5644,2.6832,2.7444,2.7466,2.691,2.5818,2.426,2.2323,2.0095,1.7665,1.5122,1.2561,1.0078,0.7764,0.5691,0.3906,0.2429,0.1257,0.0373,-0.0249,-0.0638,-0.0834,-0.0879,-0.0819,-0.0691,-0.052,-0.0322,-0.0106,0.0114,0.0324,0.0505,0.0647,0.0755,0.0844,0.0931,0.1027,0.113,0.1224,0.1291,0.1321,0.1314,0.128,0.123,0.1172,0.1108,0.1035,0.0957,0.0879,0.0807,0.0743,0.0681,0.0613,0.053,0.0434,0.0333,0.0239,0.0158,0.009,0.0026,-0.004,-0.0104,-0.0158,-0.0192,-0.0204,-0.0205,-0.0217,-0.0261,-0.0347,-0.0478,-0.0647,-0.0857,-0.112,-0.1451,-0.1863,-0.2349,-0.288,-0.3416,-0.3922,-0.4377,-0.4777,-0.5125,-0.5415,-0.563,-0.5744,-0.5733,-0.5589,-0.5306]},"ankle_mom":{"mean":[0.0302,-0.0012,-0.0326,-0.0463,-0.0241,0.0453,0.163,0.3194,0.4987,0.6851,0.8676,1.0417,1.208,1.3685,1.5231,1.6691,1.8015,1.9151,2.0058,2.0709,2.1086,2.1168,2.0937,2.0379,1.95,1.833,1.6918,1.5328,1.3622,1.1861,1.0101,0.84,0.6814,0.5391,0.4164,0.3144,0.2319,0.1663,0.1147,0.0746,0.0442,0.0218,0.006,-0.0048,-0.0123,-0.0177,-0.0217,-0.0245,-0.0265,-0.0281,-0.0297,-0.0316,-0.0339,-0.0361,-0.0376,-0.0383,-0.0386,-0.0389,-0.0396,-0.0402,-0.0402,-0.0389,-0.0362,-0.0326,-0.0291,-0.0265,-0.0248,-0.0236,-0.0222,-0.0205,-0.0187,-0.0176,-0.0175,-0.0182,-0.0189,-0.0191,-0.0187,-0.0184,-0.0191,-0.0211,-0.0236,-0.0255,-0.0256,-0.0238,-0.0212,-0.0189,-0.0176,-0.0164,-0.0137,-0.0082,0.0001,0.0093,0.0173,0.023,0.0273,0.0327,0.0408,0.0501,0.0555,0.0501]},"grf_v":{"mean":[0.6024,1.6532,3.2708,5.3389,7.6371,9.9188,11.9896,13.7616,15.2605,16.5804,17.8116,18.9847,20.0662,20.9946,21.7194,22.2132,22.4615,22.4555,22.1968,21.704,21.0057,20.127,19.0833,17.8879,16.5617,15.1318,13.6254,12.0683,10.4928,8.9434,7.4694,6.1115,4.8946,3.8315,2.9299,2.1921,1.6098,1.1626,0.824,0.569,0.3776,0.2345,0.1294,0.0576,0.017,0.002,0.0012,0.0024,0.0003,0,0,0.0015,0.0022,0,0,0,0.0018,0.0021,0,0,0,0.0021,0.0019,0,0,0,0.0025,0.0018,0,0,0.0001,0.003,0.0016,0,0,0.0007,0.0036,0.0014,0,0,0.0014,0.0044,0.001,0,0,0.0028,0.006,0.0004,0,0,0.0057,0.0093,0,0,0,0.0172,0.0193,0,0,0.0873]},"grf_ap":{"mean":[-0.1146,-0.213,-0.3045,-0.3915,-0.5103,-0.7064,-0.9984,-1.3593,-1.7276,-2.0338,-2.225,-2.2759,-2.1897,-1.9913,-1.7176,-1.4048,-1.0785,-0.7508,-0.4248,-0.1003,0.2232,0.5446,0.8594,1.1579,1.4255,1.6464,1.8077,1.9015,1.9248,1.8802,1.7763,1.6266,1.4456,1.2463,1.0404,0.8406,0.6602,0.508,0.3844,0.2828,0.1965,0.1241,0.0684,0.0316,0.0115,0.0026,-0.0003,-0.0004,0.0004,0.0006,0,-0.0006,-0.0004,0.0004,0.0006,-0.0001,-0.0007,-0.0003,0.0005,0.0006,-0.0002,-0.0007,-0.0002,0.0007,0.0006,-0.0003,-0.0008,-0.0001,0.0008,0.0006,-0.0005,-0.0009,0,0.001,0.0005,-0.0008,-0.001,0.0003,0.0012,0.0004,-0.0011,-0.0011,0.0006,0.0016,0.0002,-0.0017,-0.0012,0.0012,0.0022,-0.0002,-0.0028,-0.0014,0.0028,0.0035,-0.0018,-0.0062,-0.0008,0.0107,0.0073,-0.0337]}}},"run35":{"label":"run35","n_subjects":39,"speed":3.5,"stride_time":0.7013,"stride_time_sd":0.0409,"mass":70.5,"height":1.758,"curves":{"hip_ang":{"mean":[38.0532,37.3871,36.8219,36.3756,36.0633,35.8899,35.8431,35.8894,35.9748,36.0303,35.9811,35.7581,35.3073,34.5973,33.6213,32.3943,30.9467,29.3161,27.539,25.6457,23.6575,21.5879,19.4461,17.2415,14.9873,12.7033,10.4165,8.1594,5.9681,3.8792,1.9273,0.1431,-1.4486,-2.829,-3.9867,-4.9177,-5.6257,-6.1212,-6.4205,-6.544,-6.5136,-6.3512,-6.0763,-5.7059,-5.2543,-4.7341,-4.1568,-3.5332,-2.8726,-2.1816,-1.4615,-0.7064,0.0987,0.9768,1.9583,3.0766,4.3645,5.8497,7.5509,9.4755,11.6189,13.9647,16.486,19.1476,21.9082,24.7224,27.5431,30.3238,33.0208,35.596,38.0181,40.2642,42.3197,44.1779,45.8374,47.3009,48.5727,49.6576,50.5601,51.2841,51.8337,52.2129,52.4254,52.4744,52.3614,52.0868,51.6502,51.0527,50.2991,49.4015,48.3804,47.2651,46.0918,44.8993,43.7241,42.5956,41.5332,40.5466,39.6378,38.806]},"knee_ang":{"mean":[11.21,12.3492,14.0104,16.1515,18.7191,21.6391,24.81,28.1031,31.37,34.4569,37.2232,39.5585,41.3944,42.7087,43.5205,43.8775,43.8413,43.4721,42.8186,41.9135,40.776,39.4169,37.8466,36.0808,34.1435,32.0671,29.8899,27.6537,25.4027,23.1832,21.0468,19.0517,17.2643,15.7572,14.6042,13.874,13.622,13.8841,14.6738,15.9824,17.7826,20.0341,22.6894,25.6988,29.013,32.5838,36.3642,40.3082,44.3714,48.5125,52.6953,56.8908,61.0769,65.2371,69.3574,73.4222,77.4104,81.294,85.0375,88.6006,91.9409,95.0179,97.7947,100.2387,102.3213,104.0162,105.299,106.1477,106.5447,106.4799,105.9534,104.9769,103.5727,101.7707,99.6036,97.102,94.2913,91.1903,87.8133,84.1724,80.282,76.1602,71.8302,67.3184,62.6528,57.8615,52.9736,48.0226,43.0525,38.1228,33.3123,28.7182,24.4504,20.6204,17.3291,14.6545,12.6444,11.3146,10.6536,10.6316]},"ankle_ang":{"mean":[3.8283,3.066,2.2932,1.6697,1.3604,1.5007,2.1672,3.3616,5.0128,6.995,9.1562,11.3496,13.4582,15.4078,17.1658,18.7286,20.1033,21.2894,22.2678,22.9978,23.4238,23.486,23.1328,22.3291,21.0606,19.3314,17.1604,14.5771,11.6204,8.3407,4.8045,1.0992,-2.6659,-6.3636,-9.8586,-13.0216,-15.7444,-17.9532,-19.6155,-20.7419,-21.3802,-21.6057,-21.5099,-21.1893,-20.7361,-20.2321,-19.7438,-19.3193,-18.9855,-18.7467,-18.5855,-18.465,-18.3355,-18.1431,-17.8393,-17.3898,-16.78,-16.0162,-15.1216,-14.1298,-13.0765,-11.9938,-10.9058,-9.8293,-8.776,-7.7563,-6.7814,-5.8634,-5.0134,-4.2379,-3.5368,-2.9027,-2.3235,-1.787,-1.286,-0.8207,-0.3985,-0.0291,0.282,0.5405,0.766,0.9906,1.2506,1.5765,1.9814,2.4554,2.9661,3.4665,3.9095,4.2615,4.5131,4.6801,4.7958,4.8957,4.9997,5.0994,5.1549,5.1046,4.885,4.457]},"hip_mom":{"mean":[1.1649,1.1783,1.1978,1.2075,1.1954,1.1617,1.1195,1.0871,1.0765,1.0848,1.0941,1.0804,1.0259,0.928,0.8002,0.6645,0.5405,0.4382,0.357,0.2906,0.2336,0.1849,0.146,0.117,0.0935,0.0676,0.0318,-0.0162,-0.0727,-0.1306,-0.185,-0.2366,-0.2914,-0.3561,-0.4322,-0.5141,-0.5908,-0.6526,-0.696,-0.7265,-0.7548,-0.7914,-0.841,-0.9005,-0.9615,-1.0144,-1.0522,-1.0719,-1.0729,-1.056,-1.0217,-0.972,-0.911,-0.8455,-0.7839,-0.7336,-0.6981,-0.6764,-0.6633,-0.6508,-0.63,-0.5931,-0.5353,-0.456,-0.3602,-0.2581,-0.1623,-0.084,-0.0282,0.0078,0.0324,0.0554,0.0829,0.1151,0.1477,0.1765,0.2011,0.226,0.2573,0.2986,0.3478,0.3981,0.4431,0.4811,0.5172,0.5608,0.6199,0.696,0.7834,0.8725,0.9547,1.0267,1.089,1.1426,1.1857,1.213,1.2199,1.2078,1.1858,1.1678]},"knee_mom":{"mean":[-0.5996,-0.5172,-0.3952,-0.22,0.0196,0.3266,0.6928,1.0986,1.5171,1.9194,2.2803,2.5814,2.8113,2.964,3.0371,3.0312,2.9496,2.7991,2.59,2.3351,2.0483,1.7436,1.434,1.1317,0.8484,0.594,0.3765,0.2001,0.0654,-0.0307,-0.0929,-0.1265,-0.1366,-0.1285,-0.1078,-0.0808,-0.0534,-0.0298,-0.0112,0.0041,0.0196,0.0384,0.0619,0.0887,0.1159,0.1405,0.161,0.1771,0.1898,0.2001,0.208,0.213,0.2143,0.2118,0.206,0.1977,0.1878,0.1769,0.1653,0.1531,0.141,0.1294,0.1184,0.1075,0.0959,0.0829,0.0682,0.0528,0.0379,0.0244,0.0131,0.0035,-0.0047,-0.0115,-0.0168,-0.0205,-0.0229,-0.0257,-0.0307,-0.0402,-0.0552,-0.0758,-0.1021,-0.1343,-0.1738,-0.2222,-0.2799,-0.3453,-0.4144,-0.4817,-0.5422,-0.5932,-0.6342,-0.6664,-0.6908,-0.7071,-0.7136,-0.7082,-0.6892,-0.6543]},"ankle_mom":{"mean":[0.0325,-0.0201,-0.0808,-0.1236,-0.1204,-0.0523,0.0839,0.2744,0.4958,0.7243,0.9445,1.1513,1.3474,1.5367,1.7193,1.8897,2.0388,2.1577,2.2402,2.2837,2.2874,2.2506,2.1723,2.0526,1.8945,1.705,1.4944,1.2743,1.0556,0.8467,0.6541,0.483,0.3375,0.2203,0.1321,0.0707,0.0311,0.0074,-0.0062,-0.0138,-0.0177,-0.0196,-0.0207,-0.0224,-0.0255,-0.03,-0.035,-0.0392,-0.0417,-0.0431,-0.0443,-0.0465,-0.0497,-0.053,-0.0552,-0.0554,-0.0539,-0.0519,-0.0503,-0.0495,-0.0484,-0.0461,-0.042,-0.0369,-0.0322,-0.0291,-0.028,-0.0276,-0.0269,-0.0249,-0.0224,-0.0206,-0.0204,-0.0217,-0.0233,-0.0239,-0.0232,-0.0221,-0.0224,-0.0247,-0.0283,-0.031,-0.0309,-0.0275,-0.0225,-0.0185,-0.0168,-0.0166,-0.015,-0.0093,0.001,0.0132,0.0233,0.0289,0.0313,0.0351,0.0441,0.0574,0.0673,0.062]},"grf_v":{"mean":[0.6962,1.9353,3.8568,6.3281,9.0807,11.798,14.2207,16.2294,17.8632,19.2557,20.5287,21.7156,22.763,23.5898,24.14,24.3921,24.3397,23.9815,23.3308,22.4202,21.287,19.9538,18.4301,16.7336,14.9063,13.0083,11.0999,9.2349,7.4673,5.8532,4.4389,3.2472,2.279,1.5259,0.9749,0.6009,0.3601,0.203,0.0963,0.0301,0.0027,0.0022,0.0075,0.0047,0,0,0.0005,0.0046,0.0018,0,0,0.0016,0.0041,0.0006,0,0,0.0023,0.0038,0,0,0,0.0029,0.0035,0,0,0,0.0035,0.0032,0,0,0,0.0042,0.0029,0,0,0.0003,0.0051,0.0026,0,0,0.0014,0.0063,0.0021,0,0,0.0031,0.0082,0.0012,0,0,0.0067,0.0124,0,0,0,0.0203,0.0248,0,0,0.0947]},"grf_ap":{"mean":[-0.1585,-0.3456,-0.5734,-0.8223,-1.0975,-1.4201,-1.7982,-2.2045,-2.5777,-2.847,-2.9594,-2.8942,-2.6616,-2.2942,-1.8347,-1.3251,-0.7978,-0.2712,0.246,0.7482,1.2266,1.6681,2.056,2.3714,2.5948,2.7102,2.7113,2.6044,2.407,2.1414,1.8309,1.5,1.1744,0.8785,0.6282,0.4278,0.2723,0.1551,0.0729,0.0238,0.0028,-0.0005,0.0019,0.0025,0.0003,-0.0015,-0.001,0.0006,0.0012,0.0002,-0.0009,-0.0007,0.0004,0.0009,0.0002,-0.0007,-0.0006,0.0003,0.0008,0.0002,-0.0006,-0.0006,0.0002,0.0007,0.0002,-0.0006,-0.0006,0.0003,0.0008,0.0002,-0.0007,-0.0007,0.0003,0.0009,0.0002,-0.0008,-0.0008,0.0004,0.0011,0.0002,-0.0011,-0.0009,0.0006,0.0014,0.0002,-0.0016,-0.0012,0.0011,0.0021,0,-0.0027,-0.0017,0.0025,0.0039,-0.0011,-0.0067,-0.0023,0.0112,0.011,-0.0378]}}},"run45":{"label":"run45","n_subjects":31,"speed":4.5,"stride_time":0.6628,"stride_time_sd":0.0519,"mass":69.89,"height":1.759,"curves":{"hip_ang":{"mean":[42.1858,41.2667,40.4761,39.831,39.3459,39.0239,38.8487,38.779,38.749,38.6749,38.4663,38.0396,37.3319,36.3085,34.9666,33.3308,31.4443,29.358,27.1195,24.7659,22.3218,19.8004,17.2101,14.5598,11.8659,9.1546,6.4628,3.8359,1.3233,-1.0254,-3.1646,-5.0557,-6.6692,-7.9861,-8.9992,-9.7132,-10.1455,-10.3244,-10.2875,-10.0773,-9.7367,-9.3047,-8.8122,-8.2802,-7.7203,-7.1358,-6.5253,-5.8846,-5.2084,-4.49,-3.7192,-2.8804,-1.9505,-0.899,0.3102,1.7151,3.3501,5.2412,7.4016,9.83,12.5102,15.4133,18.5001,21.7241,25.0339,28.3752,31.6925,34.9308,38.0382,40.9688,43.6863,46.166,48.3969,50.3811,52.131,53.6657,55.0062,56.1719,57.1769,58.0294,58.7317,59.2809,59.6703,59.8905,59.9302,59.7766,59.4176,58.8435,58.0509,57.0461,55.8481,54.4896,53.015,51.4763,49.926,48.4107,46.9658,45.6134,44.3638,43.2205]},"knee_ang":{"mean":[13.0873,14.0003,15.4578,17.4223,19.8446,22.6537,25.7491,29.0006,32.2543,35.3481,38.1295,40.4745,42.3008,43.5742,44.3052,44.5384,44.3378,43.771,42.8972,41.7598,40.3856,38.7882,36.9742,34.9507,32.7307,30.3382,27.811,25.2029,22.5843,20.0422,17.6787,15.6058,13.938,12.7815,12.2228,12.3181,13.0862,14.507,16.5265,19.0665,22.0381,25.354,28.9388,32.7336,36.696,40.7957,45.008,49.3087,53.6707,58.0649,62.4623,66.8377,71.1728,75.4556,79.6783,83.8325,87.9032,91.8655,95.6826,99.3072,102.6862,105.7655,108.495,110.8324,112.744,114.2051,115.1982,115.7123,115.7431,115.2933,114.3743,113.0065,111.2191,109.0478,106.5312,103.7067,100.6076,97.2611,93.6879,89.904,85.9222,81.7539,77.4092,72.8976,68.2279,63.4099,58.4575,53.3947,48.2618,43.1211,38.0587,33.1824,28.6131,24.473,20.8712,17.8915,15.5853,13.9701,13.0358,12.7536]},"ankle_ang":{"mean":[1.8228,0.9746,0.1161,-0.5902,-0.9728,-0.8864,-0.2418,0.9752,2.7037,4.8229,7.1786,9.6139,11.9944,14.2231,16.2416,18.0213,19.5464,20.7984,21.7446,22.3343,22.5036,22.185,21.319,19.8648,17.8065,15.1569,11.9583,8.2824,4.2303,-0.0687,-4.459,-8.7661,-12.8079,-16.4126,-19.4378,-21.7897,-23.4363,-24.4112,-24.8068,-24.7576,-24.4176,-23.9363,-23.4385,-23.0119,-22.7033,-22.523,-22.4534,-22.4601,-22.5003,-22.5299,-22.506,-22.3897,-22.1469,-21.7515,-21.1885,-20.4569,-19.5719,-18.5628,-17.4686,-16.3316,-15.1895,-14.0705,-12.9908,-11.9563,-10.9664,-10.0195,-9.1165,-8.2622,-7.4639,-6.7276,-6.055,-5.4416,-4.8778,-4.3524,-3.8566,-3.3872,-2.9463,-2.5384,-2.1646,-1.8169,-1.4763,-1.1144,-0.7012,-0.2145,0.3497,0.9721,1.6113,2.2133,2.7257,3.1119,3.3623,3.4951,3.5485,3.5646,3.571,3.5669,3.5188,3.3688,3.0552,2.538]},"hip_mom":{"mean":[1.4546,1.4711,1.4853,1.4839,1.4597,1.4175,1.3728,1.343,1.3362,1.3441,1.3439,1.3092,1.2227,1.0851,0.915,0.7397,0.5838,0.4603,0.3691,0.3011,0.2457,0.1951,0.1463,0.0985,0.0509,0.0011,-0.0542,-0.1178,-0.1917,-0.2766,-0.372,-0.4758,-0.5829,-0.6848,-0.7714,-0.8352,-0.8752,-0.8995,-0.9231,-0.9613,-1.0228,-1.1056,-1.1975,-1.2821,-1.3455,-1.3811,-1.3903,-1.3787,-1.3518,-1.3121,-1.2599,-1.1958,-1.1227,-1.047,-0.9763,-0.9167,-0.8709,-0.8373,-0.8107,-0.7834,-0.7461,-0.69,-0.6082,-0.4998,-0.3713,-0.2368,-0.1135,-0.0161,0.0494,0.0873,0.1096,0.1296,0.1559,0.1899,0.2288,0.2695,0.3127,0.3619,0.4204,0.4868,0.5543,0.6149,0.6654,0.7112,0.7652,0.8406,0.9426,1.0638,1.1863,1.2902,1.363,1.4045,1.4244,1.4352,1.4447,1.4532,1.457,1.454,1.448,1.4463]},"knee_mom":{"mean":[-0.7398,-0.6365,-0.482,-0.2667,0.0151,0.3624,0.766,1.2081,1.6637,2.1035,2.498,2.8223,3.0586,3.1977,3.2386,3.1859,3.0483,2.8368,2.5643,2.246,1.8993,1.5426,1.1945,0.8709,0.584,0.3415,0.1472,0.0016,-0.0969,-0.1525,-0.1719,-0.164,-0.1395,-0.1088,-0.0796,-0.0554,-0.0357,-0.0172,0.0043,0.0311,0.0632,0.0986,0.1339,0.1669,0.1961,0.2215,0.2436,0.2627,0.2787,0.2909,0.299,0.3028,0.3024,0.2981,0.2902,0.2789,0.2645,0.2479,0.2301,0.2123,0.1952,0.1788,0.1627,0.1459,0.1279,0.1087,0.0888,0.0691,0.0504,0.0333,0.0181,0.0051,-0.0056,-0.014,-0.0204,-0.0258,-0.0313,-0.0388,-0.0497,-0.0656,-0.0878,-0.1175,-0.156,-0.2043,-0.263,-0.3316,-0.4081,-0.4889,-0.5694,-0.6447,-0.7104,-0.7638,-0.804,-0.8319,-0.8496,-0.8592,-0.8618,-0.8565,-0.8394,-0.8037]},"ankle_mom":{"mean":[0.041,-0.0311,-0.1218,-0.1972,-0.2186,-0.1573,-0.0067,0.216,0.4789,0.7485,1.0024,1.2336,1.4464,1.648,1.8402,2.0168,2.1663,2.2774,2.3427,2.3598,2.3286,2.2491,2.1212,1.9463,1.7308,1.487,1.2315,0.9817,0.7515,0.5494,0.3792,0.2419,0.1372,0.0641,0.0195,-0.0028,-0.0109,-0.0134,-0.016,-0.0209,-0.027,-0.0322,-0.0353,-0.0374,-0.0404,-0.0454,-0.0521,-0.0586,-0.063,-0.0648,-0.065,-0.0656,-0.0674,-0.0698,-0.071,-0.0698,-0.0663,-0.062,-0.0589,-0.0577,-0.0572,-0.0557,-0.0517,-0.0458,-0.0397,-0.0356,-0.0343,-0.0347,-0.0347,-0.0329,-0.0296,-0.0268,-0.026,-0.0276,-0.03,-0.0311,-0.0298,-0.0271,-0.0253,-0.0262,-0.0294,-0.0323,-0.0318,-0.0267,-0.019,-0.0123,-0.0093,-0.0094,-0.0088,-0.0034,0.0082,0.023,0.0352,0.0407,0.0407,0.0415,0.0497,0.066,0.0809,0.0776]},"grf_v":{"mean":[0.7652,2.1098,4.1961,6.8935,9.9232,12.9405,15.6391,17.8484,19.5755,20.9575,22.1481,23.2176,24.1333,24.8168,25.2099,25.293,25.0611,24.5054,23.6226,22.4313,20.9669,19.261,17.3373,15.2342,13.0289,10.829,8.7373,6.8246,5.1337,3.698,2.545,1.6787,1.0661,0.6478,0.366,0.1831,0.077,0.0274,0.0105,0.0061,0.004,0.002,0.0004,0,0,0,0.0012,0.0013,0,0,0,0.0015,0.0017,0,0,0,0.0019,0.0018,0,0,0,0.0024,0.0019,0,0,0,0.0029,0.0018,0,0,0.0004,0.0036,0.0017,0,0,0.0011,0.0044,0.0014,0,0,0.0021,0.0057,0.001,0,0,0.0039,0.0077,0.0001,0,0,0.0079,0.0121,0,0,0,0.0231,0.0253,0,0,0.1085]},"grf_ap":{"mean":[-0.1883,-0.4447,-0.7866,-1.1802,-1.6,-2.0346,-2.4746,-2.8952,-3.2493,-3.4763,-3.5233,-3.3647,-3.01,-2.4958,-1.8685,-1.1705,-0.4365,0.3033,1.0203,1.6881,2.2822,2.7771,3.1449,3.3614,3.4154,3.3154,3.0845,2.7525,2.3515,1.9181,1.4928,1.1102,0.7879,0.5254,0.3166,0.1612,0.063,0.0179,0.0075,0.0079,0.0048,-0.0012,-0.0033,-0.0003,0.0027,0.0015,-0.0016,-0.0022,0.0003,0.0022,0.0008,-0.0016,-0.0016,0.0006,0.0019,0.0004,-0.0016,-0.0012,0.0008,0.0016,0.0001,-0.0016,-0.0009,0.001,0.0015,-0.0002,-0.0016,-0.0007,0.0012,0.0014,-0.0005,-0.0017,-0.0004,0.0015,0.0013,-0.0008,-0.0018,-0.0002,0.0017,0.0012,-0.0012,-0.0019,0.0002,0.0022,0.0011,-0.0018,-0.0022,0.0007,0.003,0.0009,-0.0031,-0.0029,0.0021,0.0051,0.0001,-0.0074,-0.0043,0.0112,0.0147,-0.0386]}}}}};
+const SWEEP = [{"joint":"hip","actuator":"RS03","ratio":1,"mass":0.88,"worst":{"thermal":1.8874090986214056,"torqueUse":1,"speedUse":0.43051999839594124,"saturated":0.13,"delivered":0.961655236351498},"per":{"walk":0.6247883235153702,"run25":1.1178129816612912,"run35":1.557948603937549,"run45":1.8874090986214056},"ok":false},{"joint":"hip","actuator":"AK109","ratio":1,"mass":0.94,"worst":{"thermal":1.9973121503258757,"torqueUse":1,"speedUse":0.2623481240225267,"saturated":0.21,"delivered":0.92365401333025},"per":{"walk":0.6974369888660934,"run25":1.2455103836792092,"run35":1.6901473357823307,"run45":1.9973121503258757},"ok":false},{"joint":"hip","actuator":"RS04","ratio":1,"mass":1.42,"worst":{"thermal":1.011571969322271,"torqueUse":0.6710311302310399,"speedUse":0.41975699843604275,"saturated":0,"delivered":1},"per":{"walk":0.32118294345691434,"run25":0.5665244516561534,"run35":0.790055533259493,"run45":1.011571969322271},"ok":false},{"joint":"knee","actuator":"RS03","ratio":1,"mass":0.88,"worst":{"thermal":1.4158146857851412,"torqueUse":1,"speedUse":0.6640004691094418,"saturated":0.13,"delivered":0.782663476423584},"per":{"walk":0.3867073099153418,"run25":1.3340024165089797,"run35":1.3603767539546228,"run45":1.4158146857851412},"ok":false},{"joint":"knee","actuator":"AK109","ratio":1,"mass":0.94,"worst":{"thermal":1.466473633752325,"torqueUse":1,"speedUse":0.4046252858635661,"saturated":0.15,"delivered":0.7395557100403659},"per":{"walk":0.43305795178174894,"run25":1.3601217131149128,"run35":1.3997278568946905,"run45":1.466473633752325},"ok":false},{"joint":"knee","actuator":"RS04","ratio":1,"mass":1.42,"worst":{"thermal":1.04733374445346,"torqueUse":1,"speedUse":0.6474004573817058,"saturated":0.03,"delivered":0.9931893280437961},"per":{"walk":0.2003218024029488,"run25":0.9340483005534782,"run35":1.003706654510046,"run45":1.04733374445346},"ok":false},{"joint":"ankle","actuator":"RS03","ratio":2,"mass":0.88,"worst":{"thermal":0.6980748927961742,"torqueUse":0.6899977136684126,"speedUse":1.1293413964055132,"saturated":0.05,"delivered":0.9221699007243427},"per":{"walk":0.5070331624690768,"run25":0.6738206933844223,"run35":0.6980748927961742,"run45":0.6913539524061683},"ok":false},{"joint":"ankle","actuator":"RS03","ratio":3,"mass":0.88,"worst":{"thermal":0.47573027068870066,"torqueUse":0.4973119411439588,"speedUse":1.6940120946082697,"saturated":0.08,"delivered":0.8460706852408669},"per":{"walk":0.34392707340300077,"run25":0.4648797262212995,"run35":0.47225235264248216,"run45":0.47573027068870066},"ok":false},{"joint":"ankle","actuator":"AK109","ratio":2,"mass":0.94,"worst":{"thermal":0.7972989944240886,"torqueUse":0.796375101684246,"speedUse":0.6881924134346096,"saturated":0,"delivered":1},"per":{"walk":0.5669632900975504,"run25":0.75692105217245,"run35":0.7869922923813001,"run45":0.7972989944240886},"ok":true},{"joint":"ankle","actuator":"AK109","ratio":2.5,"mass":0.94,"worst":{"thermal":0.66554625370637,"torqueUse":0.6656413926897001,"speedUse":0.860240516793262,"saturated":0.02,"delivered":0.996670620793257},"per":{"walk":0.45787288059569664,"run25":0.6187845680639055,"run35":0.6501768922506046,"run45":0.66554625370637},"ok":true},{"joint":"ankle","actuator":"AK109","ratio":3,"mass":0.94,"worst":{"thermal":0.5684458310131854,"torqueUse":0.583404041765839,"speedUse":1.0322886201519144,"saturated":0.07,"delivered":0.910440176616745},"per":{"walk":0.38655947880338376,"run25":0.5297186066721715,"run35":0.564017368873658,"run45":0.5684458310131854},"ok":false},{"joint":"ankle","actuator":"AK109","ratio":4,"mass":0.94,"worst":{"thermal":0.46566014246300674,"torqueUse":0.495205203613411,"speedUse":1.3763848268692191,"saturated":0.07,"delivered":0.8366921124887198},"per":{"walk":0.30138091204869905,"run25":0.42596223557242896,"run35":0.45309511001967884,"run45":0.46566014246300674},"ok":false},{"joint":"ankle","actuator":"RS04","ratio":1.5,"mass":1.42,"worst":{"thermal":0.4833309290827127,"torqueUse":0.473235832009507,"speedUse":0.8258308961215316,"saturated":0,"delivered":1},"per":{"walk":0.3488093314387146,"run25":0.46314659443664113,"run35":0.4794606473009875,"run45":0.4833309290827127},"ok":true},{"joint":"ankle","actuator":"RS04","ratio":2,"mass":1.42,"worst":{"thermal":0.37264482797865495,"torqueUse":0.3722242404998915,"speedUse":1.1011078614953753,"saturated":0.05,"delivered":0.9255075127297444},"per":{"walk":0.2640814911107638,"run25":0.35536388168227373,"run35":0.3719382372445163,"run45":0.37264482797865495},"ok":false}];
+(function () {
+  'use strict';
+  const S = ExoSim, N = S.N, DEG = Math.PI / 180;
+  const $ = (id) => document.getElementById(id);
+  const el = (tag, attrs, kids) => {
+    const e = document.createElement(tag);
+    for (const k in (attrs || {})) { if (k === 'text') e.textContent = attrs[k]; else if (k === 'cls') e.className = attrs[k]; else e.setAttribute(k, attrs[k]); }
+    for (const c of [].concat(kids || [])) e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+    return e;
+  };
+  const svg = (tag, attrs) => { const e = document.createElementNS('http://www.w3.org/2000/svg', tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
+  const fmt = (v, d) => v.toLocaleString('es', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
+  const pct = (v) => (v > 0 ? '+' : v < 0 ? '−' : '') + fmt(Math.abs(v) * 100) + ' %';
+
+  const GAITS = [['walk', 'Marcha 1,2 m/s'], ['run25', 'Trote 2,5 m/s'], ['run35', 'Carrera 3,5 m/s'], ['run45', 'Carrera 4,5 m/s']];
+  const CONFIGS = [['full', 'Completo'], ['run', 'Cadera + tobillo'], ['hip', 'Cadera'], ['ankle', 'Tobillo']];
+  const JOINTS = [['hip', 'Cadera', '+ extensión'], ['knee', 'Rodilla', '+ extensión'], ['ankle', 'Tobillo', '+ flexión plantar']];
+  const state = { gait: 'walk', config: 'full', assist: 0.3, mass: 75, payload: 0, rate: 1, playing: true, time: 0, hover: null };
+  let R = null; // current simulation result
+  try { if (matchMedia('(prefers-reduced-motion: reduce)').matches) state.playing = false; } catch (e) {}
+
+  // ------------------------------------------------------------ controls
+  function segmented(host, options, key, after) {
+    for (const [val, label] of options) {
+      const b = el('button', { type: 'button', text: label, 'aria-pressed': String(state[key] === val), id: host.id + '-' + val });
+      b.addEventListener('click', () => { state[key] = val; for (const x of host.children) x.setAttribute('aria-pressed', String(x === b)); after(); });
+      host.appendChild(b);
+    }
+  }
+  segmented($('gait'), GAITS, 'gait', recompute);
+  segmented($('config'), CONFIGS, 'config', recompute);
+  segmented($('rate'), [[1, '1×'], [0.5, '½×'], [0.2, '⅕×']], 'rate', () => {});
+  const sliders = [['assist', (v) => fmt(v) + ' %', (v) => { state.assist = v / 100; }], ['mass', (v) => fmt(v) + ' kg', (v) => { state.mass = v; }], ['payload', (v) => fmt(v) + ' kg', (v) => { state.payload = v; }]];
+  for (const [id, show, set] of sliders) {
+    const inp = $(id), out = $(id + 'Out');
+    const apply = () => { const v = parseFloat(inp.value); out.textContent = show(v); set(v); };
+    inp.addEventListener('input', () => { apply(); recompute(); });
+    apply();
+  }
+  $('play').addEventListener('click', () => { state.playing = !state.playing; $('play').textContent = state.playing ? 'Pausar' : 'Reproducir'; });
+  $('play').textContent = state.playing ? 'Pausar' : 'Reproducir';
+
+  // ------------------------------------------------------------ theme tokens for canvas
+  let C = {};
+  function readTokens() {
+    const cs = getComputedStyle(document.documentElement);
+    for (const k of ['surface', 'ink', 'ink-2', 'muted', 'line', 'axis', 'body', 'body-far', 'exo', 'exo-far', 's2', 'stance']) C[k] = cs.getPropertyValue('--' + k).trim();
+  }
+  readTokens();
+  try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', readTokens); } catch (e) {}
+  new MutationObserver(readTokens).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  // ------------------------------------------------------------ simulation
+  function run(gait, config, extra) {
+    return S.simulate(NORM, gait, Object.assign({ config, assist: state.assist, bodyMass: state.mass, payload: state.payload, height: 1.75 }, extra || {}));
+  }
+  function recompute() {
+    R = run(state.gait, state.config);
+    // centre-of-pressure progress along the foot during right stance
+    const fv = NORM.gaits[state.gait].curves.grf_v.mean; let a = 0, b = 0;
+    for (let i = 0; i < N; i++) if (fv[i] > 0.5) { b = i; }
+    for (let i = 0; i < N; i++) if (fv[i] > 0.5) { a = i; break; }
+    R.cop = fv.map((_, i) => Math.max(0, Math.min(1, (i - a) / Math.max(1, b - a))));
+    renderTiles(); renderStatus(); renderCharts(); renderDataTable();
+  }
+
+  function level(v, lim, bad) { return v > bad ? ['bad', 'Excede'] : v > lim ? ['lim', 'Al límite'] : ['ok', 'Holgado']; }
+  const pill = (cls, label) => el('span', { cls: 'pill ' + cls }, [el('i'), label]);
+
+  function renderTiles() {
+    const host = $('tiles'); host.textContent = '';
+    const m = R.metabolic, hrs = R.endurance.hours;
+    const dur = hrs >= 1 ? fmt(hrs, 1) + ' h' : fmt(hrs * 60) + ' min';
+    const tiles = [
+      ['Energía que gastas', pct(m.netChangePct), 'Estimado frente a ir sin equipo. Apagado: ' + pct(m.offPct)],
+      ['Autonomía', dur, fmt(R.endurance.km, 1) + ' km con ' + fmt(R.endurance.usableWh) + ' Wh útiles'],
+      ['Consumo de batería', fmt(R.power.battery) + ' W', 'Potencia mecánica entregada: ' + fmt(R.power.exoPositive) + ' W'],
+      ['Masa del equipo', fmt(R.mass.total, 1) + ' kg', 'En cada pierna: ' + fmt((R.mass.byLoc.thigh + R.mass.byLoc.shank + R.mass.byLoc.foot) / 2, 1) + ' kg'],
+    ];
+    for (const [label, value, sub] of tiles) host.appendChild(el('div', { cls: 'tile' }, [el('span', { text: label }), el('b', { text: value }), el('small', { text: sub })]));
+  }
+
+  function renderStatus() {
+    const t = $('status'); t.textContent = '';
+    t.appendChild(el('thead', {}, el('tr', {}, ['Motor', 'Par pico', 'Par', 'Velocidad', 'Térmica'].map((h, i) => el('th', { cls: i > 0 ? 'n' : '', text: h })))));
+    const body = el('tbody');
+    for (const [j, name] of JOINTS) {
+      const J = R.joints[j];
+      if (!J.active) { body.appendChild(el('tr', {}, [el('td', {}, [name, el('small', { text: 'sin módulo' })]), el('td', { cls: 'n', text: '—' }), el('td', { cls: 'n', text: '—' }), el('td', { cls: 'n', text: '—' }), el('td', { cls: 'n', text: '—' })])); continue; }
+      const worst = Math.max(J.thermal, J.speedUse, J.delivered < 0.97 ? 1.2 : 0);
+      const [cls, label] = level(worst, 0.85, 1.0);
+      body.appendChild(el('tr', {}, [
+        el('td', {}, [name + ' ', pill(cls, label), el('small', { text: J.actuator + (J.ratio !== 1 ? ', cuerda ' + fmt(J.ratio, 1) + ' : 1' : '') })]),
+        el('td', { cls: 'n', text: fmt(J.peakTorque) + ' N·m' }), el('td', { cls: 'n', text: fmt(J.torqueUse * 100) + ' %' }),
+        el('td', { cls: 'n', text: fmt(J.speedUse * 100) + ' %' }), el('td', { cls: 'n', text: fmt(J.thermal * 100) + ' %' }),
+      ]));
+    }
+    t.appendChild(body);
+  }
+
+  // ------------------------------------------------------------ charts
+  const charts = {};
+  for (const [j, name, sign] of JOINTS) {
+    const s = svg('svg', { role: 'img', 'aria-label': 'Momento en ' + name.toLowerCase() + ' a lo largo de un paso' });
+    const tip = el('div', { cls: 'tip', hidden: '' });
+    const box = el('div', { cls: 'chart' }, [el('h3', { text: name }), el('p', { text: 'N·m, ' + sign }), s, tip]);
+    $('charts').appendChild(box);
+    charts[j] = { svg: s, tip, box };
+    const move = (ev) => {
+      const c = charts[j]; if (!c.geo) return;
+      const r = s.getBoundingClientRect(), x = ev.clientX - r.left;
+      const i = Math.max(0, Math.min(N - 1, Math.round((x - c.geo.l) / (c.geo.w) * N)));
+      state.hover = i; showTip(j, i, x);
+    };
+    s.addEventListener('pointermove', move); s.addEventListener('pointerdown', move);
+    s.addEventListener('pointerleave', () => { state.hover = null; for (const k in charts) charts[k].tip.hidden = true; });
+  }
+  function showTip(j, i, x) {
+    for (const k in charts) charts[k].tip.hidden = k !== j;
+    const c = charts[j], J = R.joints[j], tip = c.tip; tip.textContent = '';
+    tip.appendChild(el('div', { cls: 'hd', text: i + ' % del paso' }));
+    const row = (color, dash, label, v) => { const k = el('i'); k.style.borderColor = color; if (dash) k.style.borderTopStyle = 'dashed'; tip.appendChild(el('div', {}, [el('span', {}, [k, label]), el('b', { text: fmt(v) + ' N·m' })])); };
+    row('var(--muted)', true, 'Sin exo', J.base[i]); row('var(--s1)', false, 'Persona', J.human[i]); if (J.active) row('var(--s2)', false, 'Exo', J.exo[i]);
+    const w = c.box.clientWidth; tip.style.top = '54px';
+    if (x > w / 2) { tip.style.left = ''; tip.style.right = (w - x + 4) + 'px'; } else { tip.style.right = ''; tip.style.left = (x + 26) + 'px'; }
+  }
+  function niceStep(span) { const raw = span / 4, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; }
+  function renderCharts() {
+    const fv = NORM.gaits[state.gait].curves.grf_v.mean;
+    for (const [j] of JOINTS) {
+      const c = charts[j], J = R.joints[j], s = c.svg; s.textContent = '';
+      const W = s.clientWidth || 320, H = 190, l = 38, r = 8, t = 8, b = 22, w = W - l - r, h = H - t - b;
+      s.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+      const all = J.base.concat(J.human, J.exo), lo0 = Math.min(0, ...all), hi0 = Math.max(0, ...all);
+      const step = niceStep(hi0 - lo0 || 1), lo = Math.floor(lo0 / step) * step, hi = Math.ceil(hi0 / step) * step;
+      const X = (i) => l + (i / N) * w, Y = (v) => t + (1 - (v - lo) / (hi - lo)) * h;
+      c.geo = { l, w, t, h };
+      // stance band
+      let a = -1;
+      for (let i = 0; i <= N; i++) {
+        const on = i < N && fv[i] > 0.5;
+        if (on && a < 0) a = i;
+        if (!on && a >= 0) { s.appendChild(svg('rect', { x: X(a), y: t, width: X(i) - X(a), height: h, fill: 'var(--stance)' })); a = -1; }
+      }
+      for (let v = lo; v <= hi + 1e-9; v += step) {
+        s.appendChild(svg('line', { x1: l, x2: l + w, y1: Y(v), y2: Y(v), stroke: Math.abs(v) < 1e-9 ? 'var(--axis)' : 'var(--line)', 'stroke-width': 1 }));
+        const tx = svg('text', { x: l - 6, y: Y(v) + 4, 'text-anchor': 'end', fill: 'var(--muted)', 'font-size': 11, 'font-family': 'var(--mono)' }); tx.textContent = fmt(v); s.appendChild(tx);
+      }
+      for (const p of [0, 50, 100]) { const tx = svg('text', { x: X(p), y: H - 6, 'text-anchor': p === 0 ? 'start' : p === 100 ? 'end' : 'middle', fill: 'var(--muted)', 'font-size': 11, 'font-family': 'var(--mono)' }); tx.textContent = p + ' %'; s.appendChild(tx); }
+      const path = (arr) => arr.map((v, i) => (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(v).toFixed(1)).join('') + 'L' + X(N).toFixed(1) + ' ' + Y(arr[0]).toFixed(1);
+      s.appendChild(svg('path', { d: path(J.base), fill: 'none', stroke: 'var(--muted)', 'stroke-width': 1.5, 'stroke-dasharray': '4 3' }));
+      if (J.active) s.appendChild(svg('path', { d: path(J.exo), fill: 'none', stroke: 'var(--s2)', 'stroke-width': 2, 'stroke-linejoin': 'round' }));
+      s.appendChild(svg('path', { d: path(J.human), fill: 'none', stroke: 'var(--s1)', 'stroke-width': 2, 'stroke-linejoin': 'round' }));
+      c.cursor = svg('line', { y1: t, y2: t + h, x1: l, x2: l, stroke: 'var(--ink)', 'stroke-width': 1 }); s.appendChild(c.cursor);
+    }
+  }
+  function renderDataTable() {
+    const t = $('dataTable'); t.textContent = '';
+    const head = ['% del paso'];
+    for (const [, name] of JOINTS) head.push(name + ' sin exo', name + ' persona', name + ' exo');
+    t.appendChild(el('thead', {}, el('tr', {}, head.map((h, i) => el('th', { cls: i ? 'n' : '', text: h })))));
+    const body = el('tbody');
+    for (let i = 0; i < N; i += 5) {
+      const cells = [el('td', { cls: 'n', text: String(i) })];
+      for (const [j] of JOINTS) { const J = R.joints[j]; cells.push(el('td', { cls: 'n', text: fmt(J.base[i]) }), el('td', { cls: 'n', text: fmt(J.human[i]) }), el('td', { cls: 'n', text: J.active ? fmt(J.exo[i]) : '—' })); }
+      body.appendChild(el('tr', {}, cells));
+    }
+    t.appendChild(body);
+  }
+  let rz; new ResizeObserver(() => { clearTimeout(rz); rz = setTimeout(() => { if (R) renderCharts(); }, 80); }).observe($('charts'));
+
+  // ------------------------------------------------------------ figure
+  const cv = $('stage'), ctx = cv.getContext('2d');
+  function sizeCanvas() { const d = Math.min(2, window.devicePixelRatio || 1), w = cv.clientWidth, h = cv.clientHeight; if (cv.width !== Math.round(w * d) || cv.height !== Math.round(h * d)) { cv.width = Math.round(w * d); cv.height = Math.round(h * d); } ctx.setTransform(d, 0, 0, d, 0, 0); return [w, h]; }
+  const lerp = (a, b, u) => a + (b - a) * u, lerp2 = (a, b, u) => [lerp(a[0], b[0], u), lerp(a[1], b[1], u)];
+  function legAt(side, i0, i1, u) {
+    const A = R.kin.frames[i0][side], B = R.kin.frames[i1][side], o = {};
+    for (const k of ['knee', 'ankle', 'heel', 'ball']) o[k] = lerp2(A[k], B[k], u);
+    for (const k of ['tt', 'ts', 'tf']) o[k] = lerp(A[k], B[k], u);
+    return o;
+  }
+  function draw(phase) {
+    const [W, H] = sizeCanvas();
+    ctx.clearRect(0, 0, W, H);
+    const fpos = phase * N, i0 = Math.floor(fpos) % N, i1 = (i0 + 1) % N, u = fpos - Math.floor(fpos);
+    const F0 = R.kin.frames[i0], F1 = R.kin.frames[i1], seg = R.kin.seg;
+    const gy = H - 44, sc = (gy - 26) / 1.95, cx = W * 0.5;
+    const px = lerp(F0.px, F1.px, u), py = lerp(F0.py, F1.py, u);
+    const P = (p) => [cx + (px + p[0]) * sc, gy - (py + p[1]) * sc];
+    const line = (pts, color, width) => { ctx.strokeStyle = color; ctx.lineWidth = width; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath(); pts.forEach((p, k) => { const q = P(p); if (k) ctx.lineTo(q[0], q[1]); else ctx.moveTo(q[0], q[1]); }); ctx.stroke(); };
+    const disc = (p, r, fill, stroke) => { const q = P(p); ctx.beginPath(); ctx.arc(q[0], q[1], r * sc, 0, 7); ctx.fillStyle = fill; ctx.fill(); if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 2; ctx.stroke(); } };
+    const along = (a, b, f) => lerp2(a, b, f);
+    const perp = (a, b, d) => { const dx = b[0] - a[0], dy = b[1] - a[1], n = Math.hypot(dx, dy) || 1; return [-dy / n * d, dx / n * d]; };
+
+    // belt
+    ctx.strokeStyle = C.axis; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(0, gy + 0.5); ctx.lineTo(W, gy + 0.5); ctx.stroke();
+    const travel = (state.time * R.kin.belt) % 0.5;
+    ctx.strokeStyle = C.axis; ctx.lineWidth = 1;
+    for (let x = -travel; x * sc < W; x += 0.5) { const sx = (x - (W / 2 / sc) % 0.5 + 0.5) * sc; ctx.beginPath(); ctx.moveTo(sx, gy + 4); ctx.lineTo(sx - 7, gy + 13); ctx.stroke(); }
+
+    const lean = (state.gait === 'walk' ? 4 : 9) * DEG, run = state.gait !== 'walk';
+    const up = [Math.sin(lean), Math.cos(lean)], fwd = [Math.cos(lean), -Math.sin(lean)];
+    const sh = [up[0] * seg.trunk, up[1] * seg.trunk];
+    const head = [sh[0] + up[0] * 0.2 + fwd[0] * 0.03, sh[1] + up[1] * 0.2 + fwd[1] * 0.03];
+    const mods = R.mass.modules;
+    const use = (j, i) => { const J = R.joints[j]; return J.active ? Math.min(1, Math.abs(J.exo[i]) / (S.ACTUATORS[S.DESIGN.joints[j].actuator].tauPeak * J.ratio)) : 0; };
+
+    function arm(side, far) {
+      const leg = legAt(side, i0, i1, u), swing = -(run ? 0.75 : 0.6) * (leg.tt - 0.12), elbow = run ? 1.45 : 0.3 + Math.max(0, swing) * 0.5;
+      const a = swing + lean, e = [sh[0] + Math.sin(a) * 0.3, sh[1] - Math.cos(a) * 0.3], hnd = [e[0] + Math.sin(a + elbow) * 0.3, e[1] - Math.cos(a + elbow) * 0.3];
+      line([sh, e, hnd], far ? C['body-far'] : C.body, 0.075 * sc);
+    }
+    function leg(side, far) {
+      const L = legAt(side, i0, i1, u), body = far ? C['body-far'] : C.body, exo = far ? C['exo-far'] : C.exo;
+      const idx = side === 'R' ? i0 : (i0 + N / 2) % N;
+      const ballH = py + L.ball[1], k = Math.max(0, Math.min(1, ballH / 0.04)), ta = L.tf * k;
+      const toe = [L.ball[0] + seg.toeLen * Math.cos(ta), L.ball[1] + seg.toeLen * Math.sin(ta)];
+      line([[0, 0], L.knee], body, 0.135 * sc); line([L.knee, L.ankle], body, 0.10 * sc);
+      line([L.heel, L.ball, toe], body, 0.062 * sc); line([L.ankle, along(L.heel, L.ball, 0.25)], body, 0.07 * sc);
+      // exoskeleton on this leg
+      if (mods.includes('hip')) {
+        const end = mods.includes('knee') ? L.knee : along([0, 0], L.knee, 0.62);
+        line([[0, 0], end], exo, 5); const c = along([0, 0], L.knee, 0.5), n = perp([0, 0], L.knee, 0.085);
+        line([[c[0] - n[0], c[1] - n[1]], [c[0] + n[0], c[1] + n[1]]], exo, 9);
+      }
+      if (mods.includes('knee')) {
+        line([L.knee, along(L.knee, L.ankle, 0.5)], exo, 5); const c = along(L.knee, L.ankle, 0.4), n = perp(L.knee, L.ankle, 0.065);
+        line([[c[0] - n[0], c[1] - n[1]], [c[0] + n[0], c[1] + n[1]]], exo, 9);
+      }
+      if (mods.includes('ankle')) {
+        const n = perp(L.knee, L.ankle, -0.085), m = along(L.knee, L.ankle, 0.25), mp = [m[0] + n[0], m[1] + n[1]];
+        const lo = along(L.knee, L.ankle, 0.62), fx = Math.cos(L.tf), fy = Math.sin(L.tf), lever = [L.heel[0] - 0.075 * fx + 0.03 * fy, L.heel[1] - 0.075 * fy - 0.03 * fx + 0.045];
+        line([along(L.knee, L.ankle, 0.12), lo], exo, 5); line([m, mp], exo, 5);
+        line([lever, L.heel, L.ball], exo, 3.5);
+        ctx.setLineDash([3, 3]); line([mp, lever], exo, 1.6); ctx.setLineDash([]);
+        disc(mp, 0.045, C.surface, exo); if (!far) disc(mp, 0.045 * Math.sqrt(use('ankle', idx)), C.s2);
+      }
+      if (mods.includes('knee')) { disc(L.knee, 0.06, C.surface, exo); if (!far) disc(L.knee, 0.06 * Math.sqrt(use('knee', idx)), C.s2); }
+      return L;
+    }
+    // far side first
+    arm('R', true); leg('L', true);
+    // trunk, head, pack
+    line([[0, 0], sh], C.body, 0.23 * sc); line([sh, head], C.body, 0.09 * sc); disc(head, 0.1, C.body);
+    const back = (f, d) => [up[0] * f - fwd[0] * d, up[1] * f - fwd[1] * d];
+    line([back(0.07, 0.175), back(0.30, 0.175)], C.exo, 0.08 * sc);
+    line([back(-0.01, 0.13), [up[0] * -0.01 + fwd[0] * 0.13, up[1] * -0.01 + fwd[1] * 0.13]], C.exo, 0.07 * sc);
+    const Lr = leg('R', false);
+    if (mods.includes('hip')) { disc([0, 0], 0.062, C.surface, C.exo); disc([0, 0], 0.062 * Math.sqrt(use('hip', i0)), C.s2); }
+    arm('L', false);
+
+    // ground reaction forces
+    const cur = NORM.gaits[state.gait].curves;
+    for (const side of ['L', 'R']) {
+      const idx = side === 'R' ? i0 : (i0 + N / 2) % N, fv = cur.grf_v.mean[idx], fa = cur.grf_ap.mean[idx];
+      if (fv < 0.8) continue;
+      const L = side === 'R' ? Lr : legAt('L', i0, i1, u), c = along(L.heel, L.ball, R.cop[idx]), a = P([c[0], -py]), k = 0.042 * sc;
+      const bx = a[0] + fa * k, by = a[1] - fv * k, ang = Math.atan2(by - a[1], bx - a[0]);
+      ctx.strokeStyle = C.ink; ctx.fillStyle = C.ink; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(bx, by); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(bx - 8 * Math.cos(ang - 0.4), by - 8 * Math.sin(ang - 0.4)); ctx.lineTo(bx - 8 * Math.cos(ang + 0.4), by - 8 * Math.sin(ang + 0.4)); ctx.fill();
+    }
+    // labels
+    ctx.font = '500 11px ' + getComputedStyle(document.body).getPropertyValue('--mono'); ctx.fillStyle = C.muted; ctx.textAlign = 'left';
+    ctx.fillText('Naranja: par que aplica cada motor', 12, 20);
+    ctx.fillText('Flecha: fuerza del suelo', 12, 36);
+    const both = F0.wR > 0.5 && F0.wL > 0.5, none = F0.wR <= 0.5 && F0.wL <= 0.5;
+    $('readout').textContent = (both ? 'Doble apoyo' : none ? 'Vuelo' : F0.wR > 0.5 ? 'Apoyo derecho' : 'Apoyo izquierdo') + ' · ' + String(i0).padStart(2, '0') + ' % · paso de ' + fmt(R.strideTime, 2) + ' s';
+    for (const j in charts) { const c = charts[j]; if (c.cursor && c.geo) { const x = c.geo.l + phase * c.geo.w; c.cursor.setAttribute('x1', x); c.cursor.setAttribute('x2', x); } }
+  }
+
+  let last = null;
+  function tick(ts) {
+    if (last === null) last = ts;
+    const dt = Math.min(0.05, (ts - last) / 1000); last = ts;
+    if (state.playing && state.hover === null) state.time += dt * state.rate;
+    const phase = state.hover !== null ? state.hover / N : (state.time / R.strideTime) % 1;
+    draw(phase);
+    requestAnimationFrame(tick);
+  }
+
+  // ------------------------------------------------------------ static tables
+  function matrix() {
+    const t = $('matrix');
+    t.appendChild(el('thead', {}, el('tr', {}, [el('th', { text: 'Configuración' }), el('th', { cls: 'n', text: 'Masa' })].concat(GAITS.map(([, l]) => el('th', { cls: 'n', text: l }))))));
+    const body = el('tbody');
+    for (const [cfg] of CONFIGS) {
+      const cells = [el('td', { text: S.DESIGN.configs[cfg].label }), el('td', { cls: 'n', text: fmt(S.massModel(S.DESIGN, cfg).total, 1) + ' kg' })];
+      for (const [g] of GAITS) {
+        const r = S.simulate(NORM, g, { config: cfg, assist: 0.3, bodyMass: 75 });
+        let th = 0; for (const j of ['hip', 'knee', 'ankle']) if (r.joints[j].active) th = Math.max(th, r.joints[j].thermal);
+        const hrs = r.endurance.hours, dur = hrs >= 1 ? fmt(hrs, 1) + ' h' : fmt(hrs * 60) + ' min';
+        const sub = el('small', {}, [dur + ' · ']); sub.appendChild(pill(th > 1 ? 'bad' : th > 0.85 ? 'lim' : 'ok', 'térmico ' + fmt(th * 100) + ' %'));
+        cells.push(el('td', { cls: 'n' }, [pct(r.metabolic.netChangePct), sub]));
+      }
+      body.appendChild(el('tr', {}, cells));
+    }
+    t.appendChild(body);
+  }
+  function sweepTable() {
+    const t = $('sweep'), names = { hip: 'Cadera', knee: 'Rodilla', ankle: 'Tobillo' }, D = S.DESIGN.joints;
+    t.appendChild(el('thead', {}, el('tr', {}, ['Eje', 'Motor', 'Reducción extra', 'Masa', 'Térmico marcha', 'Térmico peor caso', 'Velocidad', 'Par entregado', 'Resultado'].map((h, i) => el('th', { cls: i > 1 && i < 8 ? 'n' : '', text: h })))));
+    const body = el('tbody');
+    for (const r of SWEEP) {
+      const pick = D[r.joint].actuator === r.actuator && D[r.joint].ratio === r.ratio;
+      body.appendChild(el('tr', pick ? { cls: 'pick' } : {}, [
+        el('td', { text: names[r.joint] }), el('td', { text: S.ACTUATORS[r.actuator].name }), el('td', { cls: 'n', text: r.ratio === 1 ? '—' : fmt(r.ratio, 1) + ' : 1' }),
+        el('td', { cls: 'n', text: fmt(r.mass, 2) + ' kg' }), el('td', { cls: 'n', text: fmt(r.per.walk * 100) + ' %' }), el('td', { cls: 'n', text: fmt(r.worst.thermal * 100) + ' %' }),
+        el('td', { cls: 'n', text: fmt(r.worst.speedUse * 100) + ' %' }), el('td', { cls: 'n', text: fmt(r.worst.delivered * 100) + ' %' }),
+        el('td', {}, pill(r.ok ? 'ok' : r.worst.thermal <= 1.1 && r.worst.speedUse <= 1 && r.worst.delivered >= 0.97 ? 'lim' : 'bad', r.ok ? 'Pasa' : r.worst.thermal <= 1.1 && r.worst.speedUse <= 1 && r.worst.delivered >= 0.97 ? 'Pasa hasta 3,5 m/s' : 'No pasa')),
+      ]));
+    }
+    t.appendChild(body);
+  }
+  function massTable() {
+    const t = $('massTable'), m = S.massModel(S.DESIGN, 'full'), mod = { core: 'Base', hip: 'Cadera', knee: 'Rodilla', ankle: 'Tobillo' }, loc = { waist: 'Cintura', thigh: 'Muslo', shank: 'Tibia', foot: 'Pie' };
+    t.appendChild(el('thead', {}, el('tr', {}, ['Módulo', 'Pieza', 'Dónde va', 'Cant.', 'Unidad', 'Total'].map((h, i) => el('th', { cls: i > 2 ? 'n' : '', text: h })))));
+    const body = el('tbody'), order = ['core', 'hip', 'knee', 'ankle'];
+    for (const o of order) for (const it of m.items.filter((x) => x.module === o)) body.appendChild(el('tr', {}, [el('td', { text: mod[it.module] }), el('td', { text: it.name }), el('td', { text: loc[it.loc] }), el('td', { cls: 'n', text: String(it.qty) }), el('td', { cls: 'n', text: fmt(it.mass, 2) + ' kg' }), el('td', { cls: 'n', text: fmt(it.mass * it.qty, 2) + ' kg' })]));
+    t.appendChild(body);
+    t.appendChild(el('tfoot', {}, el('tr', {}, [el('td', { text: 'Equipo completo' }), el('td'), el('td', { text: 'Cintura ' + fmt(m.byLoc.waist, 1) + ' kg · piernas ' + fmt(m.total - m.byLoc.waist, 1) + ' kg' }), el('td'), el('td'), el('td', { cls: 'n', text: fmt(m.total, 2) + ' kg' })])));
+  }
+  function checks() {
+    const host = $('checks'), items = [];
+    const w = NORM.gaits.walk, kw = S.kinematics(w, w.height);
+    items.push('Marcha: la velocidad que sale de reconstruir el movimiento es ' + fmt(kw.belt, 2) + ' m/s frente a ' + fmt(w.speed, 2) + ' m/s medidos.');
+    const parts = [];
+    for (const g of ['run25', 'run35', 'run45']) { const d = NORM.gaits[g], k = S.kinematics(d, d.height); parts.push(fmt(k.belt, 2) + ' de ' + fmt(d.speed, 1)); }
+    items.push('Carrera: la reconstrucción se queda corta (' + parts.join(', ') + ' m/s). El modelo es solo lateral y no incluye la rotación de la pelvis, que alarga la zancada. No afecta al dimensionado de motores, que usa ángulos y momentos medidos.');
+    const k35 = S.kinematics(NORM.gaits.run35, NORM.gaits.run35.height);
+    items.push('La inclinación de pelvis en carrera no está en los datos. Se calibró exigiendo un vuelo balístico y resultó ' + fmt(k35.tilt[0] / DEG, 1) + '°, dentro de lo normal en corredores.');
+    items.push('La fuerza vertical media del suelo durante un paso equivale al peso corporal con menos de 8 % de error en las cuatro velocidades.');
+    items.push('Momentos pico al caminar: tobillo ' + fmt(Math.max(...w.curves.ankle_mom.mean), 2) + ' N·m/kg, dentro del rango publicado.');
+    items.push('El simulador tiene 10 pruebas automáticas en el repositorio.');
+    for (const s of items) host.appendChild(el('li', { text: s }));
+  }
+
+  recompute(); matrix(); sweepTable(); massTable(); checks();
+  requestAnimationFrame(tick);
+})();
+</script>

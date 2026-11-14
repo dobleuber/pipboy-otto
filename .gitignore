@@ -12,3 +12,6 @@ __pycache__/
 # OS
 .DS_Store
 Thumbs.db
+
+# Exoskeleton raw gait data (downloaded by exo/sim/fetch_data.py)
+exo/raw/

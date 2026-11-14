@@ -1,0 +1,659 @@
+<title>Exoesqueleto Otto</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: a lab notebook. The simulator is the instrument at the top; the design record follows in one reading column, tables allowed to run wider. */
+:root {
+  --bg: #f3f5f2; --surface: #fcfcfb; --ink: #101413; --ink-2: #47504c; --muted: #7d8580;
+  --line: #dde1db; --axis: #bfc6bf; --accent: #0d6b57; --accent-soft: #d9ebe5;
+  --s1: #2a78d6; --s2: #eb6834; --good: #0ca30c; --warn: #fab219; --crit: #d03b3b;
+  --body: #5d6763; --body-far: #b3bab5; --exo: #0d6b57; --exo-far: #8fbcae; --stance: #e9ede8;
+  --display: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  --text: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0d100f; --surface: #161a18; --ink: #eef1ec; --ink-2: #bcc4be; --muted: #858d88;
+  --line: #29302c; --axis: #3b433e; --accent: #57cfa8; --accent-soft: #163229;
+  --s1: #3987e5; --s2: #d95926; --good: #0ca30c; --warn: #fab219; --crit: #e05a5a;
+  --body: #aab3ad; --body-far: #4d5651; --exo: #57cfa8; --exo-far: #2c6a57; --stance: #1d2320;
+  color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0d100f; --surface: #161a18; --ink: #eef1ec; --ink-2: #bcc4be; --muted: #858d88;
+  --line: #29302c; --axis: #3b433e; --accent: #57cfa8; --accent-soft: #163229;
+  --s1: #3987e5; --s2: #d95926; --good: #0ca30c; --warn: #fab219; --crit: #e05a5a;
+  --body: #aab3ad; --body-far: #4d5651; --exo: #57cfa8; --exo-far: #2c6a57; --stance: #1d2320;
+  color-scheme: dark }
+
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--text); }
+.wrap { max-width: 1120px; margin: 0 auto; padding-block: 28px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; text-wrap: balance; margin: 0; letter-spacing: .01em; }
+h1 { font-size: clamp(34px, 6vw, 52px); line-height: 1.02; }
+h2 { font-size: 28px; line-height: 1.1; }
+h3 { font-size: 20px; }
+p { margin: 0; }
+a { color: var(--accent); }
+.eyebrow { font: 500 12px/1 var(--mono); letter-spacing: .09em; text-transform: uppercase; color: var(--accent); }
+.lede { font-size: 17px; color: var(--ink-2); max-width: 66ch; }
+header { display: grid; gap: 12px; padding-bottom: 24px; }
+section { display: grid; gap: 16px; padding-block: 28px; border-top: 1px solid var(--line); }
+.prose { display: grid; gap: 12px; max-width: 68ch; }
+.prose ul, .prose ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.note { font-size: 13px; color: var(--ink-2); max-width: 78ch; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+/* simulator */
+.controls { display: flex; flex-wrap: wrap; gap: 14px 22px; align-items: end; }
+.field { display: grid; gap: 6px; min-width: 0; }
+.field > span, .field > label { font: 500 11px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--axis); border-radius: 8px; overflow: hidden; background: var(--surface); }
+.seg button { font: 500 13px/1 var(--text); color: var(--ink-2); background: none; border: 0; padding: 9px 12px; cursor: pointer; border-right: 1px solid var(--line); }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); }
+.seg button:focus-visible, .btn:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--s1); outline-offset: 2px; }
+.slider { display: grid; grid-template-columns: minmax(110px, 170px) 58px; gap: 8px; align-items: center; }
+.slider input { width: 100%; accent-color: var(--accent); }
+.slider output { font: 500 13px/1 var(--mono); text-align: right; }
+.btn { font: 500 13px/1 var(--text); color: var(--ink); background: var(--surface); border: 1px solid var(--axis); border-radius: 8px; padding: 9px 14px; cursor: pointer; }
+
+.bench { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 860px) { .bench { grid-template-columns: minmax(0, 1fr); } }
+.stage { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.stage canvas { display: block; width: 100%; height: 440px; }
+.stagebar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; padding: 10px 12px; border-top: 1px solid var(--line); }
+.stagebar .seg button { padding: 7px 10px; }
+.readout { font: 500 12px/1.3 var(--mono); color: var(--ink-2); }
+.side { display: grid; gap: 14px; min-width: 0; }
+.tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.tile { background: var(--surface); padding: 12px 14px; display: grid; gap: 4px; align-content: start; }
+.tile b { font: 600 30px/1 var(--display); letter-spacing: .01em; }
+.tile span { font: 500 11px/1.2 var(--mono); letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+.tile small { font-size: 12px; color: var(--ink-2); }
+.pill { display: inline-flex; align-items: center; gap: 5px; font: 500 12px/1 var(--text); white-space: nowrap; }
+.pill i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.pill.ok i { background: var(--good); } .pill.lim i { background: var(--warn); border-radius: 2px; } .pill.bad i { background: var(--crit); border-radius: 0; transform: rotate(45deg); }
+
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 500 11px/1.2 var(--mono); letter-spacing: .07em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+tr.pick td { background: var(--accent-soft); }
+tfoot td { font-weight: 600; border-bottom: 0; }
+td small { display: block; color: var(--ink-2); font-size: 12px; }
+
+.charts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 860px) { .charts { grid-template-columns: minmax(0, 1fr); } }
+.chart { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 12px 8px; display: grid; gap: 6px; min-width: 0; position: relative; }
+.chart h3 { font-size: 18px; }
+.chart p { font-size: 12px; color: var(--muted); }
+.chart svg { display: block; width: 100%; height: 190px; touch-action: none; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 7px; }
+.legend i { width: 20px; height: 0; border-top: 2px solid; display: inline-block; }
+.tip { position: absolute; z-index: 5; pointer-events: none; background: var(--surface); border: 1px solid var(--axis); border-radius: 8px; padding: 8px 10px; font-size: 12px; display: grid; gap: 3px; min-width: 150px; box-shadow: 0 4px 14px rgb(0 0 0 / .12); }
+.tip div { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+.tip i { width: 12px; border-top: 2px solid; display: inline-block; margin-right: 6px; vertical-align: middle; }
+.tip b { font: 500 12px/1 var(--mono); }
+.tip .hd { font: 500 11px/1 var(--mono); color: var(--muted); letter-spacing: .06em; }
+details summary { cursor: pointer; font-size: 13px; color: var(--ink-2); }
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 32px; }
+@media (max-width: 760px) { .two { grid-template-columns: minmax(0, 1fr); } }
+.steps { display: grid; gap: 0; counter-reset: s; max-width: 78ch; }
+.steps > div { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 4px 12px; padding: 12px 0; border-bottom: 1px solid var(--line); counter-increment: s; }
+.steps > div::before { content: counter(s); font: 600 22px/1.1 var(--display); color: var(--accent); }
+.steps b { font-weight: 600; }
+.steps p { grid-column: 2; color: var(--ink-2); font-size: 14px; }
+</style>
+
+<div class="wrap">
+<header>
+  <span class="eyebrow">Diseño conceptual v0.1 · sin tope de presupuesto</span>
+  <h1>Exoesqueleto Otto</h1>
+  <p class="lede">Un exoesqueleto modular de piernas para caminar y correr, con seis motores y módulos de cadera, rodilla y tobillo que se montan según la actividad. Abajo puedes verlo moverse sobre datos reales de marcha y carrera, y comprobar qué le exige cada paso a cada motor.</p>
+</header>
+
+<section id="simulacion">
+  <h2>Simulación de marcha y carrera</h2>
+  <div class="controls">
+    <div class="field"><span>Movimiento</span><div class="seg" id="gait"></div></div>
+    <div class="field"><span>Configuración</span><div class="seg" id="config"></div></div>
+    <div class="field"><label for="assist">Asistencia</label><div class="slider"><input id="assist" type="range" min="0" max="60" step="5" value="30"><output id="assistOut"></output></div></div>
+    <div class="field"><label for="mass">Masa corporal</label><div class="slider"><input id="mass" type="range" min="50" max="110" step="1" value="75"><output id="massOut"></output></div></div>
+    <div class="field"><label for="payload">Carga en la espalda</label><div class="slider"><input id="payload" type="range" min="0" max="30" step="1" value="0"><output id="payloadOut"></output></div></div>
+  </div>
+
+  <div class="bench">
+    <div class="stage">
+      <canvas id="stage" aria-label="Animación lateral de una persona con el exoesqueleto"></canvas>
+      <div class="stagebar">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <button class="btn" id="play" type="button">Pausar</button>
+          <div class="seg" id="rate"></div>
+        </div>
+        <div class="readout" id="readout"></div>
+      </div>
+    </div>
+    <div class="side">
+      <div class="tiles" id="tiles"></div>
+      <div class="scroll"><table id="status"></table></div>
+      <p class="note">Par, velocidad y térmica son el porcentaje usado del límite del motor. Por encima de 100 % en térmica el motor se sobrecalienta si mantienes ese ritmo.</p>
+    </div>
+  </div>
+
+  <div class="legend" aria-label="Leyenda">
+    <span><i style="border-color:var(--muted);border-top-style:dashed"></i>Persona sin exoesqueleto</span>
+    <span><i style="border-color:var(--s1)"></i>Persona con exoesqueleto</span>
+    <span><i style="border-color:var(--s2)"></i>Par del exoesqueleto</span>
+    <span><i style="border-top:8px solid var(--stance)"></i>Pie derecho apoyado</span>
+  </div>
+  <div class="charts" id="charts"></div>
+  <details><summary>Ver los datos de las gráficas en tabla</summary><div class="scroll" style="margin-top:10px"><table id="dataTable"></table></div></details>
+  <p class="note">Qué es esto: dinámica inversa sobre movimiento humano medido (24 personas caminando y hasta 39 corriendo en caminadora). El exoesqueleto se añade como masa y como fuentes de par, y cada motor se compara con su límite de par, velocidad y temperatura. Qué no es: no predice cómo se adaptaría tu cuerpo. Se asume que te mueves igual que sin el equipo, y el balance metabólico es una estimación de primer orden.</p>
+</section>
+
+<section>
+  <h2>Qué se puede lograr</h2>
+  <div class="prose">
+    <p>Con dinero ilimitado, lo que limita un exoesqueleto ya no es el precio de las piezas sino la física: cada kilo en la pierna cuesta energía, las baterías pesan y un motor fuerte es lento o pesado. Por eso el diseño es modular: te pones solo lo que la actividad paga.</p>
+    <p>La tabla resume el diseño para una persona de 75 kg con 30 % de asistencia. El porcentaje grande es el cambio estimado en tu gasto de energía frente a no llevar nada; negativo es ahorro.</p>
+  </div>
+  <div class="scroll"><table id="matrix"></table></div>
+  <div class="two">
+    <div class="prose">
+      <h3>Lo que sí</h3>
+      <ul>
+        <li>Caminar con un ahorro estimado de 11–12 % de energía. Con 20 kg en la espalda el ahorro estimado es parecido, 13 %.</li>
+        <li>Trotar y correr hasta 3,5 m/s (unos 4:45 min/km) con cadera y tobillo asistidos y todos los motores dentro de su límite térmico.</li>
+        <li>Subir escaleras, levantarte y bajar pendientes con el módulo de rodilla, que aporta hasta 120 N·m por pierna.</li>
+        <li>Ajustar la asistencia a tu cuerpo con sensores, que es donde los laboratorios obtienen sus mejores resultados.</li>
+      </ul>
+    </div>
+    <div class="prose">
+      <h3>Lo que no</h3>
+      <ul>
+        <li>Correr con el equipo completo. A 3,5 m/s los motores de cadera y rodilla ya están en su límite térmico, en buena parte por mover los 16 kg del propio equipo, y la batería dura unos 45 minutos.</li>
+        <li>Hacerte más rápido en velocidad punta. La evidencia publicada es de ahorro de energía, no de récords.</li>
+        <li>Cargar decenas de kilos como una armadura. Eso exige una estructura que lleve el peso hasta el suelo, pesa 60 kg o más y no puede correr.</li>
+        <li>Mantenerte en pie por ti. No tiene equilibrio propio: si te caes, cae contigo.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="prose">
+    <h3>Cómo se compara con lo publicado</h3>
+    <p class="note">Los valores de marcha del modelo caen dentro de lo medido en laboratorio. Los de carrera están por encima de lo que nadie ha demostrado todavía con un equipo autónomo, así que léelos como techo y no como promesa.</p>
+  </div>
+  <div class="scroll"><table>
+    <thead><tr><th>Estudio</th><th>Equipo</th><th>Condición</th><th class="n">Cambio de energía</th></tr></thead>
+    <tbody>
+      <tr><td>Slade et al., Nature 2022</td><td>Tobillo, autónomo</td><td>Caminar en la calle / caminadora 1,5 m/s</td><td class="n">−17 % / −23 %</td></tr>
+      <tr><td>Franks et al., 2021</td><td>Cadera + rodilla + tobillo, motores fuera del cuerpo</td><td>Caminar en caminadora</td><td class="n">−50 %</td></tr>
+      <tr><td>Mooney et al., JNER 2014</td><td>Tobillo, autónomo, 4,0 kg</td><td>Caminar 1,5 m/s con 23 kg de carga</td><td class="n">−8 %</td></tr>
+      <tr><td>Kim et al., Science 2019</td><td>Traje blando de cadera, 5 kg</td><td>Caminar 1,5 m/s / correr 2,5 m/s</td><td class="n">−9,3 % / −4,0 %</td></tr>
+      <tr><td>Witte et al., 2020</td><td>Tobillo, motores fuera del cuerpo</td><td>Correr, frente a zapatillas normales</td><td class="n">−14,6 %</td></tr>
+    </tbody></table></div>
+</section>
+
+<section>
+  <h2>Arquitectura</h2>
+  <div class="scroll"><table>
+    <thead><tr><th>Articulación</th><th>Tipo</th><th>Accionamiento</th><th class="n">Par pico</th><th class="n">Recorrido</th></tr></thead>
+    <tbody>
+      <tr><td>Cadera, flexión y extensión</td><td>Activa</td><td>RobStride 04 directo sobre el eje</td><td class="n">120 N·m</td><td class="n">−30° a +120°</td></tr>
+      <tr><td>Cadera, abducción</td><td>Pasiva</td><td>Bisagra de titanio con resorte de retorno</td><td class="n">—</td><td class="n">±20°</td></tr>
+      <tr><td>Cadera, rotación</td><td>Pasiva</td><td>Deslizador en la abrazadera del muslo</td><td class="n">—</td><td class="n">±15°</td></tr>
+      <tr><td>Rodilla, flexión y extensión</td><td>Activa, desmontable</td><td>RobStride 04 directo sobre el eje</td><td class="n">120 N·m</td><td class="n">0° a 130°</td></tr>
+      <tr><td>Tobillo, flexión plantar</td><td>Activa, solo empuja</td><td>CubeMars AK10-9 en la tibia, cuerda a una palanca de talón (2,5 : 1)</td><td class="n">132 N·m</td><td class="n">libre</td></tr>
+      <tr><td>Tobillo, inversión</td><td>Libre</td><td>Plantilla de carbono flexible</td><td class="n">—</td><td class="n">libre</td></tr>
+    </tbody></table></div>
+  <div class="two">
+    <div class="prose">
+      <h3>Motores</h3>
+      <p>Los tres ejes usan motores sin escobillas con reductor planetario 9 : 1 y control de par por CAN. Con esa reducción baja el motor cede si lo empujas, así que apagado no te bloquea la pierna.</p>
+      <p>El tobillo tira de una cuerda en vez de ir sobre el eje. Solo puede empujar el talón hacia arriba, nunca forzar el pie en la otra dirección, y el motor queda alto en la tibia, donde su peso cuesta menos de la mitad que en el pie.</p>
+      <h3>Estructura e interfaz</h3>
+      <p>Eslabones de tubo de carbono, uniones de titanio impreso y aluminio 7075 mecanizado. Las abrazaderas se moldean sobre un escaneo 3D de tus piernas: el ajuste al cuerpo decide más que el motor si la fuerza llega al hueso o se pierde en la piel.</p>
+    </div>
+    <div class="prose">
+      <h3>Electrónica y control</h3>
+      <ul>
+        <li>Lazo de corriente dentro de cada motor; lazo de par a 1 kHz en un microcontrolador de tiempo real que compensa la fricción y la inercia del propio motor.</li>
+        <li>Estimador de fase del paso con sensores inerciales en muslo, tibia y pie y plantillas de presión; distingue marcha de carrera y elige el perfil de par.</li>
+        <li>Bus de 48 V con packs intercambiables de 240 Wh.</li>
+        <li>Tu Pip-Boy Otto como pantalla de muñeca: modo, batería y par en vivo.</li>
+      </ul>
+      <h3>Seguridad</h3>
+      <ul>
+        <li>Topes mecánicos dentro de tu rango articular en cada eje activo.</li>
+        <li>Paro de emergencia que corta el bus, al alcance de la mano y de un acompañante.</li>
+        <li>Límites de par, velocidad y ángulo en firmware, con vigilancia de comunicaciones.</li>
+        <li>Primeras pruebas siempre en caminadora, con arnés anticaídas.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Por qué estos motores</h2>
+  <p class="prose">Cada candidato se probó en las cuatro velocidades con 30 % de asistencia. Se muestra el peor caso. Un motor pasa si su carga térmica no supera 100 %, no rebasa su velocidad máxima y entrega al menos 97 % del par pedido. Las filas resaltadas son las elegidas.</p>
+  <div class="scroll"><table id="sweep"></table></div>
+  <p class="note">La cadera y la rodilla necesitan el motor grande por la carrera, no por la marcha: al caminar trabajan a un tercio de su capacidad o menos. A 4,5 m/s el RobStride 04 queda justo por encima de su límite en la cadera (101 %) y en la rodilla (105 %); a esa velocidad el diseño reduce la asistencia o limita el tiempo.</p>
+</section>
+
+<section>
+  <h2>Masa</h2>
+  <div class="scroll"><table id="massTable"></table></div>
+  <p class="note">Las masas de los motores son las del fabricante. Las de estructura, interfaz y electrónica son objetivos de diseño, no medidas.</p>
+</section>
+
+<section>
+  <h2>Presupuesto</h2>
+  <div class="scroll"><table>
+    <thead><tr><th>Partida</th><th>Incluye</th><th class="n">USD</th></tr></thead>
+    <tbody>
+      <tr><td>Motores</td><td>4 RobStride 04, 2 CubeMars AK10-9 V3 y un repuesto de cada modelo</td><td class="n">3 700 – 6 600</td></tr>
+      <tr><td>Estructura</td><td>Mecanizado de aluminio 7075, uniones de titanio impreso, tubos y placas de carbono, dos iteraciones</td><td class="n">6 000 – 15 000</td></tr>
+      <tr><td>Interfaz con el cuerpo</td><td>Abrazaderas moldeadas sobre escaneo 3D, cierres, plantillas de carbono</td><td class="n">1 500 – 4 000</td></tr>
+      <tr><td>Energía</td><td>4 packs de 240 Wh con gestión de celdas, cargador</td><td class="n">800 – 1 500</td></tr>
+      <tr><td>Electrónica y sensores</td><td>Computador, microcontrolador, CAN, sensores inerciales, plantillas de presión, celdas de carga</td><td class="n">3 000 – 12 000</td></tr>
+      <tr><td>Seguridad y banco de pruebas</td><td>Pórtico con arnés anticaídas, caminadora, banco para caracterizar motores</td><td class="n">3 500 – 8 000</td></tr>
+    </tbody>
+    <tfoot><tr><td>Exoesqueleto completo</td><td></td><td class="n">18 500 – 47 000</td></tr></tfoot>
+  </table></div>
+  <div class="scroll"><table>
+    <tbody>
+      <tr><td>Laboratorio para optimizar la asistencia (opcional)</td><td>Medidor portátil de consumo de oxígeno, electromiografía, captura de movimiento</td><td class="n">50 000 – 110 000</td></tr>
+    </tbody></table></div>
+  <p class="note">Solo los precios de los motores vienen de tiendas (RobStride 04: 320–550 USD; AK10-9 V3: 700–1 270 USD). El resto son estimaciones propias de orden de magnitud y no incluyen envío ni aranceles. El laboratorio es lo que convierte un exoesqueleto que funciona en uno que de verdad ahorra energía, y es la partida más cara.</p>
+</section>
+
+<section>
+  <h2>Orden de construcción</h2>
+  <div class="steps">
+    <div><b>Banco de un motor</b><p>Dos a cuatro semanas. Medir fricción, constante térmica y respuesta de par de un RobStride 04 y un AK10-9. Sustituye los valores supuestos de la simulación por medidos.</p></div>
+    <div><b>Módulo de tobillo</b><p>Dos a tres meses. Es el que más ahorra por gramo al caminar y el más seguro para empezar, porque la cuerda solo puede tirar.</p></div>
+    <div><b>Módulo de cadera</b><p>Dos a tres meses. Marco pélvico, bisagras pasivas y control en ambos sentidos.</p></div>
+    <div><b>Carrera con cadera y tobillo</b><p>Uno a dos meses en caminadora con arnés. Detección de marcha y carrera, y perfiles de par para cada una.</p></div>
+    <div><b>Módulo de rodilla</b><p>Dos meses. Escaleras, sentadillas y carga.</p></div>
+    <div><b>Ajuste a tu cuerpo</b><p>Continuo. Optimizar el momento y la forma del par midiendo tu consumo de energía.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Supuestos y validación</h2>
+  <div class="two">
+    <div class="prose">
+      <h3>Qué se comprobó</h3>
+      <ul id="checks"></ul>
+    </div>
+    <div class="prose">
+      <h3>Qué está supuesto</h3>
+      <ul>
+        <li>Constante de motor, fricción e inercia del rotor de los RobStride. El fabricante no las publica; el banco del primer paso las mide.</li>
+        <li>Te mueves igual con y sin el equipo, y cada N·m del exoesqueleto sustituye un N·m de tus músculos.</li>
+        <li>El peso añadido aumenta los momentos articulares en proporción durante el apoyo.</li>
+        <li>Balance metabólico: 1 W de potencia positiva del equipo ahorra 2,4 W de energía corporal, y cada kilo cuesta según dónde vaya (Mooney 2014). Medido para caminar; en carrera el costo por kilo se escala con el gasto y el resultado es una extrapolación.</li>
+        <li>Solo plano sagital. La abducción y la rotación no se simulan.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="prose">
+    <h3>Fuentes</h3>
+    <ul class="note">
+      <li>Datos de marcha: Fukuchi, Fukuchi y Duarte, PeerJ 2018, <a href="https://doi.org/10.7717/peerj.4640">doi:10.7717/peerj.4640</a> (CC BY 4.0).</li>
+      <li>Datos de carrera: Fukuchi, Fukuchi y Duarte, PeerJ 2017, <a href="https://doi.org/10.7717/peerj.3298">doi:10.7717/peerj.3298</a> (CC BY 4.0).</li>
+      <li>Modelo metabólico: Mooney, Rouse y Herr, J NeuroEng Rehabil 2014, <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4036406/">PMC4036406</a>.</li>
+      <li>Kim et al., Science 2019, <a href="https://doi.org/10.1126/science.aav7536">doi:10.1126/science.aav7536</a>. Slade et al., Nature 2022, <a href="https://news.stanford.edu/stories/2022/10/exoskeleton-makes-walking-faster-less-tiring">nota de Stanford</a>. Franks et al., <a href="https://www.biorxiv.org/content/10.1101/2021.02.19.431882v1.full.pdf">bioRxiv 2021</a>.</li>
+      <li>Motores: <a href="https://openelab.io/blogs/learn/what-is-robstride04-120nm-qdd-high-torque-robot-joints">RobStride 04</a>, <a href="https://www.robotshop.com/products/cubemars-ak10-9-v30-kv60-ak-series-robotic-actuator">CubeMars AK10-9 V3</a>, <a href="https://openelab.io/blogs/learn/what-is-robstride03-qdd-60n-m-actuator">RobStride 03</a>.</li>
+    </ul>
+  </div>
+</section>
+</div>
+
+<script>
+/*__EXOSIM__*/
+</script>
+<script>
+/*__NORM__*/
+/*__SWEEP__*/
+(function () {
+  'use strict';
+  const S = ExoSim, N = S.N, DEG = Math.PI / 180;
+  const $ = (id) => document.getElementById(id);
+  const el = (tag, attrs, kids) => {
+    const e = document.createElement(tag);
+    for (const k in (attrs || {})) { if (k === 'text') e.textContent = attrs[k]; else if (k === 'cls') e.className = attrs[k]; else e.setAttribute(k, attrs[k]); }
+    for (const c of [].concat(kids || [])) e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+    return e;
+  };
+  const svg = (tag, attrs) => { const e = document.createElementNS('http://www.w3.org/2000/svg', tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
+  const fmt = (v, d) => v.toLocaleString('es', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
+  const pct = (v) => (v > 0 ? '+' : v < 0 ? '−' : '') + fmt(Math.abs(v) * 100) + ' %';
+
+  const GAITS = [['walk', 'Marcha 1,2 m/s'], ['run25', 'Trote 2,5 m/s'], ['run35', 'Carrera 3,5 m/s'], ['run45', 'Carrera 4,5 m/s']];
+  const CONFIGS = [['full', 'Completo'], ['run', 'Cadera + tobillo'], ['hip', 'Cadera'], ['ankle', 'Tobillo']];
+  const JOINTS = [['hip', 'Cadera', '+ extensión'], ['knee', 'Rodilla', '+ extensión'], ['ankle', 'Tobillo', '+ flexión plantar']];
+  const state = { gait: 'walk', config: 'full', assist: 0.3, mass: 75, payload: 0, rate: 1, playing: true, time: 0, hover: null };
+  let R = null; // current simulation result
+  try { if (matchMedia('(prefers-reduced-motion: reduce)').matches) state.playing = false; } catch (e) {}
+
+  // ------------------------------------------------------------ controls
+  function segmented(host, options, key, after) {
+    for (const [val, label] of options) {
+      const b = el('button', { type: 'button', text: label, 'aria-pressed': String(state[key] === val), id: host.id + '-' + val });
+      b.addEventListener('click', () => { state[key] = val; for (const x of host.children) x.setAttribute('aria-pressed', String(x === b)); after(); });
+      host.appendChild(b);
+    }
+  }
+  segmented($('gait'), GAITS, 'gait', recompute);
+  segmented($('config'), CONFIGS, 'config', recompute);
+  segmented($('rate'), [[1, '1×'], [0.5, '½×'], [0.2, '⅕×']], 'rate', () => {});
+  const sliders = [['assist', (v) => fmt(v) + ' %', (v) => { state.assist = v / 100; }], ['mass', (v) => fmt(v) + ' kg', (v) => { state.mass = v; }], ['payload', (v) => fmt(v) + ' kg', (v) => { state.payload = v; }]];
+  for (const [id, show, set] of sliders) {
+    const inp = $(id), out = $(id + 'Out');
+    const apply = () => { const v = parseFloat(inp.value); out.textContent = show(v); set(v); };
+    inp.addEventListener('input', () => { apply(); recompute(); });
+    apply();
+  }
+  $('play').addEventListener('click', () => { state.playing = !state.playing; $('play').textContent = state.playing ? 'Pausar' : 'Reproducir'; });
+  $('play').textContent = state.playing ? 'Pausar' : 'Reproducir';
+
+  // ------------------------------------------------------------ theme tokens for canvas
+  let C = {};
+  function readTokens() {
+    const cs = getComputedStyle(document.documentElement);
+    for (const k of ['surface', 'ink', 'ink-2', 'muted', 'line', 'axis', 'body', 'body-far', 'exo', 'exo-far', 's2', 'stance']) C[k] = cs.getPropertyValue('--' + k).trim();
+  }
+  readTokens();
+  try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', readTokens); } catch (e) {}
+  new MutationObserver(readTokens).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  // ------------------------------------------------------------ simulation
+  function run(gait, config, extra) {
+    return S.simulate(NORM, gait, Object.assign({ config, assist: state.assist, bodyMass: state.mass, payload: state.payload, height: 1.75 }, extra || {}));
+  }
+  function recompute() {
+    R = run(state.gait, state.config);
+    // centre-of-pressure progress along the foot during right stance
+    const fv = NORM.gaits[state.gait].curves.grf_v.mean; let a = 0, b = 0;
+    for (let i = 0; i < N; i++) if (fv[i] > 0.5) { b = i; }
+    for (let i = 0; i < N; i++) if (fv[i] > 0.5) { a = i; break; }
+    R.cop = fv.map((_, i) => Math.max(0, Math.min(1, (i - a) / Math.max(1, b - a))));
+    renderTiles(); renderStatus(); renderCharts(); renderDataTable();
+  }
+
+  function level(v, lim, bad) { return v > bad ? ['bad', 'Excede'] : v > lim ? ['lim', 'Al límite'] : ['ok', 'Holgado']; }
+  const pill = (cls, label) => el('span', { cls: 'pill ' + cls }, [el('i'), label]);
+
+  function renderTiles() {
+    const host = $('tiles'); host.textContent = '';
+    const m = R.metabolic, hrs = R.endurance.hours;
+    const dur = hrs >= 1 ? fmt(hrs, 1) + ' h' : fmt(hrs * 60) + ' min';
+    const tiles = [
+      ['Energía que gastas', pct(m.netChangePct), 'Estimado frente a ir sin equipo. Apagado: ' + pct(m.offPct)],
+      ['Autonomía', dur, fmt(R.endurance.km, 1) + ' km con ' + fmt(R.endurance.usableWh) + ' Wh útiles'],
+      ['Consumo de batería', fmt(R.power.battery) + ' W', 'Potencia mecánica entregada: ' + fmt(R.power.exoPositive) + ' W'],
+      ['Masa del equipo', fmt(R.mass.total, 1) + ' kg', 'En cada pierna: ' + fmt((R.mass.byLoc.thigh + R.mass.byLoc.shank + R.mass.byLoc.foot) / 2, 1) + ' kg'],
+    ];
+    for (const [label, value, sub] of tiles) host.appendChild(el('div', { cls: 'tile' }, [el('span', { text: label }), el('b', { text: value }), el('small', { text: sub })]));
+  }
+
+  function renderStatus() {
+    const t = $('status'); t.textContent = '';
+    t.appendChild(el('thead', {}, el('tr', {}, ['Motor', 'Par pico', 'Par', 'Velocidad', 'Térmica'].map((h, i) => el('th', { cls: i > 0 ? 'n' : '', text: h })))));
+    const body = el('tbody');
+    for (const [j, name] of JOINTS) {
+      const J = R.joints[j];
+      if (!J.active) { body.appendChild(el('tr', {}, [el('td', {}, [name, el('small', { text: 'sin módulo' })]), el('td', { cls: 'n', text: '—' }), el('td', { cls: 'n', text: '—' }), el('td', { cls: 'n', text: '—' }), el('td', { cls: 'n', text: '—' })])); continue; }
+      const worst = Math.max(J.thermal, J.speedUse, J.delivered < 0.97 ? 1.2 : 0);
+      const [cls, label] = level(worst, 0.85, 1.0);
+      body.appendChild(el('tr', {}, [
+        el('td', {}, [name + ' ', pill(cls, label), el('small', { text: J.actuator + (J.ratio !== 1 ? ', cuerda ' + fmt(J.ratio, 1) + ' : 1' : '') })]),
+        el('td', { cls: 'n', text: fmt(J.peakTorque) + ' N·m' }), el('td', { cls: 'n', text: fmt(J.torqueUse * 100) + ' %' }),
+        el('td', { cls: 'n', text: fmt(J.speedUse * 100) + ' %' }), el('td', { cls: 'n', text: fmt(J.thermal * 100) + ' %' }),
+      ]));
+    }
+    t.appendChild(body);
+  }
+
+  // ------------------------------------------------------------ charts
+  const charts = {};
+  for (const [j, name, sign] of JOINTS) {
+    const s = svg('svg', { role: 'img', 'aria-label': 'Momento en ' + name.toLowerCase() + ' a lo largo de un paso' });
+    const tip = el('div', { cls: 'tip', hidden: '' });
+    const box = el('div', { cls: 'chart' }, [el('h3', { text: name }), el('p', { text: 'N·m, ' + sign }), s, tip]);
+    $('charts').appendChild(box);
+    charts[j] = { svg: s, tip, box };
+    const move = (ev) => {
+      const c = charts[j]; if (!c.geo) return;
+      const r = s.getBoundingClientRect(), x = ev.clientX - r.left;
+      const i = Math.max(0, Math.min(N - 1, Math.round((x - c.geo.l) / (c.geo.w) * N)));
+      state.hover = i; showTip(j, i, x);
+    };
+    s.addEventListener('pointermove', move); s.addEventListener('pointerdown', move);
+    s.addEventListener('pointerleave', () => { state.hover = null; for (const k in charts) charts[k].tip.hidden = true; });
+  }
+  function showTip(j, i, x) {
+    for (const k in charts) charts[k].tip.hidden = k !== j;
+    const c = charts[j], J = R.joints[j], tip = c.tip; tip.textContent = '';
+    tip.appendChild(el('div', { cls: 'hd', text: i + ' % del paso' }));
+    const row = (color, dash, label, v) => { const k = el('i'); k.style.borderColor = color; if (dash) k.style.borderTopStyle = 'dashed'; tip.appendChild(el('div', {}, [el('span', {}, [k, label]), el('b', { text: fmt(v) + ' N·m' })])); };
+    row('var(--muted)', true, 'Sin exo', J.base[i]); row('var(--s1)', false, 'Persona', J.human[i]); if (J.active) row('var(--s2)', false, 'Exo', J.exo[i]);
+    const w = c.box.clientWidth; tip.style.top = '54px';
+    if (x > w / 2) { tip.style.left = ''; tip.style.right = (w - x + 4) + 'px'; } else { tip.style.right = ''; tip.style.left = (x + 26) + 'px'; }
+  }
+  function niceStep(span) { const raw = span / 4, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; }
+  function renderCharts() {
+    const fv = NORM.gaits[state.gait].curves.grf_v.mean;
+    for (const [j] of JOINTS) {
+      const c = charts[j], J = R.joints[j], s = c.svg; s.textContent = '';
+      const W = s.clientWidth || 320, H = 190, l = 38, r = 8, t = 8, b = 22, w = W - l - r, h = H - t - b;
+      s.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+      const all = J.base.concat(J.human, J.exo), lo0 = Math.min(0, ...all), hi0 = Math.max(0, ...all);
+      const step = niceStep(hi0 - lo0 || 1), lo = Math.floor(lo0 / step) * step, hi = Math.ceil(hi0 / step) * step;
+      const X = (i) => l + (i / N) * w, Y = (v) => t + (1 - (v - lo) / (hi - lo)) * h;
+      c.geo = { l, w, t, h };
+      // stance band
+      let a = -1;
+      for (let i = 0; i <= N; i++) {
+        const on = i < N && fv[i] > 0.5;
+        if (on && a < 0) a = i;
+        if (!on && a >= 0) { s.appendChild(svg('rect', { x: X(a), y: t, width: X(i) - X(a), height: h, fill: 'var(--stance)' })); a = -1; }
+      }
+      for (let v = lo; v <= hi + 1e-9; v += step) {
+        s.appendChild(svg('line', { x1: l, x2: l + w, y1: Y(v), y2: Y(v), stroke: Math.abs(v) < 1e-9 ? 'var(--axis)' : 'var(--line)', 'stroke-width': 1 }));
+        const tx = svg('text', { x: l - 6, y: Y(v) + 4, 'text-anchor': 'end', fill: 'var(--muted)', 'font-size': 11, 'font-family': 'var(--mono)' }); tx.textContent = fmt(v); s.appendChild(tx);
+      }
+      for (const p of [0, 50, 100]) { const tx = svg('text', { x: X(p), y: H - 6, 'text-anchor': p === 0 ? 'start' : p === 100 ? 'end' : 'middle', fill: 'var(--muted)', 'font-size': 11, 'font-family': 'var(--mono)' }); tx.textContent = p + ' %'; s.appendChild(tx); }
+      const path = (arr) => arr.map((v, i) => (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(v).toFixed(1)).join('') + 'L' + X(N).toFixed(1) + ' ' + Y(arr[0]).toFixed(1);
+      s.appendChild(svg('path', { d: path(J.base), fill: 'none', stroke: 'var(--muted)', 'stroke-width': 1.5, 'stroke-dasharray': '4 3' }));
+      if (J.active) s.appendChild(svg('path', { d: path(J.exo), fill: 'none', stroke: 'var(--s2)', 'stroke-width': 2, 'stroke-linejoin': 'round' }));
+      s.appendChild(svg('path', { d: path(J.human), fill: 'none', stroke: 'var(--s1)', 'stroke-width': 2, 'stroke-linejoin': 'round' }));
+      c.cursor = svg('line', { y1: t, y2: t + h, x1: l, x2: l, stroke: 'var(--ink)', 'stroke-width': 1 }); s.appendChild(c.cursor);
+    }
+  }
+  function renderDataTable() {
+    const t = $('dataTable'); t.textContent = '';
+    const head = ['% del paso'];
+    for (const [, name] of JOINTS) head.push(name + ' sin exo', name + ' persona', name + ' exo');
+    t.appendChild(el('thead', {}, el('tr', {}, head.map((h, i) => el('th', { cls: i ? 'n' : '', text: h })))));
+    const body = el('tbody');
+    for (let i = 0; i < N; i += 5) {
+      const cells = [el('td', { cls: 'n', text: String(i) })];
+      for (const [j] of JOINTS) { const J = R.joints[j]; cells.push(el('td', { cls: 'n', text: fmt(J.base[i]) }), el('td', { cls: 'n', text: fmt(J.human[i]) }), el('td', { cls: 'n', text: J.active ? fmt(J.exo[i]) : '—' })); }
+      body.appendChild(el('tr', {}, cells));
+    }
+    t.appendChild(body);
+  }
+  let rz; new ResizeObserver(() => { clearTimeout(rz); rz = setTimeout(() => { if (R) renderCharts(); }, 80); }).observe($('charts'));
+
+  // ------------------------------------------------------------ figure
+  const cv = $('stage'), ctx = cv.getContext('2d');
+  function sizeCanvas() { const d = Math.min(2, window.devicePixelRatio || 1), w = cv.clientWidth, h = cv.clientHeight; if (cv.width !== Math.round(w * d) || cv.height !== Math.round(h * d)) { cv.width = Math.round(w * d); cv.height = Math.round(h * d); } ctx.setTransform(d, 0, 0, d, 0, 0); return [w, h]; }
+  const lerp = (a, b, u) => a + (b - a) * u, lerp2 = (a, b, u) => [lerp(a[0], b[0], u), lerp(a[1], b[1], u)];
+  function legAt(side, i0, i1, u) {
+    const A = R.kin.frames[i0][side], B = R.kin.frames[i1][side], o = {};
+    for (const k of ['knee', 'ankle', 'heel', 'ball']) o[k] = lerp2(A[k], B[k], u);
+    for (const k of ['tt', 'ts', 'tf']) o[k] = lerp(A[k], B[k], u);
+    return o;
+  }
+  function draw(phase) {
+    const [W, H] = sizeCanvas();
+    ctx.clearRect(0, 0, W, H);
+    const fpos = phase * N, i0 = Math.floor(fpos) % N, i1 = (i0 + 1) % N, u = fpos - Math.floor(fpos);
+    const F0 = R.kin.frames[i0], F1 = R.kin.frames[i1], seg = R.kin.seg;
+    const gy = H - 44, sc = (gy - 26) / 1.95, cx = W * 0.5;
+    const px = lerp(F0.px, F1.px, u), py = lerp(F0.py, F1.py, u);
+    const P = (p) => [cx + (px + p[0]) * sc, gy - (py + p[1]) * sc];
+    const line = (pts, color, width) => { ctx.strokeStyle = color; ctx.lineWidth = width; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath(); pts.forEach((p, k) => { const q = P(p); if (k) ctx.lineTo(q[0], q[1]); else ctx.moveTo(q[0], q[1]); }); ctx.stroke(); };
+    const disc = (p, r, fill, stroke) => { const q = P(p); ctx.beginPath(); ctx.arc(q[0], q[1], r * sc, 0, 7); ctx.fillStyle = fill; ctx.fill(); if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 2; ctx.stroke(); } };
+    const along = (a, b, f) => lerp2(a, b, f);
+    const perp = (a, b, d) => { const dx = b[0] - a[0], dy = b[1] - a[1], n = Math.hypot(dx, dy) || 1; return [-dy / n * d, dx / n * d]; };
+
+    // belt
+    ctx.strokeStyle = C.axis; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(0, gy + 0.5); ctx.lineTo(W, gy + 0.5); ctx.stroke();
+    const travel = (state.time * R.kin.belt) % 0.5;
+    ctx.strokeStyle = C.axis; ctx.lineWidth = 1;
+    for (let x = -travel; x * sc < W; x += 0.5) { const sx = (x - (W / 2 / sc) % 0.5 + 0.5) * sc; ctx.beginPath(); ctx.moveTo(sx, gy + 4); ctx.lineTo(sx - 7, gy + 13); ctx.stroke(); }
+
+    const lean = (state.gait === 'walk' ? 4 : 9) * DEG, run = state.gait !== 'walk';
+    const up = [Math.sin(lean), Math.cos(lean)], fwd = [Math.cos(lean), -Math.sin(lean)];
+    const sh = [up[0] * seg.trunk, up[1] * seg.trunk];
+    const head = [sh[0] + up[0] * 0.2 + fwd[0] * 0.03, sh[1] + up[1] * 0.2 + fwd[1] * 0.03];
+    const mods = R.mass.modules;
+    const use = (j, i) => { const J = R.joints[j]; return J.active ? Math.min(1, Math.abs(J.exo[i]) / (S.ACTUATORS[S.DESIGN.joints[j].actuator].tauPeak * J.ratio)) : 0; };
+
+    function arm(side, far) {
+      const leg = legAt(side, i0, i1, u), swing = -(run ? 0.75 : 0.6) * (leg.tt - 0.12), elbow = run ? 1.45 : 0.3 + Math.max(0, swing) * 0.5;
+      const a = swing + lean, e = [sh[0] + Math.sin(a) * 0.3, sh[1] - Math.cos(a) * 0.3], hnd = [e[0] + Math.sin(a + elbow) * 0.3, e[1] - Math.cos(a + elbow) * 0.3];
+      line([sh, e, hnd], far ? C['body-far'] : C.body, 0.075 * sc);
+    }
+    function leg(side, far) {
+      const L = legAt(side, i0, i1, u), body = far ? C['body-far'] : C.body, exo = far ? C['exo-far'] : C.exo;
+      const idx = side === 'R' ? i0 : (i0 + N / 2) % N;
+      const ballH = py + L.ball[1], k = Math.max(0, Math.min(1, ballH / 0.04)), ta = L.tf * k;
+      const toe = [L.ball[0] + seg.toeLen * Math.cos(ta), L.ball[1] + seg.toeLen * Math.sin(ta)];
+      line([[0, 0], L.knee], body, 0.135 * sc); line([L.knee, L.ankle], body, 0.10 * sc);
+      line([L.heel, L.ball, toe], body, 0.062 * sc); line([L.ankle, along(L.heel, L.ball, 0.25)], body, 0.07 * sc);
+      // exoskeleton on this leg
+      if (mods.includes('hip')) {
+        const end = mods.includes('knee') ? L.knee : along([0, 0], L.knee, 0.62);
+        line([[0, 0], end], exo, 5); const c = along([0, 0], L.knee, 0.5), n = perp([0, 0], L.knee, 0.085);
+        line([[c[0] - n[0], c[1] - n[1]], [c[0] + n[0], c[1] + n[1]]], exo, 9);
+      }
+      if (mods.includes('knee')) {
+        line([L.knee, along(L.knee, L.ankle, 0.5)], exo, 5); const c = along(L.knee, L.ankle, 0.4), n = perp(L.knee, L.ankle, 0.065);
+        line([[c[0] - n[0], c[1] - n[1]], [c[0] + n[0], c[1] + n[1]]], exo, 9);
+      }
+      if (mods.includes('ankle')) {
+        const n = perp(L.knee, L.ankle, -0.085), m = along(L.knee, L.ankle, 0.25), mp = [m[0] + n[0], m[1] + n[1]];
+        const lo = along(L.knee, L.ankle, 0.62), fx = Math.cos(L.tf), fy = Math.sin(L.tf), lever = [L.heel[0] - 0.075 * fx + 0.03 * fy, L.heel[1] - 0.075 * fy - 0.03 * fx + 0.045];
+        line([along(L.knee, L.ankle, 0.12), lo], exo, 5); line([m, mp], exo, 5);
+        line([lever, L.heel, L.ball], exo, 3.5);
+        ctx.setLineDash([3, 3]); line([mp, lever], exo, 1.6); ctx.setLineDash([]);
+        disc(mp, 0.045, C.surface, exo); if (!far) disc(mp, 0.045 * Math.sqrt(use('ankle', idx)), C.s2);
+      }
+      if (mods.includes('knee')) { disc(L.knee, 0.06, C.surface, exo); if (!far) disc(L.knee, 0.06 * Math.sqrt(use('knee', idx)), C.s2); }
+      return L;
+    }
+    // far side first
+    arm('R', true); leg('L', true);
+    // trunk, head, pack
+    line([[0, 0], sh], C.body, 0.23 * sc); line([sh, head], C.body, 0.09 * sc); disc(head, 0.1, C.body);
+    const back = (f, d) => [up[0] * f - fwd[0] * d, up[1] * f - fwd[1] * d];
+    line([back(0.07, 0.175), back(0.30, 0.175)], C.exo, 0.08 * sc);
+    line([back(-0.01, 0.13), [up[0] * -0.01 + fwd[0] * 0.13, up[1] * -0.01 + fwd[1] * 0.13]], C.exo, 0.07 * sc);
+    const Lr = leg('R', false);
+    if (mods.includes('hip')) { disc([0, 0], 0.062, C.surface, C.exo); disc([0, 0], 0.062 * Math.sqrt(use('hip', i0)), C.s2); }
+    arm('L', false);
+
+    // ground reaction forces
+    const cur = NORM.gaits[state.gait].curves;
+    for (const side of ['L', 'R']) {
+      const idx = side === 'R' ? i0 : (i0 + N / 2) % N, fv = cur.grf_v.mean[idx], fa = cur.grf_ap.mean[idx];
+      if (fv < 0.8) continue;
+      const L = side === 'R' ? Lr : legAt('L', i0, i1, u), c = along(L.heel, L.ball, R.cop[idx]), a = P([c[0], -py]), k = 0.042 * sc;
+      const bx = a[0] + fa * k, by = a[1] - fv * k, ang = Math.atan2(by - a[1], bx - a[0]);
+      ctx.strokeStyle = C.ink; ctx.fillStyle = C.ink; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(bx, by); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(bx - 8 * Math.cos(ang - 0.4), by - 8 * Math.sin(ang - 0.4)); ctx.lineTo(bx - 8 * Math.cos(ang + 0.4), by - 8 * Math.sin(ang + 0.4)); ctx.fill();
+    }
+    // labels
+    ctx.font = '500 11px ' + getComputedStyle(document.body).getPropertyValue('--mono'); ctx.fillStyle = C.muted; ctx.textAlign = 'left';
+    ctx.fillText('Naranja: par que aplica cada motor', 12, 20);
+    ctx.fillText('Flecha: fuerza del suelo', 12, 36);
+    const both = F0.wR > 0.5 && F0.wL > 0.5, none = F0.wR <= 0.5 && F0.wL <= 0.5;
+    $('readout').textContent = (both ? 'Doble apoyo' : none ? 'Vuelo' : F0.wR > 0.5 ? 'Apoyo derecho' : 'Apoyo izquierdo') + ' · ' + String(i0).padStart(2, '0') + ' % · paso de ' + fmt(R.strideTime, 2) + ' s';
+    for (const j in charts) { const c = charts[j]; if (c.cursor && c.geo) { const x = c.geo.l + phase * c.geo.w; c.cursor.setAttribute('x1', x); c.cursor.setAttribute('x2', x); } }
+  }
+
+  let last = null;
+  function tick(ts) {
+    if (last === null) last = ts;
+    const dt = Math.min(0.05, (ts - last) / 1000); last = ts;
+    if (state.playing && state.hover === null) state.time += dt * state.rate;
+    const phase = state.hover !== null ? state.hover / N : (state.time / R.strideTime) % 1;
+    draw(phase);
+    requestAnimationFrame(tick);
+  }
+
+  // ------------------------------------------------------------ static tables
+  function matrix() {
+    const t = $('matrix');
+    t.appendChild(el('thead', {}, el('tr', {}, [el('th', { text: 'Configuración' }), el('th', { cls: 'n', text: 'Masa' })].concat(GAITS.map(([, l]) => el('th', { cls: 'n', text: l }))))));
+    const body = el('tbody');
+    for (const [cfg] of CONFIGS) {
+      const cells = [el('td', { text: S.DESIGN.configs[cfg].label }), el('td', { cls: 'n', text: fmt(S.massModel(S.DESIGN, cfg).total, 1) + ' kg' })];
+      for (const [g] of GAITS) {
+        const r = S.simulate(NORM, g, { config: cfg, assist: 0.3, bodyMass: 75 });
+        let th = 0; for (const j of ['hip', 'knee', 'ankle']) if (r.joints[j].active) th = Math.max(th, r.joints[j].thermal);
+        const hrs = r.endurance.hours, dur = hrs >= 1 ? fmt(hrs, 1) + ' h' : fmt(hrs * 60) + ' min';
+        const sub = el('small', {}, [dur + ' · ']); sub.appendChild(pill(th > 1 ? 'bad' : th > 0.85 ? 'lim' : 'ok', 'térmico ' + fmt(th * 100) + ' %'));
+        cells.push(el('td', { cls: 'n' }, [pct(r.metabolic.netChangePct), sub]));
+      }
+      body.appendChild(el('tr', {}, cells));
+    }
+    t.appendChild(body);
+  }
+  function sweepTable() {
+    const t = $('sweep'), names = { hip: 'Cadera', knee: 'Rodilla', ankle: 'Tobillo' }, D = S.DESIGN.joints;
+    t.appendChild(el('thead', {}, el('tr', {}, ['Eje', 'Motor', 'Reducción extra', 'Masa', 'Térmico marcha', 'Térmico peor caso', 'Velocidad', 'Par entregado', 'Resultado'].map((h, i) => el('th', { cls: i > 1 && i < 8 ? 'n' : '', text: h })))));
+    const body = el('tbody');
+    for (const r of SWEEP) {
+      const pick = D[r.joint].actuator === r.actuator && D[r.joint].ratio === r.ratio;
+      body.appendChild(el('tr', pick ? { cls: 'pick' } : {}, [
+        el('td', { text: names[r.joint] }), el('td', { text: S.ACTUATORS[r.actuator].name }), el('td', { cls: 'n', text: r.ratio === 1 ? '—' : fmt(r.ratio, 1) + ' : 1' }),
+        el('td', { cls: 'n', text: fmt(r.mass, 2) + ' kg' }), el('td', { cls: 'n', text: fmt(r.per.walk * 100) + ' %' }), el('td', { cls: 'n', text: fmt(r.worst.thermal * 100) + ' %' }),
+        el('td', { cls: 'n', text: fmt(r.worst.speedUse * 100) + ' %' }), el('td', { cls: 'n', text: fmt(r.worst.delivered * 100) + ' %' }),
+        el('td', {}, pill(r.ok ? 'ok' : r.worst.thermal <= 1.1 && r.worst.speedUse <= 1 && r.worst.delivered >= 0.97 ? 'lim' : 'bad', r.ok ? 'Pasa' : r.worst.thermal <= 1.1 && r.worst.speedUse <= 1 && r.worst.delivered >= 0.97 ? 'Pasa hasta 3,5 m/s' : 'No pasa')),
+      ]));
+    }
+    t.appendChild(body);
+  }
+  function massTable() {
+    const t = $('massTable'), m = S.massModel(S.DESIGN, 'full'), mod = { core: 'Base', hip: 'Cadera', knee: 'Rodilla', ankle: 'Tobillo' }, loc = { waist: 'Cintura', thigh: 'Muslo', shank: 'Tibia', foot: 'Pie' };
+    t.appendChild(el('thead', {}, el('tr', {}, ['Módulo', 'Pieza', 'Dónde va', 'Cant.', 'Unidad', 'Total'].map((h, i) => el('th', { cls: i > 2 ? 'n' : '', text: h })))));
+    const body = el('tbody'), order = ['core', 'hip', 'knee', 'ankle'];
+    for (const o of order) for (const it of m.items.filter((x) => x.module === o)) body.appendChild(el('tr', {}, [el('td', { text: mod[it.module] }), el('td', { text: it.name }), el('td', { text: loc[it.loc] }), el('td', { cls: 'n', text: String(it.qty) }), el('td', { cls: 'n', text: fmt(it.mass, 2) + ' kg' }), el('td', { cls: 'n', text: fmt(it.mass * it.qty, 2) + ' kg' })]));
+    t.appendChild(body);
+    t.appendChild(el('tfoot', {}, el('tr', {}, [el('td', { text: 'Equipo completo' }), el('td'), el('td', { text: 'Cintura ' + fmt(m.byLoc.waist, 1) + ' kg · piernas ' + fmt(m.total - m.byLoc.waist, 1) + ' kg' }), el('td'), el('td'), el('td', { cls: 'n', text: fmt(m.total, 2) + ' kg' })])));
+  }
+  function checks() {
+    const host = $('checks'), items = [];
+    const w = NORM.gaits.walk, kw = S.kinematics(w, w.height);
+    items.push('Marcha: la velocidad que sale de reconstruir el movimiento es ' + fmt(kw.belt, 2) + ' m/s frente a ' + fmt(w.speed, 2) + ' m/s medidos.');
+    const parts = [];
+    for (const g of ['run25', 'run35', 'run45']) { const d = NORM.gaits[g], k = S.kinematics(d, d.height); parts.push(fmt(k.belt, 2) + ' de ' + fmt(d.speed, 1)); }
+    items.push('Carrera: la reconstrucción se queda corta (' + parts.join(', ') + ' m/s). El modelo es solo lateral y no incluye la rotación de la pelvis, que alarga la zancada. No afecta al dimensionado de motores, que usa ángulos y momentos medidos.');
+    const k35 = S.kinematics(NORM.gaits.run35, NORM.gaits.run35.height);
+    items.push('La inclinación de pelvis en carrera no está en los datos. Se calibró exigiendo un vuelo balístico y resultó ' + fmt(k35.tilt[0] / DEG, 1) + '°, dentro de lo normal en corredores.');
+    items.push('La fuerza vertical media del suelo durante un paso equivale al peso corporal con menos de 8 % de error en las cuatro velocidades.');
+    items.push('Momentos pico al caminar: tobillo ' + fmt(Math.max(...w.curves.ankle_mom.mean), 2) + ' N·m/kg, dentro del rango publicado.');
+    items.push('El simulador tiene 10 pruebas automáticas en el repositorio.');
+    for (const s of items) host.appendChild(el('li', { text: s }));
+  }
+
+  recompute(); matrix(); sweepTable(); massTable(); checks();
+  requestAnimationFrame(tick);
+})();
+</script>
