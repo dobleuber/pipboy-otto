@@ -72,7 +72,7 @@ def cuff():
             "rocks": [on(top[0], (0, WEIGHT, 0)), on(top[1], (0, -WEIGHT, 0))],
         },
         round=3.0, round_top=False,
-        voxel=2.0, volfrac=0.30, rmin=2.5, min_wall=1.6,
+        voxel=2.0, volfrac=0.20, rmin=2.5, min_wall=1.6,   # attempt 1 used 0.30: a nearly closed, lumpy skin
         baseline="baselines/cuff.stl",
         youngs=2100.0, poisson=0.35, density=1.27e-3,                               # PETG
         extra={"blender": {"voxel": 0.6}},
