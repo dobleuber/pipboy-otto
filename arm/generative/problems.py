@@ -87,7 +87,9 @@ def cabeza_fija():
             "imanes a punto de ceder": [RemoteLoad(bosses, (70, 0, 35), (0, -100, 0)),
                                         RemoteLoad([lug], (0, 0, 35), (0, 100, 0))],
         },
-        round=2.0, voxel=3.0, volfrac=0.155,   # ~ la masa de la original rmin=2.5, min_wall=1.2,
+        # volfrac: intento 1 = 0.155 (la misma masa que la original); intento 2 = 0.125 (~20 % menos;
+        # menos de 0.12 no se puede: lo obligatorio ya ocupa 0.07)
+        round=2.0, voxel=3.0, volfrac=0.125, rmin=2.5, min_wall=1.2,
         youngs=2100.0, density=1.27e-3,   # PETG
         baseline="baselines/cabeza_fija.stl",
     )
