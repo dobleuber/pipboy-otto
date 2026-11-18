@@ -12,20 +12,25 @@ sin herramientas.
 ## Piezas para imprimir
 
 PETG, capa 0.2 mm, **6 perímetros, 40 % de relleno** (giroide). Holgura `CL = 0.4 mm` en
-`params.scad` (bajarla a 0.3 si la impresora es precisa).
+`params.scad` (bajarla a 0.3 si la impresora es precisa). Masas estimadas con esos ajustes (las
+paredes delgadas salen casi macizas): en total ~760 g de PETG, ~290 g para la mesa y ~470 g más
+para el morral.
+
+La `cabeza_fija` imprímela con la cara de los imanes sobre la cama (es la cara de apoyo plana): los
+nervios crecen hacia arriba sin soporte.
 
 | Pieza | Para | Masa aprox. | Notas de impresión |
 |---|---|---|---|
-| `bandeja` | todo | 77 g | abraza la pestaña de la base (87 x 111 mm); riel abajo; tuercas M5 atrapadas |
-| `barra` (x2) | todo | 25 g | aprietan las alas de la pestaña (con goma o TPU de 1 mm debajo) |
-| `receptor` | mesa | 37 g | mordaza fija + bolsillo de la móvil + tope al fondo |
-| `mordaza`, `perilla` | mesa y morral | 7 g | la mordaza la empuja un tornillo M5 con perilla |
-| `base_mesa` | mesa | 69 g | alas para dos prensas en C, o 4 tornillos a la mesa |
-| `pie_mastil` | morral | 59 g | atornillado a la placa de la espalda, arriba a la derecha |
-| `cabeza_fija` | morral | 81 g | toma el tubo; nudillo central de la bisagra; apoyo con imanes y tope |
-| `cabeza_movil` | morral | 78 g | lleva el receptor; nudillos laterales; imanes |
-| `caja`, `tapa` | morral | 88 g | Orange Pi 5 Pro, batería 3S, convertidor 5 V, relé de parada |
-| `probeta_riel`, `probeta_receptor` | prueba | 19 g | **imprimir primero**: 2 cm del riel y del receptor para ajustar la holgura |
+| `bandeja` | todo | 115 g | abraza la pestaña de la base (87 x 111 mm); riel abajo; tuercas M5 atrapadas |
+| `barra` (x2) | todo | 36 g | aprietan las alas de la pestaña (con goma o TPU de 1 mm debajo) |
+| `receptor` | mesa | 50 g | mordaza fija + bolsillo de la móvil + tope al fondo |
+| `mordaza`, `perilla` | mesa y morral | 11 g | la mordaza la empuja un tornillo M5 con perilla |
+| `base_mesa` | mesa | 91 g | alas para dos prensas en C, o 4 tornillos a la mesa |
+| `pie_mastil` | morral | 72 g | atornillado a la placa de la espalda, arriba a la derecha |
+| `cabeza_fija` | morral | 124 g | toma el tubo; nudillo central de la bisagra; apoyo con imanes y tope, con **nervios debajo** (ver abajo) |
+| `cabeza_movil` | morral | 95 g | lleva el receptor; nudillos laterales; imanes |
+| `caja`, `tapa` | morral | 159 g | Orange Pi 5 Pro, batería 3S, convertidor 5 V, relé de parada |
+| `probeta_riel`, `probeta_receptor` | prueba | ~20 g | **imprimir primero**: 2 cm del riel y del receptor para ajustar la holgura |
 
 `placa_espalda.dxf`: contorno para cortar la placa de **HDPE de 3 mm** (o polipropileno; una
 tabla de picar sirve) de 250 x 380 mm, con ventanas para alivianar (~190 g). Entra en el
@@ -69,12 +74,33 @@ bolsillo de la laptop de casi cualquier morral.
 - Batería en bolsa ignífuga, con BMS y fusible; cables por dentro del tubo.
 
 **Cómodo**
-- Peso agregado ~1.5 kg (brazo 650 g, soporte ~450 g, placa ~190 g, electrónica ~250 g), casi
-  todo sobre la cadera.
+- Peso agregado ~1.75 kg (brazo 650 g, piezas impresas del soporte ~620 g, tubo 45 g, placa
+  ~190 g, electrónica ~250 g), casi todo sobre la cadera. Para alivianar: menos perímetros en la
+  caja y la tapa (no cargan), o una batería más chica.
 - El brazo queda en el borde del hombro, a 26 cm del centro de la cabeza, y la cámara a ~1.78 m:
   no tapa la vista.
 - El tubo sale por arriba del morral (por el cierre o un ojal). Placa curva/acolchada contra la
   espalda (el bolsillo de la laptop ya suele estarlo).
+
+## Mejora de la cabeza fija (tras la prueba de diseño generativo)
+
+La prueba de [diseño generativo](../generative/README.md) mostró que la cabeza fija original era
+floja: la plataforma de los imanes era una placa de 10 mm colgada de la bisagra. Se le agregaron
+a mano **tres nervios de 4 mm** bajo la plataforma (28 mm de alto en la raíz, afinándose hacia
+adelante), una **pared** que los une con el encastre del tubo, y la plataforma bajó a 6 mm con
+refuerzos solo alrededor de los imanes. Medido con el mismo método que la pieza generativa
+(vóxeles de 2.5 mm, mismas cargas):
+
+| | Original | Con nervios (adoptada) | Generativa (no adoptada) |
+|---|---|---|---|
+| Impresa (6 perímetros + 40 %) | ~105 g | ~124 g | más que la original |
+| Rigidez (los 5 casos) | 1 | **×3.1 a ×4.2** | ×3.8 a ×6.1 |
+| Esfuerzo indicativo | 1 | ×0.39–0.44 | — |
+| Soporte al imprimir | ~25 cm² | ~25 cm² | ~8 veces más |
+| Sale de la caja de la original | — | no | sí, 1.1 cm más abajo |
+
+Con la original, la carga de caminar con 500 g inclinaba la base del brazo ~0.6° (la cámara sigue
+a la gente con ~3° de error); con los nervios, ~0.2°. Son ~20 g más (~1 % del peso total).
 
 ## Medidas (las usa la simulación)
 

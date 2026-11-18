@@ -112,6 +112,10 @@ En el morral: placa rígida en el bolsillo de la laptop, tubo de aluminio sobre 
 **bisagra con imanes** que deja doblar el brazo hacia atrás si se engancha (nunca hacia la
 cabeza). La simulación usa las mismas medidas que el CAD (hay una prueba que lo verifica).
 
+**Cabeza fija mejorada:** una [prueba de diseño generativo](generative/README.md) mostró que la
+plataforma de los imanes era floja; se le agregaron nervios a mano y ahora es **3 a 4 veces más
+rígida** (+~20 g), sin soportes extra al imprimir (detalle en [cad/README.md](cad/README.md)).
+
 **Enganche con una rama** a 1.74 m mientras caminas ([video](media/morral_rama.mp4)):
 
 | | Con bisagra | Soporte rígido |
@@ -166,4 +170,4 @@ Archivos:
    Orange Pi 5 Pro) sobre la imagen simulada, y agarrar objetos ubicados con la cámara.
 2. **Voz:** preguntas y respuestas con un modelo de visión y lenguaje usando la imagen de la cámara.
 3. **Imprimir las probetas del riel** y medir la base real del SO-101 antes de imprimir el resto.
-4. **Comprar** según **[COMPRAS.md](COMPRAS.md)**, por fases: mesa ~250 €, morral ~150 €, voz ~40 €.
+4. **Comprar** según **[COMPRAS.md](COMPRAS.md)**, por fases: mesa ~250 €, morral ~170 €, voz ~40 €.

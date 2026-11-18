@@ -49,5 +49,11 @@ HEAD_AT = [-154, -225, -45];     // donde termina el tubo (cabeza con bisagra)
 HINGE_BEHIND = 30;               // la bisagra está detrás del riel: el brazo se dobla hacia atrás
 FOLD_TORQUE = 7;                 // N·m: con más que esto, los imanes ceden y el brazo se dobla
 MAGNET_D = 10;  MAGNET_H = 5;    // imanes de neodimio 10 x 5 mm (4 pares)
+// Apoyo de la cabeza fija (mejorado tras la prueba de diseño generativo, ../generative/): placa más
+// delgada + nervios debajo + pared que los une con el encastre del tubo
+SUPPORT_T = 6;                   // espesor del apoyo (antes 10)
+MAG_BOSS_D = 16;  MAG_BOSS_H = 9;   // refuerzo redondo alrededor de cada imán
+RIB_T = 4;  RIB_DEPTH = 28;      // nervios bajo el apoyo: espesor y alto en la raíz (28: no sale de la caja original)
+RIB_Y = [-33, 0, 33];            // posición de los nervios respecto del centro del brazo
 BOX_IN = [45, 140, 95];          // caja de electrónica (adentro): Orange Pi 5 Pro + batería 3S + buck
 BOX_Z = -330;                    // centro de la caja (abajo en la placa)

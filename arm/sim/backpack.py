@@ -130,10 +130,10 @@ def build_spec(volts="12V", fit="ajustado", rigid=False) -> mujoco.MjSpec:
     _geom(mb, "backpack", B, (0.08, 0.16, 0.22), to_user + [-0.2, 0, -0.18], (0.75, 0.35, 0.15, 1),
           mass=2.5, **nc)
     _geom(mb, "tube", B, (0.01, 0.01, 0), rgba=(0.75, 0.76, 0.78, 1), mass=0.045, fromto=list(np.r_[TUBE_FROM, TUBE_TO]), **nc)
-    _geom(mb, "foot", B, (0.015, 0.035, 0.035), TUBE_FROM, (0.4, 0.42, 0.48, 1), mass=0.07, **nc)
-    _geom(mb, "head_fixed", B, (0.04, 0.035, 0.012), HINGE_REL + [0.03, 0, -0.012], (0.4, 0.42, 0.48, 1), mass=0.10, **nc)
+    _geom(mb, "foot", B, (0.015, 0.035, 0.035), TUBE_FROM, (0.4, 0.42, 0.48, 1), mass=0.072, **nc)
+    _geom(mb, "head_fixed", B, (0.04, 0.035, 0.012), HINGE_REL + [0.03, 0, -0.012], (0.4, 0.42, 0.48, 1), mass=0.124, **nc)
     fb = spec.body("fold")  # parte móvil de la cabeza + receptor + bandeja (lo que se dobla con el brazo)
-    _geom(fb, "head_moving", B, (0.055, 0.035, 0.012), [0.065, 0, 0.012], (0.6, 0.7, 0.85, 1), mass=0.22, **nc)
+    _geom(fb, "head_moving", B, (0.055, 0.035, 0.012), [0.065, 0, 0.012], (0.6, 0.7, 0.85, 1), mass=0.26, **nc)
     s = fb.add_site()
     s.name, s.pos = "mount_imu", list(-HINGE_REL + [0, 0, -0.01])
     gyro = spec.add_sensor()

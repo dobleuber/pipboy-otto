@@ -14,14 +14,14 @@ Ya tienes: **Orange Pi 5 Pro** (el cerebro), una impresora 3D (supuesto) y una P
 | 1 | Placa de servos **Waveshare Bus Servo Adapter (A)** | ~5–12 € | USB ↔ bus de los servos (la que usa el SO-101) |
 | 1 | Fuente de **12 V / 5 A** (conector redondo 5.5 x 2.1) | ~12 € | para usarlo en la mesa |
 | 1 | Cámara **USB UVC de 32 x 32 mm** (gran angular) | ~15–25 € | va en la muñeca (el modelo del SO-101 ya trae el soporte) |
-| 1 | Filamento **PETG 1 kg** | ~20 € | piezas del SO-101 (~0.4 kg) + bandeja, receptor y base de mesa |
+| 1 | Filamento **PETG 1 kg** | ~20 € | piezas del SO-101 (~0.4 kg) + bandeja, receptor y base de mesa (~0.3 kg) |
 | 2 | Prensas en C | ~10 € | para la base de mesa |
 | — | Disipador con ventilador para la Orange Pi 5 Pro, tarjeta microSD o eMMC, cable USB | ~15 € | si no los tienes |
 
 Alternativa: los kits "SO-ARM101" de Seeed, WowRobo y otros traen los servos, la placa y la
 fuente juntos (algunos con piezas impresas y cámara). Comparar precio con la lista de arriba.
 
-## Fase 2: el morral (~150 €)
+## Fase 2: el morral (~170 €)
 
 | Cant. | Qué | Precio aprox. | Notas |
 |---|---|---|---|
@@ -37,6 +37,7 @@ fuente juntos (algunos con piezas impresas y cámara). Comparar precio con la li
 | 1 | Bolsa ignífuga para baterías | ~8 € | la batería va dentro de la caja |
 | 1 | Tubo de aluminio cuadrado 20 x 20 x 1.5 mm (cortar a 142 mm) | ~6 € | ferretería |
 | 1 | Placa de HDPE o PP de 3 mm, 25 x 38 cm | ~10 € | o una tabla de picar de plástico |
+| 1 | Filamento **PETG 1 kg** (otro rollo) | ~20 € | piezas del soporte del morral (~470 g) y la caja |
 | 8 | Imanes de neodimio N52, 10 x 5 mm | ~6 € | bisagra (se pegan con epoxi) |
 | 1 | Tornillo M8 x 70 + tuerca autoblocante + 2 arandelas de nylon | ~3 € | pasador de la bisagra |
 | — | Surtido de tornillos M5 (12–30 mm), tuercas y arandelas; 1 tornillo M4 x 10 | ~10 € | |
@@ -65,10 +66,10 @@ SO-101) + otra placa Waveshare. Se puede dejar para después.
 | Fase | Aprox. |
 |---|---|
 | 1. Mesa | ~250 € |
-| 2. Morral | ~150 € (+ el morral) |
+| 2. Morral | ~170 € (+ el morral) |
 | 3. Voz | ~40 € |
 | Opcional: líder | ~120 € |
-| **Total sin el líder** | **~440 €** |
+| **Total sin el líder** | **~460 €** |
 
 ## Antes de comprar
 

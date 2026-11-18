@@ -95,4 +95,12 @@ def cabeza_fija():
     )
 
 
-PROBLEMS = {"cabeza_fija": cabeza_fija}
+def cabeza_fija_nervios():
+    """La original mejorada a mano con lo que mostró el diseño generativo (nervios bajo el apoyo y una
+    pared que los une con el encastre; apoyo de 6 mm). Mismo problema y mismas cargas: solo para
+    evaluarla contra la original (out/cabeza_fija_nervios.stl sale de head_fixed_level.scad)."""
+    from dataclasses import replace
+    return replace(cabeza_fija(), name="cabeza_fija_nervios")
+
+
+PROBLEMS = {"cabeza_fija": cabeza_fija, "cabeza_fija_nervios": cabeza_fija_nervios}

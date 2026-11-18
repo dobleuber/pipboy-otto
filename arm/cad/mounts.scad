@@ -179,6 +179,10 @@ PLATE_Z = RX_ORIGIN[2] - RX_BASE - PLATE_T;       // cara de abajo de la placa m
 HINGE = [RX_ORIGIN[0] - HINGE_BEHIND, ARM_BASE[1], PLATE_Z];
 KNUCKLE = 14;  KR = 11;                           // ancho de cada nudillo móvil y radio
 SUPPORT_X0 = HINGE[0] + KR + 3;                   // el apoyo empieza después de la bisagra
+SUPPORT_X1 = RX_ORIGIN[0] + RX_L + STOP;          // y termina con el receptor
+SPINE_X0 = HEAD_AT[0] + TUBE / 2 + 5 - 1;         // pared: pegada a la cara delantera del encastre
+SPINE_X1 = SPINE_X0 + 6;
+SPINE_Y1 = HEAD_AT[1] + 30;                       // llega hasta el encastre del tubo
 MAG_X = [RX_ORIGIN[0] + 25, RX_ORIGIN[0] + 55];
 MAG_Y = RX_W / 2 - 9;
 
@@ -216,8 +220,20 @@ module head_fixed() {
             }
             // apoyo bajo la placa móvil (lleva los otros imanes); el tope que impide doblarse hacia adelante
             hull() {
-                translate([SUPPORT_X0, ARM_BASE[1] - RX_W / 2, PLATE_Z - 10]) cube([RX_ORIGIN[0] + RX_L + STOP - SUPPORT_X0, RX_W, 10]);
+                translate([SUPPORT_X0, ARM_BASE[1] - RX_W / 2, PLATE_Z - SUPPORT_T]) cube([SUPPORT_X1 - SUPPORT_X0, RX_W, SUPPORT_T]);
                 translate([HINGE[0], ARM_BASE[1] - lug / 2, PLATE_Z - KR]) cube([1, lug, 2]);
+            }
+            // refuerzos alrededor de los imanes
+            for (x = MAG_X, s = [-1, 1]) translate([x, ARM_BASE[1] + s * MAG_Y, PLATE_Z - MAG_BOSS_H])
+                cylinder(d = MAG_BOSS_D, h = MAG_BOSS_H);
+            // pared delante del encastre del tubo: une los nervios con el tubo
+            translate([SPINE_X0, ARM_BASE[1] - RX_W / 2, PLATE_Z - SUPPORT_T - RIB_DEPTH])
+                cube([SPINE_X1 - SPINE_X0, SPINE_Y1 - (ARM_BASE[1] - RX_W / 2), RIB_DEPTH + SUPPORT_T]);
+            // nervios bajo el apoyo: altos en la raíz (pared) y cada vez más bajos hacia adelante
+            for (dy = RIB_Y) hull() {
+                translate([SPINE_X0, ARM_BASE[1] + dy - RIB_T / 2, PLATE_Z - SUPPORT_T - RIB_DEPTH])
+                    cube([SPINE_X1 - SPINE_X0 + 6, RIB_T, RIB_DEPTH + SUPPORT_T]);
+                translate([SUPPORT_X1 - 8, ARM_BASE[1] + dy - RIB_T / 2, PLATE_Z - SUPPORT_T]) cube([1, RIB_T, SUPPORT_T]);
             }
         }
         tube_frame() translate([0, 0, TUBE_LEN - SOCKET + 8]) socket_cut();
